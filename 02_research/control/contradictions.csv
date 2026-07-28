@@ -1,0 +1,2 @@
+contradiction_id,claim_a,source_a,claim_b,source_b,impact,status,resolution,adr_id
+CON-0001,v0.1 §10 leaves coexistence of package procurement and ordinary material requisitions as an open research question.,SRC-0001,v0.1 §61 already places Procurement Package as the structural parent of the commercial graph.,SRC-0001,Potential premature commitment to package-centric ontology.,OPEN,,
