@@ -9,7 +9,7 @@
 - Phase: Phase 1 — Deterministic Architecture & Product Specification
 - Active subphase: P1.0 — Research Control System
 - Current checkpoint state: **CP-04 / A2+A4 — PASS**
-- Current work boundary: **PREPARE CP-05 FINAL P1.0 INDEPENDENT ARTIFACT AUDIT**
+- Current work boundary: **CP-05 FINAL P1.0 INDEPENDENT ARTIFACT AUDIT — READY**
 - Governing roadmap: **Phase 1 Roadmap v1.1 — FROZEN**
 - Product code: NOT STARTED
 - Phase 2 build decomposition: LOCKED
@@ -27,6 +27,7 @@
 | CP-02 Audit Report | PASS | `04_phases/phase_1/P1.0_research_control/audits/CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md` |
 | CP-03 Audit Report | PASS | `04_phases/phase_1/P1.0_research_control/audits/CP_03_A2_A3_AUDIT.md` |
 | CP-04 Audit Report | PASS | `04_phases/phase_1/P1.0_research_control/audits/CP_04_A2_A4_DECISION_TRACEABILITY_AUDIT.md` |
+| CP-05 Independent Audit Package | READY | `04_phases/phase_1/P1.0_research_control/audits/CP_05_INDEPENDENT_AUDIT_PACKAGE.md` |
 | Decision leverage classification | ACTIVE | `02_research/evidence/DECISION_LEVERAGE_CLASSIFICATION_V1_0.csv` |
 | ADR evidence coverage | ACTIVE | `02_research/evidence/ADR_EVIDENCE_COVERAGE_V1_0.csv` |
 | Targeted A2 Batch 02 | COMPLETE | `02_research/evidence/verification_batches/A2_BATCH_02_DECISION_CRITICAL.md` |
@@ -43,7 +44,7 @@
 - CP-03 hostile critique: **ACCEPTED WITH CORRECTIONS / IMPLEMENTED**
 - CP-04 / A2+A4 decision-evidence traceability audit: **PASS**
 - Findings FND-0001 through FND-0014: **CLOSED**
-- CP-05 / full A0–A5 + independent hostile artifact audit: **NEXT / PENDING**
+- CP-05 / full A0–A5 + independent hostile artifact audit: **READY / AWAITING INDEPENDENT VERDICT**
 
 ## Key correction after CP-03
 
@@ -88,7 +89,7 @@ P1.1 remains locked until **CP-05 returns `PASS — unlock P1.1`**.
 
 ## Next action
 
-Prepare the actual repository artifact set for a hostile independent CP-05 audit. The auditor must inspect the governing roadmap/control protocol/registers/checkpoint history and representative evidence directly; narrative-only summaries are insufficient.
+Run the independent hostile CP-05 audit using the actual repository artifacts listed in `CP_05_INDEPENDENT_AUDIT_PACKAGE.md`. Do not substitute a narrative-only summary.
 
 ## Rule
 
