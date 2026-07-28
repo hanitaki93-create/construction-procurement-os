@@ -1,0 +1,44 @@
+area_id,current_class,retrofittability,rationale,action
+FND-03,THIN,EXPENSIVE,"Adding deep branch/BU hierarchy later may require remapping authority/reporting history, but explicit legal-entity/project ownership already preserves recoverable anchors.",KEEP_THIN
+FND-08,THIN,EXPENSIVE,"Configuration hierarchy depth can be expanded later if version/effective-binding semantics are preserved by the deterministic substrate; migration may be broad but history need not be lost.",KEEP_THIN
+FND-13,THIN,CHEAP,"Tasks/notifications/ball-in-court are derived operational surfaces over retained lifecycle state and can be expanded later without changing historical truth.",KEEP_THIN
+FND-14,THIN,CHEAP,"Search/index breadth can be added over retained canonical records and evidence without rewriting transaction history.",KEEP_THIN
+FND-09,OUT,EXPENSIVE,"Broad custom fields/no-code schema can be introduced later through controlled metadata/versioning, with migration burden but no unavoidable loss if typed core records are preserved.",KEEP_OUT
+FND-10,OUT,EXPENSIVE,"General workflow breadth is expensive to add later, but V1 retains durable/versioned approval primitives and configuration binding so historical approvals need not be rewritten.",KEEP_OUT
+MAS-02,THIN,CHEAP,"Category/trade/project-eligibility depth can be expanded over retained vendor/project relationships; absence does not destroy core transaction truth.",KEEP_THIN
+MAS-03,THIN,EXPENSIVE,"Deep qualification/compliance lifecycle may require migration and policy backfill, but minimum eligibility state/evidence is already retained in SPINE.",KEEP_THIN
+MAS-04,THIN,CHEAP,"Performance scoring can be calculated later from retained deterministic outcome facts; the scoring model itself is recoverable.",KEEP_THIN
+MAS-05,OUT,CHEAP,"Capacity/exposure optimization is derived from retained vendor/project/commitment truth and can be added later.",KEEP_OUT
+MAS-06,THIN,EXPENSIVE,"A richer item/material catalogue can be introduced later but mapping historical freeform lines may be costly; transaction identity remains recoverable.",KEEP_THIN
+MAS-07,THIN,EXPENSIVE,"Reusable taxonomy can be layered later over retained package/requisition/vendor relationships, with migration burden but no unrecoverable truth loss.",KEEP_THIN
+FIN-09,THIN,EXPENSIVE,"Full claim/certification workflow is costly to deepen later, but valuation/progress events and posting/correction substrate preserve the commercial history required to elaborate it.",KEEP_THIN
+FIN-10,THIN,EXPENSIVE,"Bond/guarantee/insurance lifecycle automation can be expanded later if terms/evidence are retained; retention/advance/recoupment positions are separated into SPINE by the v0.3 amendment.",KEEP_THIN
+PRC-01,THIN,CHEAP,"Procurement planning/milestone depth can be added over retained demand/tender states; planning is not required to reconstruct transaction truth.",KEEP_THIN
+PRC-04,THIN,EXPENSIVE,"Long-lead orchestration can be added later but historical milestone mapping may be costly; underlying commitment/item/evidence anchors remain available.",KEEP_THIN
+PRC-07,THIN,CHEAP,"Bid-form configurability can expand later; canonical bid-line/comparison structure is separately retained in SPINE.",KEEP_THIN
+PRC-09,THIN,EXPENSIVE,"Rich clarification/addenda correspondence is costly to backfill, but exact bid/revision/evidence identity and manual evidence references preserve the core award basis.",KEEP_THIN
+PRC-11,THIN,CHEAP,"A distinct recommendation object can be added later; governed award proposal/justification and approval evidence remain in SPINE.",KEEP_THIN
+PRC-13,THIN,CHEAP,"Negotiation-log breadth can be expanded later using retained revisions/evidence; it is not required to preserve canonical award truth.",KEEP_THIN
+COM-02,THIN,CHEAP,"Document-compilation/template breadth is an output surface over retained commitment/evidence data and can be expanded later.",KEEP_THIN
+COM-05,THIN,EXPENSIVE,"Detailed GRN/receipt workflow is costly to expand later, but commercial valuation/receipt evidence is retained by FIN-11 and inventory stock truth is explicitly outside V1.",KEEP_THIN
+COM-06,THIN,EXPENSIVE,"Full subcontract claim workflow can be elaborated later because valuation events, positions and evidence survive; workflow detail may require migration but not historical reinvention.",KEEP_THIN
+COM-07,THIN,EXPENSIVE,"Detailed final-account/closeout workflow may be costly to add later, but commitment/change/valuation history and terminal-state capability preserve the required truth.",KEEP_THIN
+DOC-04,THIN,EXPENSIVE,"Automated email/message-channel capture cannot reconstruct every omitted historical conversation, but V1 commercial decisions require evidence references/uploads; channel automation is therefore not a truth prerequisite.",KEEP_THIN
+EXT-02,THIN,CHEAP,"Self-registration can be added later over the retained external identity/vendor model; invite-first operation remains valid.",KEEP_THIN
+INT-02,THIN,CHEAP,"External API breadth can be exposed incrementally because bounded internal actions/events are SPINE.",KEEP_THIN
+INT-05,THIN,CHEAP,"Migration/import breadth can be expanded later; stable IDs and validation/reconciliation contracts protect core truth.",KEEP_THIN
+INT-06,THIN,CHEAP,"Export/BI/accounting-handoff breadth can expand later over stable canonical records and interface contracts.",KEEP_THIN
+UX-04,THIN,CHEAP,"Dashboard/report UI is derived from canonical query/truth contracts and can be expanded later.",KEEP_THIN
+UX-05,THIN,CHEAP,"Saved views/personalization are recoverable UI preferences over stable queries.",KEEP_THIN
+FIN-07,OUT,EXPENSIVE,"Native payment/banking execution is a large regulated/operational addition, but external payment authority and mirrored states allow later integration without reconstructing procurement history.",KEEP_OUT
+DOC-05,OUT,EXPENSIVE,"Full RFI/submittal/transmittal domain is costly to add, but exact external-document references and procurement evidence preserve the seam; it is not required to reconstruct retained commercial truth.",KEEP_OUT
+EXT-03,OUT,CHEAP,"A persistent supplier portal/dashboard can be added later over retained external identity and task actions.",KEEP_OUT
+EXT-04,OUT,CHEAP,"Marketplace/network discovery is an additive business model over retained vendor identity/categories.",KEEP_OUT
+UX-02,OUT,CHEAP,"Native clients can be added over stable bounded APIs/actions without changing historical semantics.",KEEP_OUT
+UX-03,OUT,EXPENSIVE,"Offline synchronization is expensive to add because conflict/idempotency rules broaden, but stable IDs/bounded actions/concurrency semantics preserve a viable later path.",KEEP_OUT
+AI-01,OUT,CHEAP,"Extraction can be added later because provenance/source identity is SPINE.",KEEP_OUT
+AI-02,OUT,CHEAP,"Copilot/recommendation can be added later over retained decision/evidence truth.",KEEP_OUT
+AI-03,OUT,CHEAP,"Autonomous actions can be added later because bounded actions, authority and audit are SPINE.",KEEP_OUT
+ADJ-03,OUT,CHEAP,"Inventory/warehouse can be added as a separate stock domain later; procurement retains commercial receipt/valuation events without pretending to own stock truth.",KEEP_OUT
+ADJ-04,OUT,CHEAP,"HR/payroll/attendance is independent of the procurement/commercial truth graph.",KEEP_OUT
+ADJ-05,OUT,CHEAP,"CRM/sales/client management is independent of the retained procurement/commercial truth graph.",KEEP_OUT
