@@ -1,0 +1,7 @@
+question_id,question,why_it_matters,blocks,owner,status,resolution,related_ids,target_phase
+Q-0001,What exact beachhead contractor segment is V1 for?,"Controls scope, workflows, integrations, implementation burden and evidence acquisition.",all post-P1.0 architecture,Project,BLOCKING,,"ASM-0004,ASM-0006,ASM-0007",P1.1
+Q-0002,What is the authoritative accounting/commercial seam?,"Changes invoice, payment, retention, ledger, approvals, reporting and integration.",P1.5,Project,BLOCKING,,"ASM-0003,ASM-0004",P1.4
+Q-0003,"What canonical commercial financial-event model derives committed, pending, certified, retained, actual, paid and forecast balances?",Without it modules will compute money inconsistently.,P1.5b,Project,BLOCKING,,REQ-0003,P1.5b
+Q-0004,Does real procurement require package-led and requisition/item-led paths as equal first-class patterns?,Determines structural root and avoids forcing commodity procurement through artificial packages.,P1.5a,Project,OPEN,,ASM-0001,P1.2/P1.5a
+Q-0005,Should PO and Subcontract specialize one Commitment model or remain separate models?,Affects duplication and semantic clarity across workflows and financials.,P1.5a/P1.5c,Project,OPEN,,ASM-0002,P1.5a
+Q-0006,What external vendor identity model minimizes friction while preserving confidentiality and auditability?,Portal adoption can fail if vendors must maintain heavy accounts.,"P1.4 identity,P1.9 vendor UX",Project,OPEN,,,P1.2/P1.4
