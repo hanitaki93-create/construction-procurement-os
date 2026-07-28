@@ -129,26 +129,33 @@ A frozen artifact changes only through `CHG-*`.
 ## 9. P1.0 Work Packages
 
 ### P1.0-A — Schemas and registers
-**Status:** CP-01 A0 AUDIT ACTIVE; schema findings under remediation.
+**Status:** CP-01 A0 PASS. Control schemas are active; FND-0001 through FND-0006 closed.
 
-### P1.0-B — Retro-file v0.1 architecture assumptions
-**Status:** MAJOR LOAD-BEARING SET SEEDED; evidence-link normalization in CP-01.
+### P1.0-B — Retro-file v0.1 architecture assumptions/questions
+**Status:** CP-02 A1 PASS. Load-bearing inherited assumptions, known contradiction and explicit inherited research questions are controlled; FND-0008 closed.
 
 ### P1.0-C — Retro-file v0.1 competitor claims and cross-market conclusions
-**Status:** STRUCTURAL RETRO-FILE COMPLETE; VERIFICATION PENDING.
+**Status:** CP-02 A1 PASS FOR COMPLETENESS; A2 SOURCE VERIFICATION ACTIVE.
 
-The old §2 competitor statements exist as individual `PROPOSED` evidence records. Old §3 conclusions are `CONTESTED` and demoted to hypotheses. Source-by-source verification is still required.
+The 164 §2 competitor statements are controlled as EVD-0005–0168. The 10 old §3 conclusions are controlled/demoted as EVD-0169–0178. Their factual truth is not implied by completeness: external records remain `PROPOSED` until exact-source verification.
 
 ### P1.0-D — Terminology normalization
-**Status:** STARTED.
+**Status:** STARTED; expands during A2 verification.
 
 ### P1.0-E — Requirement bootstrap
 **Status:** STARTED.
 
-### P1.0-F — P1.0 gate audit
-**Status:** PENDING.
+### P1.0-F — P1.0 final gate audit
+**Status:** PENDING CP-05.
 
-## 10. P1.0 Completion Gate
+## 10. Checkpoint Status
+
+- CP-01 / A0: **PASS**
+- CP-02 / A1: **PASS**
+- A2 exact source verification: **ACTIVE**
+- CP-03 / A2+A3: triggers after first 25 external claims are verified.
+
+## 11. P1.0 Completion Gate
 
 P1.0 completes only when:
 - all v0.1 §2 claims are registered,
