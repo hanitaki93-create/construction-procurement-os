@@ -1,0 +1,2 @@
+change_id,artifact,from_version,to_version,proposed_change,trigger_or_evidence,affected_areas,impact,decision,date,status
+CHG-0001,Phase 1 Roadmap,v0.1 process sequence,v1.0,"Replace the 13-step sequential roadmap with the audited gated roadmap.","Phase 1 Structure Audit v1; ADR-0001",All Phase 1 execution,"Major process redesign while preserving provisional domain content.",ACCEPTED,2026-07-28,IMPLEMENTED
