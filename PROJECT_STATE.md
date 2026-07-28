@@ -9,6 +9,7 @@
 - Phase: Phase 1 — Deterministic Architecture & Product Specification
 - Active subphase: **P1.1 — Thesis, Beachhead & Release Boundary**
 - P1.0 final gate: **CP-05 PASS — P1.1 UNLOCKED**
+- P1.1 current state: **INTEGRATED BOUNDARY DRAFT COMPLETE / HOSTILE CRITIQUE DUE**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 - Product code: NOT STARTED
 - Phase 2 build decomposition: LOCKED
@@ -19,60 +20,75 @@
 | Artifact | Status | Location |
 |---|---|---|
 | Phase 1 Roadmap v1.3 | FROZEN / GOVERNING | `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md` |
-| Roadmap v1.2 | SUPERSEDED / HISTORICAL PREDECESSOR | `01_roadmaps/PHASE1_ROADMAP_V1_2_FROZEN.md` |
-| Roadmap changes CHG-0006/0007 | IMPLEMENTED | `01_roadmaps/ROADMAP_CHANGE_CHG_0006.md` + `04_phases/phase_1/P1.0_research_control/CONTROL_CHANGE_CHG_0007.md` |
 | P1.0 Control System v0.4 | CURRENT CONTROL BASELINE | `04_phases/phase_1/P1.0_research_control/P1_0_CONTROL_SYSTEM_V0_4.md` |
-| P1.0 Audit Protocol v1.3 | CURRENT AUDIT BASELINE | `04_phases/phase_1/P1.0_research_control/audits/P1_0_AUDIT_PROTOCOL_V1_3.md` |
 | CP-05 Final Verdict | PASS | `04_phases/phase_1/P1.0_research_control/audits/CP_05_FINAL_VERDICT.md` |
 | P1.1 Workplan | ACTIVE | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_WORKPLAN_V0_1.md` |
+| P1.1 Beachhead Candidates | PROVISIONAL | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_BEACHHEAD_CANDIDATES_V0_1.md` |
+| P1.1 Wedge Hypotheses | PROVISIONAL | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_WEDGE_HYPOTHESES_V0_1.md` |
+| P1.1 Scope Matrix | COMPLETE DRAFT | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_SCOPE_MATRIX_V0_1.csv` |
+| P1.1 Burden Budget | COMPLETE DRAFT | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_BURDEN_BUDGET_V0_1.md` |
+| P1.1 Integrated Boundary Draft | COMPLETE / NOT FROZEN | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_INTEGRATED_BOUNDARY_DRAFT_V0_1.md` |
 | Source Preservation Policy | ACTIVE | `02_research/sources/SOURCE_PRESERVATION_POLICY_V1_0.md` |
-| ADR evidence coverage v1.1 | ACTIVE | `02_research/evidence/ADR_EVIDENCE_COVERAGE_V1_1.csv` |
 | Research control registers | ACTIVE | `02_research/control/` |
 
-## Checkpoint state
+## P1.1 draft result
 
-- CP-01: **PASS**
-- CP-02: **PASS**
-- CP-03: **PASS**
-- CP-04: **PASS**
-- CP-05 first hostile verdict: **FAIL**
-- CP-05 remediation: **IMPLEMENTED**
-- CP-05 hostile recheck: **PASS — unlock P1.1**
-- Canonical artifact-execution audit: **PASS**
+### Provisional beachhead
 
-## CP-05 audit scope
+**UAE private-sector mid-market main contractors** with a centralized procurement/commercial function, approximately 5–25 concurrently active building projects or equivalent multi-project procurement load, and no fully integrated enterprise procurement/commercial operating layer.
 
-The external hostile recheck certified the **control-system design** and explicitly did not claim direct repository execution inspection because the auditor lacked repo access.
+Candidate B (upper-mid/enterprise GCC main contractors) remains the ceiling/integration comparator. Candidate C (specialist subcontractors) remains a falsification/control population.
 
-Canonical artifact execution was checked separately with repository access. The project records both components and does not describe the result as an independent repository audit.
+### Wedges
 
-## Final non-blocking CP-05 amendments
+1. **Procurement Control Loop** — planned demand/MR/package → tender → comparison → recommendation → approval → award.
+2. **Commercial Commitment Truth** — award → cost attribution → commitment → controlled changes → derived commercial balances without owning GL/AP.
+3. **Low-Friction Supplier Participation + Tender Evidence** — guest participation, controlled bid/revision evidence and comparison-ready requested data without heavyweight portal dependency.
 
-Roadmap v1.3 / Control v0.4 add:
-- verbatim-by-default P1.2 capture with logged normalization exceptions;
-- post-P1.2 primary corroboration status for incumbent-derived hypotheses;
-- P1.5 audit-store compatibility with controlled redaction/tombstoning;
-- explicit/versioned projection evolution when new event types affect derived balances;
-- `evidence_basis` on every ACCEPTED ADR;
-- auditor-selected sampling for future independent artifact audits where practical.
+### Scope classification
 
-## P1.1 objective
+80 candidate areas classified:
+- **37 SPINE**
+- **20 THIN**
+- **7 INTERFACE-ONLY**
+- **16 OUT**
 
-Select a named first beachhead and define a finite V1 boundary without reducing the long-term architectural ceiling.
+No `important later` bucket remains.
 
-Required outputs include:
-- beachhead segment;
-- three falsifiable wedge hypotheses;
-- complete SPINE / THIN / INTERFACE-ONLY / OUT classification;
-- implementation-burden budget;
-- explicit exclusions and evidence-to-revisit rules.
+### Implementation burden
 
-## Next critique point
+- hard envelope: **240 weighted burden units**
+- current draft: **230.2**
+- reserve: **9.8**
+- highest workstream: commitments/changes/commercial truth = **38.1**, below the 40-unit mandatory sub-slicing trigger
 
-**After the integrated P1.1 boundary draft is complete, before P1.1 freezes.**
+The burden model keeps difficult truth/authority/integration substrates while explicitly deferring separate gravity wells such as full accounting, CDE/BIM, inventory, general no-code/workflow, broad ERP connector portfolio, native/offline, marketplace and deterministic-stage AI.
 
-Do not interrupt early P1.1 exploration with repeated architecture critique; challenge the integrated beachhead/scope/burden decision as one coherent object.
+### Expected V1 closed sub-graph
+
+`Company/Legal Entity → Project → User/Authority → Vendor → Cost/WBS/Budget Context → Procurement Plan → {MR | Package} → RFQ → Invite/Guest Access → Quote/Revision → Comparison → Recommendation → Approval → Award → Commitment → Change → Derived Commercial Balance → Evidence/Audit → Export/Reconciliation`
+
+Dependencies leaving the V1 graph terminate at explicit interfaces for accounting/ERP, estimating/budget source, CDE/document source, e-signature and project schedule.
+
+## P1.1 gate status
+
+- named beachhead: **PROVISIONALLY YES**
+- three falsifiable wedges: **YES**
+- 100% candidate areas classified: **YES — 80/80**
+- numeric burden budget: **YES**
+- explicit exclusions/revisit conditions: **YES**
+- attractive features deliberately deferred: **YES — multiple**
+- no everything-is-core outcome: **YES**
+- hostile critique resolved: **NO**
+
+## Current market-context note
+
+Current official UAE sources (`SRC-0047`–`SRC-0050`) support an active construction environment and continuing contractor-sector digitalization. They are context for geography selection only; P1.2 must establish actual workflow pain, buying behavior and ontology.
+
+## Blocking condition
+
+**P1.1 must not freeze or unlock P1.2 until the integrated boundary draft receives hostile critique and all blocking findings are resolved.**
 
 ## Next action
 
-Begin P1.1-A: construct explicit beachhead candidates and the decision criteria/evidence needed to select among them.
+Run the planned hostile critique against the integrated P1.1 boundary as one object: beachhead + wedges + scope matrix + burden budget + exclusions + expected closed sub-graph. Do not continue into P1.2 before that critique.
