@@ -1,6 +1,6 @@
 checkpoint,trigger,audit_layers,status,decision,notes
-CP-01,Bootstrap complete,A0,READY,,Validate schemas before scaling research
-CP-02,Inherited v0.1 retro-file complete,A1,PENDING,,All inherited claims controlled before verification continues
+CP-01,Bootstrap complete,A0,PASS,PASS — continue P1.0,"Control schemas audited; FND-0001 through FND-0006 resolved and closed."
+CP-02,Inherited v0.1 retro-file complete,A1,READY,,"Audit inherited-claim completeness and ensure no v0.1 load-bearing truth remains uncontrolled."
 CP-03,First 25 external claims verified,"A2,A3",PENDING,,Detect evidence and assumption hygiene problems early
 CP-04,Approximately 50 percent source verification complete,"A2,A4",PENDING,,Traceability stress test
 CP-05,P1.0 work complete,"A0-A5 plus independent audit",PENDING,,Only PASS unlocks P1.1
