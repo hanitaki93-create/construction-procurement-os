@@ -1,6 +1,6 @@
 checkpoint,trigger,audit_layers,status,decision,notes
 CP-01,Bootstrap complete,A0,PASS,PASS — continue P1.0,"Control schemas audited; FND-0001 through FND-0006 resolved and closed."
 CP-02,Inherited v0.1 retro-file complete,A1,PASS,PASS — begin A2 source verification,"164 v0.1 §2 claims map 1:1 to EVD-0005–0168; 10 §3 conclusions controlled in EVD-0169–0178; structural assumptions/questions/contradiction controlled; FND-0007 and FND-0008 closed."
-CP-03,First 25 external claims verified,"A2,A3",PASS,PASS — continue A2 toward CP-04,"EVD-0005–0029 verified: 21 SUPPORTED / 4 CONTESTED / 0 PROPOSED. FND-0009 evidence-atomicity issue fixed and closed. Stop here for planned critique before scaling verification."
-CP-04,Approximately 50 percent source verification complete,"A2,A4",PENDING,,Traceability stress test
-CP-05,P1.0 work complete,"A0-A5 plus independent audit",PENDING,,Only PASS unlocks P1.1
+CP-03,First 25 external claims verified + hostile critique,"A2,A3",PASS,PASS — method stress test complete,"EVD-0005–0029 verified: 21 SUPPORTED / 4 CONTESTED. Hostile critique found phase-drift/decision-leverage/anchoring issues; CHG-0002 corrected them."
+CP-04,Decision-leverage classification + targeted decision evidence stable,"A2,A4",PENDING,,"Replaces obsolete ~50% / 82-of-164 trigger. Audit decision traceability, VERIFY_EXACT dispositions, grouped patterns and ADR evidence needs; deep competitor reconstruction remains P1.3."
+CP-05,P1.0 work complete,"A0-A5 plus independent artifact audit",PENDING,,"Only PASS unlocks P1.1; external auditor receives actual repository artifacts, not narrative-only summary."
