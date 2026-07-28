@@ -1,0 +1,2 @@
+evidence_id,claim,source_ids,source_locator,claim_type,grade,confidence,status,related_sections,related_req_ids,notes
+EVD-0179,v0.1 §10 explicitly leaves coexistence of project-package procurement and ordinary material requisitions as an unresolved research question.,SRC-0001,v0.1 §10 — final Research question,INTERNAL_ARCHITECTURE_FACT,N/A,HIGH,SUPPORTED,v0.1 §10,,Created during CP-01 to make CON-0001 claim-to-claim traceable.
