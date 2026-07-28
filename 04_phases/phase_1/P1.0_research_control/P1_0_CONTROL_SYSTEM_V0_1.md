@@ -88,6 +88,18 @@ Controlled claim types currently include:
 - `ARCHITECTURAL_INFERENCE`
 - `INHERITED_CONCLUSION_HYPOTHESIS`
 
+### Composite inherited evidence rule
+
+The v0.1 retro-file preserves inherited statements even when an inherited row bundles several independently testable assertions.
+
+- A composite inherited row may be marked `SUPPORTED` only when every material component is supported at the stated scope.
+- If only part of the row is supported, the inherited parent remains `CONTESTED` and the verified/unsupported components are described explicitly in `notes`.
+- A composite or qualitative inherited parent claim may not directly support an ADR or Requirement unless all material components are independently verified.
+- If one component becomes load-bearing for an architecture decision, create a new atomic child `EVD-*` claim and trace the ADR/Requirement to that child claim rather than to the composite parent.
+- Qualitative adjectives such as `strong`, `best`, `broad`, or `source of truth` must be either operationally defined or treated as inference/user sentiment rather than product mechanics.
+
+This preserves the 1:1 CP-02 historical mapping without allowing coarse inherited wording to contaminate later architecture decisions.
+
 ## 6. Requirement Scope Vocabulary
 
 Product-area scope and requirement scope are different concepts.
@@ -152,8 +164,8 @@ The 164 §2 competitor statements are controlled as EVD-0005–0168. The 10 old 
 
 - CP-01 / A0: **PASS**
 - CP-02 / A1: **PASS**
-- A2 exact source verification: **ACTIVE**
-- CP-03 / A2+A3: triggers after first 25 external claims are verified.
+- A2 exact source verification: **ACTIVE; first 25 external claims completed**
+- CP-03 / A2+A3: **AUDIT ACTIVE**
 
 ## 11. P1.0 Completion Gate
 
