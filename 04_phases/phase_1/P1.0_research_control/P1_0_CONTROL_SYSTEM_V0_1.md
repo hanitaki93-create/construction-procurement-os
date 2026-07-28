@@ -18,7 +18,7 @@
 - Requirements: `REQ-0001`
 - Architecture/roadmap changes: `CHG-0001`
 
-IDs are never reused after rejection, deletion or supersession.
+IDs are never reused after rejection, deletion, supersession, or migration.
 
 ---
 
@@ -26,9 +26,9 @@ IDs are never reused after rejection, deletion or supersession.
 
 - **A** — primary official technical evidence: API/help documentation, official product training, contractual/product specification, formal public documentation.
 - **B** — official but promotional/summary evidence: product marketing pages, official demos, vendor sales collateral.
-- **C** — user/community evidence: reviews, forums, Reddit, YouTube comments, implementation commentary. Useful for pain/friction, weak for proving product mechanics.
+- **C** — user/community evidence: reviews, forums, Reddit, YouTube comments, implementation commentary. Useful for pain/friction; weak for proving product mechanics.
 - **D** — inference/architectural judgment. Never presented as external fact.
-- **P** — primary contractor evidence obtained during P1.2: real artifacts, observed workflow, structured interview/process reconstruction. P evidence is strongest for what contractors actually do, but not automatically universal.
+- **P** — primary contractor evidence obtained during P1.2: real artifacts, observed workflow, structured interview/process reconstruction. Strong for what an observed contractor actually does, not automatically universal.
 - **N/A** — internal project-control artifact, not evidence of external reality.
 
 Grades describe source type, not truth. Confidence is tracked separately.
@@ -42,6 +42,12 @@ Grades describe source type, not truth. Confidence is tracked separately.
 
 ## 4. Status Vocabulary
 
+### Source verification
+`PENDING_REVIEW / AVAILABLE / VERIFIED / UNAVAILABLE / SUPERSEDED`
+
+- `AVAILABLE` means the source is accessible/retained but has not necessarily been externally re-verified.
+- `VERIFIED` means the exact source/version/location has been reviewed under the P1.0 evidence protocol.
+
 ### Evidence
 `PROPOSED / SUPPORTED / CONTESTED / WITHDRAWN / SUPERSEDED`
 
@@ -54,6 +60,9 @@ Grades describe source type, not truth. Confidence is tracked separately.
 ### Contradiction
 `OPEN / RESOLVED / ACCEPTED_VARIANT`
 
+### Terminology
+`PROVISIONAL / CANONICAL / DEPRECATED / SUPERSEDED`
+
 ### ADR
 `PROPOSED / ACCEPTED / REJECTED / SUPERSEDED / DEFERRED`
 
@@ -63,30 +72,67 @@ Grades describe source type, not truth. Confidence is tracked separately.
 ### Change
 `PROPOSED / ACCEPTED / REJECTED / IMPLEMENTED`
 
-## 5. Traceability Chain
+## 5. Evidence Record Schema
+
+Canonical fields:
+
+`evidence_id, claim, source_ids, source_locator, claim_type, grade, confidence, status, related_sections, related_req_ids, notes`
+
+`source_locator` must become an exact page/section/timestamp/help-article locator before an external claim is marked `SUPPORTED`. `PENDING_A2_EXACT_LOCATOR` is valid only while the claim remains unverified.
+
+Controlled claim types currently include:
+- `INTERNAL_ARCHITECTURE_FACT`
+- `PRODUCT_MECHANICS_CLAIM`
+- `PRODUCT_CAPABILITY_CLAIM`
+- `USER_OR_MARKET_PAIN_CLAIM`
+- `ARCHITECTURAL_INFERENCE`
+- `INHERITED_CONCLUSION_HYPOTHESIS`
+
+## 6. Requirement Scope Vocabulary
+
+Product-area scope and requirement scope are different concepts.
+
+P1.1 product areas use the frozen roadmap vocabulary:
+`SPINE / THIN / INTERFACE-ONLY / OUT`.
+
+A requirement record uses one of:
+- `CROSS_CUTTING_CONSTRAINT` — applies across multiple product areas.
+- `PRODUCT_AREA_SPINE` — requirement owned by a SPINE product area.
+- `PRODUCT_AREA_THIN` — requirement owned by a THIN product area.
+- `INTERFACE_CONTRACT` — requirement defines an integration/system boundary.
+- `DEFERRED` — retained requirement intentionally outside current release scope.
+
+The requirement register must not invent hybrid terms such as `SPINE_CONSTRAINT`.
+
+## 7. Traceability Chain
 
 `SOURCE → EVIDENCE CLAIM → ASSUMPTION / QUESTION / CONTRADICTION → ADR → REQUIREMENT → SPEC SECTION → TEST / GOLDEN THREAD`
 
-Not every source creates a requirement. Every accepted requirement must trace backward to evidence or an explicit ADR. Every load-bearing ADR must state its evidence and alternatives.
+Rules:
+- Not every source creates evidence; not every evidence claim creates a requirement.
+- Assumptions may retain `source_ids` as convenience, but architecture reasoning must use `evidence_ids` as its claim-level basis.
+- Contradictions are evidence-claim to evidence-claim, not source to source.
+- Every accepted requirement must trace backward to evidence and/or an explicit ADR.
+- Every load-bearing ADR must state evidence and alternatives.
 
-## 6. Freeze Rules
+## 8. Freeze Rules
 
 An artifact is `FROZEN` only when:
 1. its gate is passed,
 2. open blocking questions are zero,
 3. contradictions affecting SPINE are resolved,
 4. assumptions affecting the artifact are accepted/rejected/deferred explicitly,
-5. red-team requirement for that artifact is passed.
+5. the required red-team gate is passed.
 
 A frozen artifact changes only through `CHG-*`.
 
-## 7. P1.0 Work Packages
+## 9. P1.0 Work Packages
 
 ### P1.0-A — Schemas and registers
-**Status:** DONE in the bootstrap package; CP-01 schema audit pending.
+**Status:** CP-01 A0 AUDIT ACTIVE; schema findings under remediation.
 
 ### P1.0-B — Retro-file v0.1 architecture assumptions
-**Status:** STARTED / MAJOR LOAD-BEARING SET SEEDED.
+**Status:** MAJOR LOAD-BEARING SET SEEDED; evidence-link normalization in CP-01.
 
 ### P1.0-C — Retro-file v0.1 competitor claims and cross-market conclusions
 **Status:** STRUCTURAL RETRO-FILE COMPLETE; VERIFICATION PENDING.
@@ -102,7 +148,7 @@ The old §2 competitor statements exist as individual `PROPOSED` evidence record
 ### P1.0-F — P1.0 gate audit
 **Status:** PENDING.
 
-## 8. P1.0 Completion Gate
+## 10. P1.0 Completion Gate
 
 P1.0 completes only when:
 - all v0.1 §2 claims are registered,
@@ -111,6 +157,7 @@ P1.0 completes only when:
 - all current blocking questions are visible,
 - terminology used by the roadmap is normalized,
 - accepted constraints have requirement IDs,
-- every register has stable schema and status rules.
+- every register has stable schema and status rules,
+- all mandatory P1.0 audit gates pass.
 
 Until then P1.1 remains locked.
