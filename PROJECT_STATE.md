@@ -7,110 +7,126 @@
 
 - Project: Construction Procurement OS
 - Phase: Phase 1 — Deterministic Architecture & Product Specification
-- Active subphase: **P1.1 — Thesis, Beachhead & Release Boundary**
-- P1.0 final gate: **CP-05 PASS — P1.1 UNLOCKED**
-- P1.1 current state: **HOSTILE CRITIQUE 01 RECHECK = FAIL NARROW / REMEDIATION v0.3 IMPLEMENTED / FINAL RECHECK DUE**
+- Active subphase: **P1.2 — Primary Workflow Evidence**
+- P1.0 final gate: **CP-05 PASS / CLOSED**
+- P1.1 final gate: **PASS — FROZEN / P1.2 UNLOCKED**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
+- P1.3 competitor reconstruction: **LOCKED pending P1.2 gate**
 - Product code: NOT STARTED
 - Phase 2 build decomposition: LOCKED
 - Phase 3 construction: LOCKED
 
-## Current authoritative P1.1 artifacts
+## Current authoritative artifacts
 
 | Artifact | Status | Location |
 |---|---|---|
-| P1.1 Workplan | ACTIVE | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_WORKPLAN_V0_1.md` |
-| Structural Envelope v0.2 | PROVISIONAL | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_STRUCTURAL_ENVELOPE_V0_2.md` |
-| Wedge Hypotheses v0.3 | CURRENT PROVISIONAL | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_WEDGE_HYPOTHESES_V0_3.md` |
-| Scope Matrix v0.2 | BASE CORRECTED MATRIX | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_SCOPE_MATRIX_V0_2.csv` |
-| Scope Amendment v0.3 | CURRENT BINDING OVERLAY | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_SCOPE_AMENDMENT_V0_3.md` |
-| SPINE Re-test v0.2 | COMPLETE | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_SPINE_RETEST_V0_2.md` |
-| Retrofittability Audit v0.3 | COMPLETE | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_RETROFIT_AUDIT_V0_3.csv` |
-| Burden Budget v0.3 | CURRENT PROVISIONAL | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_BURDEN_BUDGET_V0_3.md` |
-| Integrated Boundary Draft v0.3 | COMPLETE / NOT FROZEN | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_INTEGRATED_BOUNDARY_DRAFT_V0_3.md` |
+| Phase 1 Roadmap v1.3 | FROZEN / GOVERNING | `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md` |
+| P1.1 Final Verdict | PASS | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_FINAL_VERDICT.md` |
+| P1.1 Frozen Baseline v1.0 | FROZEN | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_FROZEN_BASELINE_V1_0.md` |
+| P1.2 Workplan v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_WORKPLAN_V0_1.md` |
+| P1.2 Workflow Reconstruction Packet v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_WORKFLOW_RECONSTRUCTION_PACKET_V0_1.md` |
+| P1.2 Registers | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/registers/` |
+| Source Preservation Policy | ACTIVE | `02_research/sources/SOURCE_PRESERVATION_POLICY_V1_0.md` |
+| Research control registers | ACTIVE | `02_research/control/` |
 
-Earlier P1.1 drafts remain historical provisional predecessors and are not current decision truth.
+## P1.1 final result
 
-## Recheck findings now remediated
+### Frozen structural/sampling envelope
 
-1. **Retrofittability axis strengthened:** any `IMPOSSIBLE` area must be `SPINE` or `INTERFACE-ONLY`; it can never be THIN/OUT.
-2. **All 43 THIN/OUT areas rescored:** 28 THIN + 15 OUT; zero `IMPOSSIBLE` findings remain in deferred scope.
-3. **Retention / advance / recoupment positions are SPINE** independently of full certification workflow depth.
-4. **WEDGE-01 restated structurally** as the complete procurement-control graph from budget/cost context through valuation/current commercial position.
-5. **Canonical bid-line/comparison structure is SPINE** while configurable bid forms remain THIN.
-6. **Award justification remains SPINE content** even though a distinct Recommendation object remains THIN.
-7. **Decline/no-bid is a first-class external tender-response state.**
-
-## Structural/sampling envelope
-
-Initial P1.2 sampling/deployment filter:
+Initial P1.2 filter:
 
 **UAE private-sector contractor procurement organizations acting as buyers of material and/or subcontract commitments, with explicit procurement/commercial authority and an accounting posture the platform must coexist with.**
 
-Primary sampling may emphasize main contractors; specialist contractors remain a deliberate posture/control population.
+Main contractors may be emphasized for primary sampling because they expose downstream buying plus upstream commercial context. Specialist contractors remain deliberate posture/control cases.
 
-Not decided: company size, project-concurrency band, willingness to pay, pricing, sales cycle, commercial implementation model, or commercially optimal geography.
+Not frozen as assumptions: company size, revenue, project-concurrency band, willingness to pay, pricing, sales cycle, implementation model, or commercially optimal geography.
 
-## Current structural wedges
+### Frozen structural wedges
 
-1. **Closed Procurement Control Graph** — `budget/cost context → demand {MR|package} → vendor eligibility → tender → bid/revision → comparison → governed award → commitment → change → valuation/progress → current commercial position` without a parallel ledger containing unique authoritative truth.
-2. **Commercial Commitment Truth** — award/cost attribution/commitment/change/valuation plus retention/advance/recoupment positions while accounting ownership remains open.
-3. **Task-Focused External Tender Participation** — bounded secure supplier actions including `decline/no-bid`, without requiring a broad portal.
+1. **Closed Procurement Control Graph** — test whether one deterministic graph can explain in-scope procurement/current-commercial position without a parallel ledger containing unique authoritative truth.
+2. **Commercial Commitment Truth** — test award/cost attribution/commitment/change/valuation plus retention/advance/recoupment positions while accounting ownership remains open.
+3. **Task-Focused External Tender Participation** — test bounded secure supplier actions including `decline/no-bid` without a broad persistent portal.
 
-## Current scope classification
+### Frozen scope
 
-Base v0.2 matrix: 82 areas = 30 SPINE / 28 THIN / 9 INTERFACE-ONLY / 15 OUT.
-
-v0.3 adds two explicit SPINE structures:
-- `FIN-12` retention / advance / recoupment position substrate;
-- `PRC-15` canonical bid-line / comparison input structure.
-
-Current provisional total:
 - **32 SPINE**
 - **28 THIN**
 - **9 INTERFACE-ONLY**
 - **15 OUT**
-- **84 areas total**
+- **84 total controlled areas**
 
-## Current burden budget
+Protective rule: `IMPOSSIBLE`-to-retrofit areas may only be SPINE or INTERFACE-ONLY; never THIN/OUT.
 
-No summed pseudo-unit score.
+P1.1 retrofit audit checked all 43 THIN/OUT rows and found zero IMPOSSIBLE classifications.
 
-Axes:
-- implementation cost: `S / M / L / XL`;
-- retrofittability: `CHEAP / EXPENSIVE / IMPOSSIBLE`.
-
-Binding guardrails:
-- `IMPOSSIBLE` → SPINE or INTERFACE-ONLY; never THIN/OUT;
-- independent XL SPINE gravity wells: **max 1**, unless a newly discovered IMPOSSIBLE invariant forces reopening rather than demotion;
-- `XL + CHEAP` cannot be SPINE;
-- standard-config tenant to first live tender: **≤5 working days** from clean onboarding inputs;
-- bespoke named connectors required before first live tender: **0**.
-
-Current single XL SPINE gravity well: commitment/change/valuation/commercial truth.
-
-## Current closed sub-graph target
+### Frozen closed graph target
 
 `Tenant/Company → Legal Entity + Contracting Posture → Project → Budget/Cost Structure → Demand {MR | Package} → Vendor + Minimum Compliance State → Tender/RFQ → Invite/External Task Access → {Respond | Decline/No-Bid} → Quote/Revision → Canonical Bid-Line Structure → Comparison → Governed Award + Justification → Commitment → [Controlled Change] → Valuation/Progress Event → Retention/Advance/Recoupment Positions → Derived Commercial Balance → Evidence/Audit → Reconciliation/External Interface`
 
-Authority/approval, provenance, bounded action, audit and concurrency are cross-cutting transition properties.
+Authority/approval, provenance, bounded actions, audit and concurrency remain cross-cutting transition properties.
 
-## P1.1 gate status
+### Frozen burden rules
 
-- structural/sampling beachhead: **PROVISIONALLY YES**
-- three falsifiable structural wedges: **YES**
-- all candidate areas controlled: **YES — base matrix + v0.3 amendment**
-- implementation burden budget explicit: **YES — ordinal + hard guardrails**
-- THIN/OUT retrofittability audit: **YES — 43/43 scored, zero IMPOSSIBLE**
-- exclusions/revisit rules explicit: **YES**
-- attractive gravity wells deliberately deferred: **YES**
-- no everything-is-core outcome: **YES**
-- hostile critique resolved: **REMEDIATION v0.3 COMPLETE / FINAL RECHECK REQUIRED**
+- cost: `S / M / L / XL`;
+- retrofittability: `CHEAP / EXPENSIVE / IMPOSSIBLE`;
+- `IMPOSSIBLE` → SPINE or INTERFACE-ONLY;
+- max one independent XL SPINE gravity well unless an IMPOSSIBLE invariant forces reopening rather than demotion;
+- `XL + CHEAP` cannot be SPINE;
+- standard configuration to first live tender target ≤5 working days from clean inputs;
+- bespoke named connectors required before first live tender = 0.
 
-## Blocking condition
+Current single independent XL SPINE gravity well: **commitment/change/valuation/commercial truth**.
 
-**P1.1 remains NOT FROZEN and P1.2 remains LOCKED until the hostile auditor accepts the v0.3 remediation.**
+## P1.1 audit scope note
+
+The external hostile reviewer certified the P1.1 boundary **as described** and explicitly did not claim independent repository execution inspection.
+
+Repository execution was checked separately before recording the PASS, including the 43-row THIN/OUT retrofit audit and the FIN-12 / PRC-15 / WEDGE-01 remediation artifacts.
+
+## Forward-owned items from P1.1
+
+- supplier non-response/timeout semantics → **P1.5 state-machine design**; P1.2 should observe actual behavior/terminology;
+- FIN-12 retention/advance/recoupment positions → **P1.5 projection over the canonical commercial cost-event store**, never a parallel mutable balance store.
+
+These are not P1.2 blockers.
+
+## P1.2 objective
+
+Reconstruct how contractors actually procure and commercially administer work **before deep competitor reconstruction** is allowed to define the domain.
+
+Required end-state includes:
+- 3–5 independent contractor workflow reconstructions;
+- at least 3 independent workflows;
+- at least 1 UAE case;
+- at least 1 case outside the founder's prior trade/project pattern;
+- real artifacts where obtainable;
+- at least 1 bid-leveling artifact decomposed to line/revision/adjustment level;
+- role/artifact map for every workflow step;
+- variant, workaround, contradiction and unmodeled-observation registers;
+- supplier-side friction evidence;
+- primary corroboration status for incumbent-derived hypotheses.
+
+Primary evidence is verbatim-by-default and normalization is a later logged transformation.
+
+## P1.2 active control artifacts
+
+Created:
+- `P1_2_WORKPLAN_V0_1.md`
+- `P1_2_WORKFLOW_RECONSTRUCTION_PACKET_V0_1.md`
+- `registers/workflows.csv`
+- `registers/role_artifact_map.csv`
+- `registers/variants.csv`
+- `registers/workarounds.csv`
+- `registers/unmodeled_observations.csv`
+- `registers/contradictions.csv`
+- `registers/primary_corroboration.csv`
+
+## Current blocking condition
+
+**P1.3 remains locked until the P1.2 primary-evidence gate passes.**
+
+P1.2 may contradict frozen P1.1 hypotheses. Any resulting boundary change must preserve raw evidence and use normal ADR/change control rather than silently editing the frozen baseline.
 
 ## Next action
 
-Return only the v0.3 correction delta to the hostile auditor. Ask for exactly one verdict: `PASS — freeze P1.1 / unlock P1.2` or `FAIL — remain P1.1`, with only concrete remaining blockers on FAIL.
+Begin P1.2 execution with a calibration workflow reconstruction using the raw-capture packet, then acquire independent contractor cases. The calibration case cannot by itself satisfy the independent-workflow gate.
