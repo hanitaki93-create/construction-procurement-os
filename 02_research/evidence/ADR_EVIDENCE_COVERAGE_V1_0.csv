@@ -1,0 +1,24 @@
+adr_id,decision_area,current_evidence_ids,coverage,next_required_evidence,resolution_phase
+ADR-0001,Phase 1 execution sequence,"EVD-0001;EVD-0002;EVD-0003;EVD-0004",ACCEPTED,None,P1.0
+ADR-0002,Commercial event substrate,EVD-0002,ACCEPTED,"Detailed event semantics and accounting seam",P1.5
+ADR-0003,Procurement structural root,"EVD-0004;EVD-0169;EVD-0190;EVD-0195",P1_0_SUFFICIENT,"Primary contractor package-led and requisition-led workflows",P1.2/P1.5
+ADR-0004,PO and Subcontract type model,"EVD-0134;EVD-0191",P1_0_SUFFICIENT,"Primary contract/PO lifecycle variants and financial differences",P1.2/P1.5
+ADR-0005,Accounting/commercial ownership seam,"EVD-0024;EVD-0184;EVD-0187",P1_0_SUFFICIENT,"Beachhead accounting stack plus field/event authority analysis",P1.4
+ADR-0006,V1 ERP/accounting integration depth,"EVD-0015;EVD-0024;EVD-0196",P1_0_SUFFICIENT,"Beachhead software stack and implementation burden",P1.1/P1.4
+ADR-0007,Long-lead tracking object model,,PRIMARY_REQUIRED,"Real long-lead artifacts and lifecycle cases",P1.2/P1.5
+ADR-0008,Workflow engine generality,"EVD-0011;EVD-0188;EVD-0189;EVD-0197",P1_0_SUFFICIENT,"Primary approval matrices and workflow variants",P1.2/P1.5
+ADR-0009,Configuration breadth,"EVD-0189",P1_0_SUFFICIENT,"Beachhead configuration variance and override needs",P1.1/P1.2/P1.5
+ADR-0010,GCC semantics versus localization,,PRIMARY_REQUIRED,"GCC contracts certificates tax retention guarantee and payment workflows",P1.2/P1.5
+ADR-0011,Budget/cost attribution timing,"EVD-0170;EVD-0182;EVD-0183;EVD-0192",P1_0_SUFFICIENT,"Primary evidence on when coding becomes mandatory",P1.2/P1.5
+ADR-0012,External vendor identity/access,"EVD-0181;EVD-0186",P1_0_SUFFICIENT,"Supplier-side primary participation/friction evidence",P1.2/P1.4
+ADR-0013,Event-derived status versus manual tracker,"EVD-0180",P1_0_SUFFICIENT,"Primary procurement tracker fields and planning/status distinction",P1.2/P1.5
+ADR-0014,Document provenance ownership/depth,"EVD-0175;EVD-0185;EVD-0187",P1_0_SUFFICIENT,"Primary dispute/evidence flows and external CDE boundary",P1.2/P1.4/P1.6
+ADR-0015,Posting/finalization/reversal/correction,"EVD-0002;EVD-0176;EVD-0184;EVD-0192;EVD-0193",P1_0_SUFFICIENT,"Accounting/commercial correction cases and closed-period golden thread design",P1.4/P1.5
+ADR-0016,External-party UX priority,"EVD-0177;EVD-0181;EVD-0186",P1_0_SUFFICIENT,"Supplier-side primary workflow/friction evidence",P1.2/P1.9
+ADR-0017,AI-readiness substrate,EVD-0178,DESIGN_PHASE,"Retrofit analysis for bounded actions provenance and future tool API",P1.10
+ADR-0018,Workflow-to-financial-state seam,"EVD-0188;EVD-0194;EVD-0197",P1_0_SUFFICIENT,"Formal invariant design and primary approval/financial cases",P1.5
+ADR-0019,Effective dating/temporal authority,EVD-0193,DESIGN_PHASE,"Historical authority FX org/config scenarios; legal/accounting requirements where applicable",P1.5
+ADR-0020,In-flight configuration binding,EVD-0189,DESIGN_PHASE,"Primary workflow change scenarios and consistent version-binding policy",P1.5
+ADR-0021,Field-level integration authority/staleness,"EVD-0024;EVD-0187;EVD-0196",DESIGN_PHASE,"Beachhead ERP field mappings conflict/staleness scenarios",P1.4/P1.7
+ADR-0022,Money representation/rounding/order,,DESIGN_PHASE,"Commercial calculation examples tax retention recoupment and accounting requirements",P1.5
+ADR-0023,Numbering/concurrency/fiscal semantics,,DESIGN_PHASE,"Beachhead numbering rules legal/fiscal obligations and concurrency model",P1.4/P1.5
