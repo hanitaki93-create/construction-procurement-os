@@ -1,15 +1,15 @@
 gate_id,check,mandatory,status,evidence,notes
-G-001,Source Register stable and deduplicated,YES,PENDING,,
-G-002,All inherited v0.1 competitor claims registered,YES,PENDING,,
-G-003,All inherited claims verified contested withdrawn or superseded,YES,PENDING,,
-G-004,Old cross-market conclusions demoted or re-derived,YES,PENDING,,
-G-005,All load-bearing assumptions visible,YES,PENDING,,
-G-006,All current blocking questions visible,YES,PENDING,,
-G-007,Known contradictions registered,YES,PENDING,,
+G-001,Source Register stable and deduplicated,YES,PENDING,,Will be re-audited after source verification expands the register
+G-002,All inherited v0.1 competitor claims registered,YES,PASS,CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md,"164 inherited §2 claims controlled as EVD-0005–0168"
+G-003,All inherited claims verified contested withdrawn or superseded,YES,PENDING,,A2 source verification not yet complete
+G-004,Old cross-market conclusions demoted or re-derived,YES,PASS,CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md,"10 old §3 conclusions controlled as EVD-0169–0178 and demoted to hypotheses"
+G-005,All load-bearing assumptions visible,YES,PASS,CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md,"Hostile-audit F1–F8 plus remaining inherited §3 assumptions are registered"
+G-006,All current blocking questions visible,YES,PASS,CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md,"Inherited explicit research questions are controlled; later evidence may add new questions"
+G-007,Known contradictions registered,YES,PASS,CP_02_A1_RETROFILE_COMPLETENESS_AUDIT.md,"CON-0001 records package-root contradiction; new contradictions may be added during A2/P1.2"
 G-008,Terminology normalized enough for P1.1,YES,PENDING,,
 G-009,ADR lifecycle tested,YES,PENDING,,
 G-010,Requirement traceability tested,YES,PENDING,,
 G-011,Architecture change control tested or dry-run,YES,PENDING,,
-G-012,No critical schema changes across two consecutive verification batches,YES,PENDING,,
-G-013,Independent hostile P1.0 gate audit completed,YES,PENDING,,
-G-014,Zero open S3 or S4 audit findings,YES,PENDING,,
+G-012,No critical schema changes across two consecutive verification batches,YES,PENDING,,Requires verification batches
+G-013,Independent hostile P1.0 gate audit completed,YES,PENDING,,Reserved for CP-05
+G-014,Zero open S3 or S4 audit findings,YES,PENDING,,Final audit condition
