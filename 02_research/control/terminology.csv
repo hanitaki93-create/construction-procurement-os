@@ -1,0 +1,6 @@
+term_id,canonical_term,definition,synonyms_or_competitor_terms,source_ids,status,notes
+TERM-0001,Procurement Package,"A planned grouping of procurement scope/work that may drive sourcing, evaluation and award; structural role remains unproven.","bid package,tender package,trade package",SRC-0001,PROVISIONAL,Do not assume it is the universal root.
+TERM-0002,Commitment,A legally/commercially binding downstream obligation to a vendor/subcontractor; exact subtype model remains open.,"purchase order,subcontract,contract,commitment",SRC-0001,PROVISIONAL,
+TERM-0003,Commercial Cost Event,An immutable/reversible-by-counterevent event that changes or classifies a commercial balance; exact event catalogue to be designed in P1.5b.,"posting,cost transaction,financial event",SRC-0002,PROVISIONAL,Not necessarily a double-entry GL journal.
+TERM-0004,Ball in Court,The actor/role currently accountable for the next required workflow action.,"BIC,assignee,current approver",SRC-0001,PROVISIONAL,
+TERM-0005,Authoritative System,The single system whose state is treated as final for a defined entity/field/domain when integrations disagree.,"system of record,source of truth",SRC-0002,PROVISIONAL,
