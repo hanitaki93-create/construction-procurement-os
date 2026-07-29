@@ -12,18 +12,20 @@
 - P1.1: **PASS / FROZEN**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 - P01–P12 provisional workflow set: **COMPLETE-ENOUGH / NOT FROZEN**
-- P01–P06 sourcing: **REVIEW A PASS**
-- P07/P08 commercial core/accounting seam: **REVIEW B PASS**
-- P09–P12 + complete graph: **REVIEW C ACTIVE / PACKET v0.2 READY**
-- Process invention: **PAUSED** unless evidence/critique proves a real missing lifecycle
-- P1.2 formal close: **LOCKED pending Review C + primary-evidence gate**
-- P1.3 formal competitor reconstruction: **LOCKED pending P1.2 gate**
+- Review A — P01–P06 sourcing: **PASS**
+- Review B — P07/P08 commercial core/accounting seam: **PASS**
+- Review C — P09–P12 + full graph: **PASS**
+- External architecture critique: **COMPLETE**
+- Current mode: **PRIMARY CHALLENGE / P1.2 CLOSURE**
+- Process invention: **PAUSED** unless primary evidence proves a missing lifecycle
+- P1.2 formal close: **LOCKED pending primary-evidence gate**
+- P1.3 formal competitor reconstruction: **LOCKED pending P1.2 close**
 - Product code: **NOT STARTED**
 - Phase 2/3 build: **LOCKED**
 
-## Operating rule
+## Evidence rule
 
-P1.2 remains `SECONDARY_REFERENCE / PROVISIONAL / REVERSIBLE` until primary evidence and later structural decisions.
+P1.2 remains `PROVISIONAL / PRIMARY-FALSIFIABLE / NOT FROZEN` until primary evidence is captured and reconciled.
 
 Authority order:
 1. PRIMARY_CONTRACTOR_EVIDENCE
@@ -33,13 +35,15 @@ Authority order:
 5. SECONDARY_REFERENCE — PROFESSIONAL PRACTICE
 6. INTERNAL_REASONING / HYPOTHESIS
 
-Independent primary cases must be captured verbatim before mapping to the candidate model.
+Independent primary cases must be captured verbatim before mapping to candidate architecture.
+
+A genuine primary contradiction may reopen any Review A/B/C finding.
 
 ---
 
 ## Review A — sourcing PASS
 
-External verdict:
+Verdict:
 
 `PASS — sourcing subgraph coherent; proceed to downstream external Review B`
 
@@ -47,24 +51,23 @@ Canonical artifacts:
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_REVIEW_A_FINAL_VERDICT.md`
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_5.md`
 
-Closed sourcing issues include:
-- supplier truth / evaluation / contractable basis separation;
+Key closed issues:
+- supplier truth / normalized representation / internal evaluation separation;
+- evaluated basis ≠ supplier-confirmed contractable basis;
 - one RequirementAllocation lineage;
-- hard scope conservation vs value governance;
-- DemandLine / PlannedRequirement common authorized-basis contract;
+- hard scope conservation separate from value/budget governance;
+- DemandLine / PlannedRequirement common authorized-basis semantic contract;
 - scope-level uniqueness;
 - controlled UOM;
 - downward reconciliation;
-- CR-01 blocking conflicting new allocation consumption and commitment binding during unresolved reduction;
-- package-root/ADR anchoring concern.
-
-Review A regression after Review B: **NO**.
+- CR-01 blocking conflicting new allocation consumption and new commitment binding during unresolved reduction;
+- ProcurementPackage remains optional; ADR-0003 physical root remains unresolved.
 
 ---
 
 ## Review B — commercial core PASS
 
-External verdict:
+Verdict:
 
 `PASS — P07/P08 coherent; proceed to Review C`
 
@@ -72,86 +75,89 @@ Canonical artifacts:
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_B_FINAL_VERDICT.md`
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_P07_P08_COMMERCIAL_CORE_CHECKPOINT_V0_4.md`
 
-Review B closed BL-03 through BL-08 and W01 through W04.
+Current binding commercial semantics:
+- CommercialTermsAuthority ≠ scope-consuming committed obligation;
+- each call-off/release/order forms an effective obligation and binds backed RequirementAllocation scope;
+- scope-backed guaranteed minimum reserves capacity on the same allocation lineage and call-offs draw it down;
+- pure monetary minimum remains commercial exposure and does not fabricate physical scope;
+- both minimum types may coexist;
+- scope/quantity basis and valuation basis are orthogonal;
+- remeasurable work always has hard conservation through a genuine cap or ScopePartitionBasis;
+- valid scope-adding AuthorizedWorkInstruction may itself establish basis expansion where authority is sufficient;
+- instruction authority ≠ supplier-agreed final price;
+- fulfillment mechanisms are composable;
+- one economic component cannot be earned twice;
+- deterministic tolerance belongs to AuthorizedRequirementBasis;
+- P08 accounting authority is field/event specific: OWN / MIRROR / REFERENCE;
+- no editable duplicate commercial/accounting balance.
 
-### Current binding commercial-core semantics
+Review A regression: **NO**.
 
-- `CommercialTermsAuthority` ≠ scope-consuming committed obligation.
-- Each call-off/release/order forms its own effective obligation and binds backed RequirementAllocation scope.
-- Scope-backed guaranteed minimum reserves capacity on the **same** RequirementAllocation lineage; call-offs draw down reservation rather than consume twice.
-- Monetary minimum remains derived commercial exposure and does not fabricate physical procurement scope.
-- One framework may carry both scope-backed and monetary minimums; qualifying call-offs can draw down both relations independently.
-- Scope/quantity basis is orthogonal to valuation basis.
-- `REMEASURABLE_QUANTITY` always has hard conservation: genuine quantity/cap or mandatory `SCOPE_PARTITION_BASIS`.
-- Valid scope-adding `AuthorizedWorkInstruction` may itself be the effective basis-expansion source event where authority is sufficient; instruction ≠ final supplier price.
-- Fulfillment mechanisms are composable at scope/economic-component grain.
-- One economic component cannot be earned twice across receipt/progress/milestone mechanisms.
-- Quantity tolerance belongs to AuthorizedRequirementBasis, is deterministic/versioned, and obeys downward-reconciliation + CR-01.
-- Accounting authority remains field/event specific: `OWN / MIRROR / REFERENCE`.
-- Integration error disposition is separate: `DATA_DEFECT / TRANSPORT_OR_MAPPING_DEFECT / TEMPORAL_RESTRICTION / EXTERNAL_AUTHORITY_RETURN`.
-- Correction shares invariants but retains domain-specific modes rather than one generic reversal primitive.
-- Retention, advance, allowance remaining, framework reservation, monetary-minimum exposure and integration status remain event-backed/derived positions; no editable duplicate ledger.
+---
 
-Second-ledger check: **CLEAN**.
+## Review C — full graph PASS
 
-ADR-0004: **OPEN as intended**.
+Verdict:
 
-P1.1 reopen: **NO**.
+`PASS — full graph coherent; proceed to primary challenge/closure work`
 
-### Review B non-blocking carry-forward
+Canonical artifacts:
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_C_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_COMPLETE_PROVISIONAL_OPERATIONAL_CHECKPOINT_V0_3.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_PRIMARY_FALSIFICATION_TARGETS_V0_1.md`
 
-1. Dual framework minimums must be allowed simultaneously.
-2. ADR-0022 rounding policy has a hard-invariant dependency because tolerance ceilings use it.
-3. P1.5 must define persisted `economic_component` matching grain for cross-fulfillment anti-double-counting.
-4. Primary evidence still must test framework/call-off, remeasurement, instructed work, fulfillment, valuation and ERP practices.
+Review C results:
+- SECOND-XL: **CLEAN — P07 only**;
+- MISSING CORE PROCESS: **NONE**;
+- FIRST LIVE TENDER: **CLEAN**;
+- REVIEW A/B REGRESSION: **NO**;
+- PRIMARY REVERSIBILITY: **CLEAN**;
+- P1.1 REOPEN: **NO**.
+
+### BL-09 closed
+
+Binding distinction:
+
+`Buyer entitlement/recovery ≠ EffectiveCommitmentChange ≠ reduction of certified gross earned value`
+
+Buyer-side recoveries include bounded semantics for LDs, backcharges/contra-charges, defect/rectification recovery, termination/replacement-cost recovery and security calls.
+
+Recovery may affect payable/settlement without rewriting supplier-agreed contract price or gross certified earned value.
+
+Cross-commitment recovery preserves the replacement supplier's legitimate positive cost separately from recovery against the defaulting supplier.
+
+### CR-02 — required before P07 fulfillment implementation
+
+Replacement/rectification procurement must still reconcile to RequirementAllocation authority.
+
+- reversible source fulfillment may return capacity through a valid history-preserving reversal/release;
+- irreversible source fulfillment does not silently return capacity and requires governed additional authorized scope/capacity before replacement commitment;
+- recovery against the defaulting supplier remains separate from replacement procurement authorization/cost.
+
+CR-02 **does not block primary challenge**.
 
 ---
 
 ## Complete provisional process set
 
 - **P01** Demand / planning / package / cost attribution / RequirementAllocation
-- **P02** Vendor qualification / contextual eligibility / bidder selection
+- **P02** Vendor qualification / contextual eligibility / participant selection
 - **P03** Tender event / immutable release / addenda
 - **P04** External participation / intent / decline / bid submission/revision
 - **P05** Bid normalization / leveling / comparison
 - **P06** Recommendation / DOA / governed award
-- **P07A** Commitment formation / original effective baseline
-- **P07B** Controlled commitment change / variation / instruction
-- **P07C/P07D** Composable fulfillment / receipt / valuation / certification / retention / advance
+- **P07** Commitment formation/change/instruction/fulfillment/certification/recovery
 - **P08** Commercial position / accounting authority / ERP reconciliation
-- **P09** Cross-cutting deterministic control plane
-- **P10** Long-lead / procurement schedule / expediting
-- **P11** Commercial closeout / security / warranty
+- **P09** Bounded deterministic control plane
+- **P10** Long-lead / procurement schedule / expediting overlay
+- **P11** Commercial closeout / security / warranty / recovery linkage
 - **P12** External technical/material approval dependency interface
 
-No new P13 process is justified unless evidence/critique proves a missing lifecycle.
+No P13 is justified unless primary evidence proves a missing lifecycle.
 
 ---
 
-## Review C — ACTIVE
-
-Canonical packet:
-
-`04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_C_CONTROLS_OVERLAYS_FULL_GRAPH_PACKET_V0_2.md`
-
-Review C attacks:
-- P09 BPM/workflow-engine creep;
-- P10 Primavera/master-schedule creep;
-- P11 banking/legal/warranty-platform creep;
-- P12 CDE/submittal-platform creep;
-- whole-graph object inflation;
-- second-XL subsystem risk;
-- missing core construction lifecycle;
-- first-live-tender adoption burden;
-- Review A/B regression;
-- open ADR anchoring;
-- whether blind primary evidence can still overturn the model.
-
-Review C must PASS/remediate before P1.2 moves to primary challenge/closure work.
-
----
-
-## One-XL gravity guardrail
+## One-XL guardrail
 
 P07 remains the intended single XL commercial gravity well.
 
@@ -159,53 +165,76 @@ Reject expansion that turns:
 - P08 into full accounting ERP/GL/AP/cash;
 - P09 into programmable BPM/low-code;
 - P10 into CPM/master scheduling;
-- P11 into banking/legal/insurance/warranty CRM;
+- P11 into legal claims/banking/insurance/warranty platform;
 - P12 into full CDE/submittal platform;
-- P07 fulfillment into inventory/WMS.
+- fulfillment into inventory/WMS.
+
+P09 gate classes are product-level bounded semantics. Deployment configuration may operate only inside those limits; hard invariants cannot be softened.
+
+P10 may perform bounded local deterministic forecast derivation with visible source/formula/version, but not recursive dependency-network scheduling.
 
 ---
 
-## ADRs intentionally open
+## Provisional ADR directions
 
-- ADR-0003 Procurement structural root
-- ADR-0004 PO/Subcontract/Framework/CallOff physical model
-- ADR-0005 Commercial/accounting ownership seam
-- ADR-0007 Long-lead model
-- ADR-0008 Workflow generality
-- ADR-0010 GCC semantics/localization
-- ADR-0011 Budget/cost authority
-- ADR-0012 External identity/access
-- ADR-0013 Event-derived status
-- ADR-0014 Provenance depth
-- ADR-0015 Posting/finalization/correction
-- ADR-0018 Workflow→financial-state seam
-- ADR-0019 Effective dating
-- ADR-0020 In-flight config binding
-- ADR-0021 Integration authority/staleness
-- ADR-0022 Money/rounding/calculation order
-- ADR-0023 Numbering/concurrency/fiscal semantics
+Status:
 
-Review B added a hard dependency on deterministic ADR-0022 policy use, but did not resolve its physical architecture.
+`PROVISIONAL_DIRECTION_SET / PRIMARY_FALSIFIABLE / IMPLEMENTATION_FORM_OPEN`
+
+Applies to:
+- ADR-0003 Requirement-authority/structural-root direction;
+- ADR-0008 Workflow generality — bounded built-in V1 controls, no arbitrary BPM;
+- ADR-0013 Event-derived status;
+- ADR-0014 Deep provenance for load-bearing events;
+- ADR-0019 Effective dating/version binding;
+- ADR-0021 OWN/MIRROR/REFERENCE integration authority model.
+
+Other structural ADRs remain open, including ADR-0004, ADR-0005, ADR-0007, ADR-0010, ADR-0011, ADR-0012, ADR-0015, ADR-0018, ADR-0020, ADR-0022 and ADR-0023.
+
+ADR-0022 now has a hard dependency on deterministic rounding wherever tolerance/conversion participates in conservation.
+
+---
+
+## Primary falsification register
+
+Canonical artifact:
+
+`04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_PRIMARY_FALSIFICATION_TARGETS_V0_1.md`
+
+Ten targets must be challenged after blind/verbatim capture:
+1. prior requirement authority;
+2. allocation before commitment;
+3. award distinct from commitment;
+4. supplier claim / buyer assessment / certification separation;
+5. composable fulfillment;
+6. remeasurement conservation;
+7. buyer recovery separation;
+8. commercial truth with external accounting authority;
+9. rectification procurement reconciliation;
+10. one active authorized basis per exclusive scope.
+
+A target may result in SUPPORTED_PRIMARY, CONTRADICTED_PRIMARY, MIXED/VARIANT, NOT TESTED or INSUFFICIENT EVIDENCE.
+
+Do not force mixed primary evidence into PASS/FAIL.
 
 ---
 
 ## P1.2 closure requirements still unmet
 
 Before formal P1.2 close:
-- Review C PASS/remediation;
 - 3–5 workflow reconstructions;
 - at least 3 independent contractor workflows;
 - at least 1 UAE independent case;
-- at least 1 outside founder prior pattern;
+- at least 1 case outside founder prior pattern;
 - at least 1 original contractor bid-leveling/comparison artifact decomposed;
 - supplier-side friction evidence;
 - contradiction/variant/unmatched reconciliation;
-- primary corroboration/contradiction status.
+- primary corroboration/contradiction status against the falsification register.
 
-Architecture progress is not commercial validation.
+Architecture critique is complete; architecture correspondence to reality is **not yet proven**.
 
 ## Next action
 
-Run **external Review C v0.2**.
+Begin **primary challenge/closure** using blind contractor workflow/artifact capture.
 
-Do not start structural freeze or product build from Review A/B PASS alone.
+Do not begin P1.3 structural/competitor reconstruction or product build until P1.2 primary-evidence gate closes.
