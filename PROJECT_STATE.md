@@ -16,9 +16,10 @@
 - Review B — P07/P08 commercial core/accounting seam: **PASS**
 - Review C — P09–P12 + full graph: **PASS**
 - External architecture critique: **COMPLETE**
-- Current mode: **PRIMARY CHALLENGE / P1.2 CLOSURE**
+- Public first-party challenge: **COMPLETE v0.1 / MAJOR P1.2 GATE PROGRESS**
+- Current mode: **PRIMARY CHALLENGE / P1.2 CLOSURE — TARGETED REMAINING EVIDENCE**
 - Process invention: **PAUSED** unless primary evidence proves a missing lifecycle
-- P1.2 formal close: **LOCKED pending primary-evidence gate**
+- P1.2 formal close: **LOCKED pending authentic completed contractor bid-leveling artifact + final reconciliation of remaining primary-unobserved assumptions**
 - P1.3 formal competitor reconstruction: **LOCKED pending P1.2 close**
 - Product code: **NOT STARTED**
 - Phase 2/3 build: **LOCKED**
@@ -35,7 +36,9 @@ Authority order:
 5. SECONDARY_REFERENCE — PROFESSIONAL PRACTICE
 6. INTERNAL_REASONING / HYPOTHESIS
 
-Independent primary cases must be captured verbatim before mapping to candidate architecture.
+Public availability does not automatically demote contractor-origin evidence. Public contractor manuals, procedures, audits, role descriptions and contractual artifacts are classified by origin/directness, with generic software/market commentary remaining secondary.
+
+Independent primary cases must be captured in source terminology before mapping to candidate architecture.
 
 A genuine primary contradiction may reopen any Review A/B/C finding.
 
@@ -201,7 +204,7 @@ Canonical artifact:
 
 `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_PRIMARY_FALSIFICATION_TARGETS_V0_1.md`
 
-Ten targets must be challenged after blind/verbatim capture:
+Ten targets must be challenged after source/verbatim capture:
 1. prior requirement authority;
 2. allocation before commitment;
 3. award distinct from commitment;
@@ -219,22 +222,106 @@ Do not force mixed primary evidence into PASS/FAIL.
 
 ---
 
-## P1.2 closure requirements still unmet
+## Public primary challenge v0.1
 
-Before formal P1.2 close:
-- 3–5 workflow reconstructions;
-- at least 3 independent contractor workflows;
-- at least 1 UAE independent case;
-- at least 1 case outside founder prior pattern;
-- at least 1 original contractor bid-leveling/comparison artifact decomposed;
-- supplier-side friction evidence;
-- contradiction/variant/unmatched reconciliation;
-- primary corroboration/contradiction status against the falsification register.
+Artifacts:
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/public_primary_challenge/P1_2_PUBLIC_PRIMARY_CHALLENGE_V0_1.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/public_primary_challenge/P1_2_FT_PUBLIC_EVIDENCE_MATRIX_V0_1.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/public_primary_challenge/P1_2_PUBLIC_CHALLENGE_GATE_VERDICT_V0_1.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/public_primary_challenge/P1_2_PUBLIC_ROLE_ARTIFACT_MAP_V0_1.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/registers/public_primary_source_register_v0_1.csv`
 
-Architecture critique is complete; architecture correspondence to reality is **not yet proven**.
+### Contractor workflow cases reconstructed
+
+1. **Khansaheb Civil Engineering LLC — UAE**: tender/estimation + site requisition → LPO → delivery note → GRN → Accounts invoice processing; subcontract/material-submittal evidence.
+2. **ASGC — UAE**: vendor RFQ notification → quotation header/lines/evaluation criteria/documents → explicit quotation submission; supplier-added quote items observed.
+3. **Bechtel — global EPC**: Engineering Material Requisition → bidder list/prequalification → bid request → Q&A → commercial/technical evaluation → Commercial Bid Summary → recommendation/approval → PO/subcontract → changes/expediting/closeout.
+4. **Fluor — global EPC**: pre-award/RFP → proposal → commercial + technical evaluation → recommendation/decision → contract finalization → performance/change/invoice/claims administration → closeout.
+5. **Larsen & Toubro / NPL — India EPC/industrial**: RFQ → initial offer → negotiation → final offer → comparative statement → L1/commercial terms/tax → PO.
+
+Additional stress evidence:
+- Skanska subcontract valuation/invoicing mechanisms;
+- ALEC UAE prequalification, technical approval, acceptance, replacement/recovery terms;
+- Bechtel supplier backcharge/corrective-work evidence.
+
+Supplier-side friction evidence:
+- Qotera UAE operational evidence;
+- ASGC supplier portal behavior;
+- Rabitbuild/Inframat used only as market corroboration.
+
+### P1.2 gates closed by public challenge
+
+- **3–5 independent workflow reconstructions: CLOSED FOR EVIDENCE QUANTITY — 5 cases**;
+- **at least 3 independent contractor workflows: CLOSED**;
+- **at least 1 beachhead/UAE case: CLOSED**;
+- **at least 1 case outside founder prior pattern: CLOSED**;
+- **supplier-side friction evidence: CLOSED**;
+- **variant/workaround/unmatched reconciliation: CLOSED FOR PUBLIC SPRINT**;
+- **named role + artifact for every step in reconstructed workflows: CLOSED FOR THE FIVE PUBLIC RECONSTRUCTIONS**;
+- **FT-01–FT-10 classification exercise: COMPLETE**.
+
+### FT public evidence status
+
+- `SUPPORTED_PRIMARY_PUBLIC`: **FT-01, FT-03, FT-05, FT-07, FT-08**;
+- `MIXED_VARIANT_PUBLIC`: **FT-04**;
+- `PRIMARY_UNOBSERVED_PUBLIC`: **FT-02, FT-09, FT-10**;
+- `INSUFFICIENT_PUBLIC_EVIDENCE`: **FT-06**.
+
+No `CONTRADICTED_PRIMARY` finding was discovered in the public sprint.
+
+### Remaining hard gate
+
+**P12-PRI-01 — completed authentic contractor bid-leveling/comparison artifact** remains OPEN.
+
+Public evidence found:
+- Khansaheb audit verifies a real `Commercial Summary T75` and Bid Settlement presentation, but does not expose the completed comparison rows;
+- Bechtel first-party roles repeatedly identify the `Commercial Bid Summary`, but no authentic completed internal sheet was publicly available;
+- L&T/NPL publishes an original contractor comparative-statement procedure specifying initial/final offers, no-quote, tax, ranking/L1 and PO basis, but it is a process specification rather than a completed transaction artifact;
+- public owner bid tabs, generic templates and unverified document-sharing uploads were rejected for this gate.
+
+Therefore the roadmap requirement **“at least 1 real bid-leveling artifact decomposed” is not closed**.
+
+### Remaining primary-unobserved architecture risks
+
+These are not silently treated as supported:
+- FT-02 — allocation before commitment;
+- FT-06 — remeasurement conservation against real scope/cap authority;
+- FT-09 — rectification procurement capacity restoration vs additional authorization;
+- FT-10 — one active authority per exclusive scope.
+
+FT-04 is supported as a real distinction family but remains `MIXED_VARIANT_PUBLIC` on exact artifact/lifecycle shape.
+
+---
+
+## P1.2 closure status after public challenge
+
+Architecture correspondence to reality is now materially better supported, but **P1.2 remains OPEN**.
+
+### Closed
+
+- architecture hostile reviews A/B/C;
+- workflow count/diversity;
+- independent contractor count;
+- UAE/beachhead case;
+- outside-founder-pattern case;
+- role/artifact mapping for reconstructed workflows;
+- supplier-side friction;
+- public variants/unmatched observations;
+- explicit FT-01–FT-10 evidence classification.
+
+### Still required
+
+1. **One authentic completed contractor bid-leveling/comparison artifact with real bidder rows, decomposed under P1.2 evidence rules.**
+2. Targeted primary evidence should challenge FT-02/FT-06/FT-09/FT-10 rather than running broad generic interviews. These may ultimately remain `PRIMARY_UNOBSERVED` only if the P1.2 close explicitly accepts the residual uncertainty and demotes the affected assumptions accordingly.
+3. Final P1.2 reconciliation must classify all carried hypotheses under the roadmap v1.3 primary-corroboration taxonomy and issue the formal P1.2 verdict.
 
 ## Next action
 
-Begin **primary challenge/closure** using blind contractor workflow/artifact capture.
+Do **not** repeat broad workflow research.
 
-Do not begin P1.3 structural/competitor reconstruction or product build until P1.2 primary-evidence gate closes.
+Highest-value next evidence is:
+
+- one completed contractor commercial comparison/bid tab artifact;
+- preferably bundled with a QS/commercial subcontract case that also exposes remeasurement/claim-assessment-certification and rectification/parallel-scope controls.
+
+P1.3 remains locked until the P1.2 gate is formally closed.
