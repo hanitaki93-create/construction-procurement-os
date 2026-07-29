@@ -222,7 +222,7 @@ No new structural issue found.
 
 ### PASS_WITH_WATCH count
 
-6:
+7:
 - GT-01;
 - GT-02;
 - GT-03;
@@ -230,8 +230,6 @@ No new structural issue found.
 - GT-08;
 - GT-09;
 - GT-10.
-
-Note: this is seven watches; no significance is attached to count beyond tracking.
 
 ### PASS_PROVISIONAL
 
