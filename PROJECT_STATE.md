@@ -11,8 +11,9 @@
 - P1.0 final gate: **CP-05 PASS / CLOSED**
 - P1.1 final gate: **PASS — FROZEN / P1.2 UNLOCKED**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
-- P1.2 state: **SOURCING SUBGRAPH P01–P06 COMPLETE / READY FOR HOSTILE CRITIQUE / PRIMARY AUDIT LATER**
-- P1.3 formal competitor reconstruction: **LOCKED pending P1.2 gate**
+- P1.2 state: **SOURCING P01–P06 HOSTILE REVIEW FAIL / B1–B4 REMEDIATED / NARROW RE-REVIEW REQUIRED**
+- P07 Commitment / Commercial Core: **BLOCKED pending sourcing re-review PASS**
+- P1.3 formal competitor reconstruction: **LOCKED pending final P1.2 gate**
 - Product code: NOT STARTED
 - Phase 2 build decomposition: LOCKED
 - Phase 3 construction: LOCKED
@@ -21,14 +22,9 @@
 
 Missing independent primary evidence is **not a day-to-day progress blocker**.
 
-The project may continue provisionally using:
-- logical/domain reasoning;
-- official top-tier competitor documentation;
-- official training/product-tour/video material;
-- professional best-practice guidance;
-- high-quality public implementation/case material.
+The project may continue provisionally using logical/domain reasoning, official top-tier competitor documentation/training/product tours, professional best practice and high-quality public implementation material.
 
-Such findings are classified `SECONDARY_REFERENCE` and remain auditable/reversible later.
+Such findings are `SECONDARY_REFERENCE` and remain reversible.
 
 Authority order:
 1. PRIMARY_CONTRACTOR_EVIDENCE
@@ -40,7 +36,19 @@ Authority order:
 
 Higher-authority evidence may overturn lower-authority conclusions.
 
-Secondary references may guide provisional specification and define strong later tests. They cannot satisfy P1.2 independent-workflow counts, original bid-leveling artifact requirements, or silently close PRIMARY_REQUIRED ADRs.
+Secondary reference work cannot satisfy the independent-workflow gate, original bid-leveling artifact gate, or close evidence-dependent ADRs by itself.
+
+## Hypothesis framing control
+
+P01–P06 are **falsifiable candidate decompositions**, not accepted entity architecture or validated contractor workflow.
+
+Candidate labels may later collapse into events, projections, value objects, relationship records or disappear.
+
+Independent primary cases must be captured verbatim before mapping to candidate concepts.
+
+`ADR-0003 Procurement structural root` remains `PROPOSED / PENDING`.
+
+`ADR-0004 PO and Subcontract type model` remains `PROPOSED / PENDING`.
 
 ## Current authoritative artifacts
 
@@ -49,15 +57,18 @@ Secondary references may guide provisional specification and define strong later
 | Phase 1 Roadmap v1.3 | FROZEN / GOVERNING | `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md` |
 | P1.1 Frozen Baseline v1.0 | FROZEN | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_FROZEN_BASELINE_V1_0.md` |
 | P1.2 Workplan v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_WORKPLAN_V0_1.md` |
-| CAL-001 Perflex founder calibration | PARTIAL / CALIBRATION | `04_phases/phase_1/P1.2_primary_workflow_evidence/cases/CAL_001_PERFLEX_FOUNDER_CALIBRATION_V0_1.md` |
+| CAL-001 founder calibration | PARTIAL / CALIBRATION | `04_phases/phase_1/P1.2_primary_workflow_evidence/cases/CAL_001_PERFLEX_FOUNDER_CALIBRATION_V0_1.md` |
 | Secondary Reference Policy v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SECONDARY_REFERENCE_POLICY_V0_1.md` |
 | Best-Practice Reference Baseline v0.1 | SECONDARY / PROVISIONAL | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_BEST_PRACTICE_REFERENCE_V0_1.md` |
-| P01–P06 detailed process artifacts | SECONDARY / PROVISIONAL | `04_phases/phase_1/P1.2_primary_workflow_evidence/processes/` |
-| Sourcing Subgraph Checkpoint v0.1 | READY FOR HOSTILE CRITIQUE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_1.md` |
-| Sourcing Hostile Critique Prompt v0.1 | READY | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_HOSTILE_CRITIQUE_PROMPT_V0_1.md` |
+| P01–P06 detailed process artifacts v0.1 | HISTORICAL PROVISIONAL INPUT | `04_phases/phase_1/P1.2_primary_workflow_evidence/processes/` |
+| Sourcing Subgraph Checkpoint v0.1 | SUPERSEDED FOR CURRENT INTEGRATION | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_1.md` |
+| Sourcing Critique Remediation v0.1 | BINDING PROVISIONAL DELTA | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_CRITIQUE_REMEDIATION_V0_1.md` |
+| Sourcing Subgraph Checkpoint v0.2 | CURRENT / READY FOR RE-REVIEW | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_2.md` |
 | Secondary Reference Sources | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/registers/secondary_reference_sources.csv` |
 
-## P1.1 frozen baseline
+Where v0.1 process wording conflicts with the remediation artifact/checkpoint v0.2, the newer remediation/checkpoint controls current provisional interpretation until later consolidation.
+
+## Frozen P1.1 boundary
 
 Frozen scope remains:
 - 32 SPINE
@@ -70,7 +81,7 @@ Frozen closed-graph hypothesis:
 
 `Tenant/Company → Legal Entity + Contracting Posture → Project → Budget/Cost Structure → Demand {MR | Package} → Vendor + Minimum Compliance State → Tender/RFQ → Invite/External Task Access → {Respond | Decline/No-Bid} → Quote/Revision → Canonical Bid-Line Structure → Comparison → Governed Award + Justification → Commitment → [Controlled Change] → Valuation/Progress Event → Retention/Advance/Recoupment Positions → Derived Commercial Balance → Evidence/Audit → Reconciliation/External Interface`
 
-No P1.1 reopening is proposed before hostile critique.
+The hostile review concluded **P1.1 REOPEN = NO**.
 
 ## P1.2 primary calibration
 
@@ -80,144 +91,122 @@ CAL-001 supports a real sourcing-to-commitment skeleton:
 
 CAL-001 remains founder calibration and counts as **0 independent workflows**.
 
-Final P1.2 closure still requires independent workflows and real primary artifacts later.
+## P01–P06 hostile review result
 
-## P1.2 detailed process work completed
+External hostile review returned:
 
-### P01 — Demand / Package Initiation + Cost Attribution
+`FAIL — remediate blockers before P07`
 
-Provisional findings carried forward:
-- `Demand`, `DemandLine`, `ProcurementPackage` and allocation relationship remain distinct;
-- MR-led and package-led procurement both valid;
-- free-form/non-stock procurement valid;
-- cost attribution, budget context and budget reservation are separate concepts;
-- partial sourcing/conversion is first-class;
-- commitment must have valid financial attribution or governed exception;
-- downstream status should derive from allocations/events rather than parallel tracker truth.
+Blockers:
+1. supplier-confirmed negotiated/agreed basis had no singular truth owner and buyer-ingested submissions lacked explicit provenance separation;
+2. award recommendation risked conflating internal evaluated amount with supplier-agreed contractable amount;
+3. `DemandAllocation` + `AwardAllocation` + future commitment allocation created competing quantity/balance writers;
+4. frozen comparison did not explicitly freeze applied FX/tax transformation basis.
 
-### P02 — Vendor Eligibility + Bidder Selection
+Additional required correction:
+- canonical lineage implicitly routed every sourcing path through `ProcurementPackage`, partially closing ADR-0003 in practice.
 
-Key finding:
+No P1.1 reopening was required.
 
-**qualification ≠ contextual eligibility ≠ bidder selection ≠ invitation.**
+## Remediation now applied
 
-A supplier may be generally qualified but ineligible for one package, eligible but not selected, or selected under an explicit exception.
+### Supplier commercial basis
 
-### P03 — Tender Package + Release Control
+Every supplier-confirmed economic change that may become contractual must materialize as an immutable `BidSubmission` revision.
 
-Key finding:
-- mutable package planning truth is not supplier-facing release truth;
-- a `TenderEvent` owns the solicitation attempt/round;
-- a released tender version is immutable evidence;
-- supplier-facing post-release change requires addendum/new controlled release.
+Clarification/thread/email is evidence, not the authoritative commercial basis.
 
-### P04 — External Tender Participation
+Submission provenance separates:
+- commercial origin = supplier;
+- capture mode = supplier direct or buyer on behalf;
+- source artifact;
+- supplier confirmation identity where available;
+- buyer ingestion actor where applicable;
+- receipt/capture timestamps and review status.
 
-Key finding:
-- external participation remains bounded/task-focused;
-- invitation/access, will-bid, decline/no-bid, non-response and submission are distinct facts;
-- email/PDF response must remain possible through controlled on-behalf ingestion with immutable source provenance;
-- broad supplier portal membership is not required.
+### Award basis
 
-### P05 — Bid Normalization / Leveling / Comparison
+`AwardRecommendation` and `AwardDecision` now carry:
+- `evaluated_basis` — internal comparison-derived decision basis;
+- `contractable_agreed_basis` — supplier-confirmed basis authorized for contractual conversion.
 
-Key truth separation:
+P07 may consume only the approved contractable basis.
 
-`supplier-origin truth → normalized mapping → internal evaluation adjustment → supplier-confirmed/agreed commercial basis`
+### Allocation authority
 
-Internal leveling may explain the decision but may not silently alter supplier-origin commercial truth.
+`DemandAllocation` and `AwardAllocation` are superseded as separate authorities by one canonical `RequirementAllocation` lineage at requirement grain.
 
-A frozen comparison snapshot is the exact decision basis passed to award governance.
+Sourcing, award and commitment are progression/bindings on the same lineage.
 
-### P06 — Recommendation / DOA Approval / Governed Award
+Split creates child allocation leaves and closes the parent from active-balance counting.
 
-Key finding:
+`sum(active leaf allocations) <= authorized basis` unless controlled overbuy/change exists.
 
-`working preference ≠ formal recommendation ≠ approval ≠ award decision ≠ commitment`
+P07 must bind commitment to existing allocation leaf/leaves instead of creating another allocation ledger.
 
-Award governance preserves:
-- exact bid/agreed basis;
-- exact comparison snapshot;
-- recommendation version;
-- effective DOA/policy version;
-- actual approvers/delegation;
-- exceptions/conditions;
-- split/partial allocation;
-- staleness/reconfirmation before commitment.
+### FX/tax reproducibility
 
-Approved award may represent pending/intended exposure but does not become authoritative committed cost until P07.
+`BidSubmission` preserves source currency/tax posture.
 
-## Integrated sourcing subgraph P01–P06
+`ComparisonSnapshot` freezes applied FX rate, source, fixing date/time/policy, tax-normalization basis and rounding/calculation reference required to reproduce historical rankings.
 
-Current provisional lineage:
+### ADR-0003 neutrality
 
-`DemandLine`
-`→ DemandAllocation`
-`→ ProcurementPackage`
-`→ supplier qualification / contextual eligibility / bidder selection`
-`→ TenderEvent`
-`→ immutable TenderRelease vN + Addenda`
-`→ invitation / bounded external access`
-`→ {will bid | decline/no-bid | undeclared/non-response}`
-`→ BidSubmission v1..n`
-`→ canonical mapping + normalization + internal adjustments`
-`→ frozen ComparisonSnapshot`
-`→ AwardRecommendation vN`
-`→ effective DOA ApprovalCase`
-`→ AwardDecision + AwardAllocation`
-`→ P07 commitment handoff`
+`ProcurementPackage` is optional.
 
-Cross-process invariants:
-- immutable lineage;
-- no destructive revision;
-- no silent allocation inflation;
-- contextual vendor status;
-- immutable market release;
-- decline ≠ non-response;
-- supplier truth ≠ leveled truth;
-- negotiated economics require supplier/agreement evidence;
-- frozen award basis;
-- award ≠ commitment;
-- effective-dated DOA;
-- compliance re-check at later commercial gates;
-- bounded external participation;
-- AI cannot silently create commercial truth;
-- blind-bid/confidentiality enforced beneath UI.
+Valid candidate routes include:
 
-## Internal integration self-audit
+`DemandLine → RequirementAllocation → TenderEvent`
 
-P01–P06 passed internal integration sufficiently to reach hostile critique.
+and
 
-Known attack points carried into critique:
-1. object inflation — durable objects vs events/projections/value objects;
-2. accidental generalized BPM/workflow-engine gravity;
-3. truth ownership overlap across package/tender/release/bid/comparison/award;
-4. version/provenance implementation burden;
-5. low-friction supplier UX vs security/provenance;
-6. internal leveling leaking into contractual commercial basis;
-7. legal semantics of soft/provisional award;
-8. split-award concurrency/double-allocation risk;
-9. email/offline ingestion attribution;
-10. irreversible omissions before P07.
+`DemandLine → RequirementAllocation → ProcurementPackage → TenderEvent`
 
-No obvious blocker was accepted by internal self-audit; this is deliberately not a PASS verdict.
+and package-led planning before detailed demand:
 
-## Critique checkpoint
+`Estimate / Procurement Plan / Long-lead Trigger → ProcurementPackage → TenderEvent`
 
-**P07 Commitment / Change / Valuation must not start until the P01–P06 hostile critique returns PASS or blockers are remediated.**
+ADR-0003 remains open.
 
-Canonical prompt:
-`04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_HOSTILE_CRITIQUE_PROMPT_V0_1.md`
+### Object simplification
 
-Critique must return:
-- BLOCKERS;
-- NON-BLOCKING WATCH ITEMS;
-- P1.1 REOPEN?;
-- exact PASS/FAIL verdict.
+Current provisional simplifications:
+- `BidderCandidate` + `BidderSelection` + invitation lifecycle → `TenderParticipant` at tender×vendor grain, while preserving distinct dated facts/transitions;
+- `EligibilityEvaluation` → dated event/value on TenderParticipant by default;
+- `PreferredBidderSelection` durable object removed; working preference becomes comparison annotation/event;
+- `ExternalAccessGrant` remains separate security capability.
 
-## P1.2 final closure — later
+### Approval history
 
-Before P1.2 can formally close and P1.3 deep competitor reconstruction opens, project still requires:
+Approval reproducibility must preserve policy version, actual approver identity, resolved role/role-assignment context and delegation evidence.
+
+Standard V1 approval configuration should have a small default core; additional dimensions remain additive.
+
+### Bid reveal
+
+Blind-bid/open/controlled-reveal mode must have a deterministic reveal condition and auditable actual reveal time/actor.
+
+## Current integrated sourcing candidate lineage
+
+Demand-led direct:
+
+`DemandLine → RequirementAllocation → TenderEvent`
+
+Demand-led packaged:
+
+`DemandLine → RequirementAllocation → ProcurementPackage → TenderEvent`
+
+Package-led planning:
+
+`Estimate / Procurement Plan / Long-lead Trigger → ProcurementPackage → TenderEvent`
+
+Then:
+
+`TenderEvent → immutable TenderRelease vN/Addenda → TenderParticipant → bounded access → BidSubmission v1..n → normalization/internal evaluation → frozen ComparisonSnapshot → AwardRecommendation {evaluated_basis + contractable_agreed_basis} → effective DOA ApprovalCase → AwardDecision → same RequirementAllocation lineage → P07`
+
+## P1.2 final closure — still later
+
+Before formal P1.2 close and P1.3 deep competitor reconstruction opens, project still requires:
 - 3–5 workflow reconstructions;
 - at least 3 independent contractor workflows;
 - at least 1 UAE independent case;
@@ -231,4 +220,8 @@ These are audit/closure requirements, not day-to-day progress blockers.
 
 ## Next action
 
-Run the **P1.2 sourcing hostile critique** against P01–P06. If PASS, proceed to P07 Commitment / Commercial Core. If FAIL, remediate only blocker-level issues before recheck.
+Run a **narrow hostile re-review** of the sourcing remediation/checkpoint v0.2.
+
+P07 remains blocked until that review returns:
+
+`PASS — sourcing subgraph coherent; proceed to P07`
