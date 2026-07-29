@@ -12,11 +12,11 @@
 - P1.1: **PASS / FROZEN**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 - P01–P12 provisional workflow set: **COMPLETE-ENOUGH / NOT FROZEN**
-- Sourcing P01–P06: **REVIEW A PASS**
-- P07/P08 commercial core: **REVIEW B FAIL → BL-03–BL-06 + W01–W04 REMEDIATED / NARROW RECHECK READY**
-- P09–P12 + complete graph: **REVIEW C PREPARED / BLOCKED pending Review B PASS**
+- P01–P06 sourcing: **REVIEW A PASS**
+- P07/P08 commercial core/accounting seam: **REVIEW B PASS**
+- P09–P12 + complete graph: **REVIEW C ACTIVE / PACKET v0.2 READY**
 - Process invention: **PAUSED** unless evidence/critique proves a real missing lifecycle
-- P1.2 formal close: **LOCKED pending primary-evidence gate + Review B/C PASS**
+- P1.2 formal close: **LOCKED pending Review C + primary-evidence gate**
 - P1.3 formal competitor reconstruction: **LOCKED pending P1.2 gate**
 - Product code: **NOT STARTED**
 - Phase 2/3 build: **LOCKED**
@@ -43,183 +43,125 @@ External verdict:
 
 `PASS — sourcing subgraph coherent; proceed to downstream external Review B`
 
-Binding sourcing corrections include:
-- supplier truth / evaluated basis / contractable basis separation;
-- single RequirementAllocation lineage;
-- hard scope conservation separate from value governance;
+Canonical artifacts:
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_REVIEW_A_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_5.md`
+
+Closed sourcing issues include:
+- supplier truth / evaluation / contractable basis separation;
+- one RequirementAllocation lineage;
+- hard scope conservation vs value governance;
 - DemandLine / PlannedRequirement common authorized-basis contract;
 - scope-level uniqueness;
-- versioned downward reconciliation;
-- controlled UOM conversion;
-- CR-01: while a reduction target is unresolved, no new allocation consumption or commitment binding may use the prior basis where inconsistent with that target;
-- shared/joint responsibility requires governed authorization/evidence.
+- controlled UOM;
+- downward reconciliation;
+- CR-01 blocking conflicting new allocation consumption and commitment binding during unresolved reduction;
+- package-root/ADR anchoring concern.
 
-ADR-0003 and ADR-0004 remain open. P1.1 reopen = NO.
-
----
-
-## Review B — external FAIL and current remediation
-
-External Review B returned:
-
-`FAIL — remediate blocker(s) before Review C`
-
-### BL-03 — Framework / rate agreement / call-off
-
-Accepted.
-
-Current model separates:
-- `CommercialTermsAuthority` — rate/terms authority that normally creates no allocation consumption or committed cost;
-- effective call-off/release/order obligation — fresh commitment baseline that binds RequirementAllocation scope.
-
-A guaranteed minimum in a framework is explicit committed obligation exposure, not hidden inside non-consuming rate authority.
-
-ADR-0004 must later decide physical PO/Subcontract/Framework/CallOff structure.
-
-### BL-04 — firm-quantity assumption
-
-Diagnosis accepted; Claude's proposed taxonomy modified.
-
-Two orthogonal dimensions now exist.
-
-**Scope/quantity basis:**
-- `FIRM_QUANTITY`
-- `REMEASURABLE_QUANTITY`
-- `NON_QUANTIFIED_SCOPE`
-
-**Valuation basis:**
-- `FIRM_LUMP_SUM`
-- `UNIT_RATE_REMEASUREMENT`
-- `PROVISIONAL_SUM_ALLOWANCE`
-- `DAYWORK`
-- `MILESTONE`
-- `RATE_BASED_SERVICE`
-
-`PROVISIONAL_SUM` is not treated as a quantity-basis type.
-
-Estimated BOQ quantity under remeasurement is not automatically a hard procurement-authorization ceiling. Hard Review A conservation must bind to genuine scope partition/cap.
-
-### BL-05 — instructed but commercially unagreed work
-
-Accepted with generalized cure.
-
-`AuthorizedWorkInstruction` may create work/scope authority before final supplier price is agreed.
-
-- if scope genuinely expands, valid instruction/governance establishes effective authorized-basis expansion before added consumption;
-- if work remains inside already-authorized remeasurable scope, no fake basis expansion is created;
-- provisional/interim certification is allowed only under a named contractual valuation authority;
-- final supplier agreement/change reconciles prior provisional valuation non-destructively.
-
-Instruction authority ≠ final supplier-agreed price.
-
-### BL-06 — fulfillment bifurcation
-
-Accepted.
-
-P07C/P07D are fulfillment mechanisms, not mutually exclusive commitment types.
-
-Candidate mechanisms at line/SOV/milestone/scope-segment grain:
-- `GOODS_RECEIPT`
-- `PROGRESS_VALUATION`
-- `MILESTONE_CERTIFICATION`
-- `RATE_BASED_SERVICE`
-- `DELIVERABLE_ACCEPTANCE`
-
-One commitment may combine mechanisms. Cross-mechanism economic value must not be earned twice.
-
-### W01 — over-receipt tolerance
-
-Accepted with refinement.
-
-Authorized quantitative basis may preserve:
-- nominal quantity;
-- governed tolerance rule;
-- derived hard authorized quantity ceiling.
-
-Tolerance is pre-authorized scope, not a receipt-time override.
-
-`accepted cumulative <= commitment permitted <= authorized requirement ceiling`
-
-Tolerance consumed above nominal remains visible separately.
-
-### W03 — integration rejection
-
-Field authority remains `OWN / MIRROR / REFERENCE`.
-
-Error/rejection disposition is separate:
-- `DATA_DEFECT`
-- `TRANSPORT_OR_MAPPING_DEFECT`
-- `TEMPORAL_RESTRICTION`
-- `EXTERNAL_AUTHORITY_RETURN`
-
-Transport/mapping defects cannot mutate commercial truth merely to make sync pass.
-
-### W04 — correction semantics
-
-Shared invariants, not one universal reversal primitive.
-
-Candidate modes:
-- non-economic amendment;
-- reverse-and-replace;
-- forward adjustment;
-- physical reversal;
-- reclassification;
-- non-domain integration correction.
-
-Retention, advance, allowance remaining and integration status remain derived/event-backed positions, never editable competing ledgers.
+Review A regression after Review B: **NO**.
 
 ---
 
-## Current binding Review B artifacts
+## Review B — commercial core PASS
 
-- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_B_CRITIQUE_REMEDIATION_V0_1.md`
-- `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_P07_P08_COMMERCIAL_CORE_CHECKPOINT_V0_2.md`
-- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_B_REMEDIATION_SANITY_AUDIT_V0_1.md`
-- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_B_NARROW_RECHECK_PROMPT_V0_1.md`
+External verdict:
 
-Historical P07A–P07D/P08 v0.1 artifacts remain evidence/input; where they conflict with the Review B remediation + checkpoint v0.2, the remediation/checkpoint controls current provisional interpretation.
+`PASS — P07/P08 coherent; proceed to Review C`
+
+Canonical artifacts:
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_B_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_P07_P08_COMMERCIAL_CORE_CHECKPOINT_V0_4.md`
+
+Review B closed BL-03 through BL-08 and W01 through W04.
+
+### Current binding commercial-core semantics
+
+- `CommercialTermsAuthority` ≠ scope-consuming committed obligation.
+- Each call-off/release/order forms its own effective obligation and binds backed RequirementAllocation scope.
+- Scope-backed guaranteed minimum reserves capacity on the **same** RequirementAllocation lineage; call-offs draw down reservation rather than consume twice.
+- Monetary minimum remains derived commercial exposure and does not fabricate physical procurement scope.
+- One framework may carry both scope-backed and monetary minimums; qualifying call-offs can draw down both relations independently.
+- Scope/quantity basis is orthogonal to valuation basis.
+- `REMEASURABLE_QUANTITY` always has hard conservation: genuine quantity/cap or mandatory `SCOPE_PARTITION_BASIS`.
+- Valid scope-adding `AuthorizedWorkInstruction` may itself be the effective basis-expansion source event where authority is sufficient; instruction ≠ final supplier price.
+- Fulfillment mechanisms are composable at scope/economic-component grain.
+- One economic component cannot be earned twice across receipt/progress/milestone mechanisms.
+- Quantity tolerance belongs to AuthorizedRequirementBasis, is deterministic/versioned, and obeys downward-reconciliation + CR-01.
+- Accounting authority remains field/event specific: `OWN / MIRROR / REFERENCE`.
+- Integration error disposition is separate: `DATA_DEFECT / TRANSPORT_OR_MAPPING_DEFECT / TEMPORAL_RESTRICTION / EXTERNAL_AUTHORITY_RETURN`.
+- Correction shares invariants but retains domain-specific modes rather than one generic reversal primitive.
+- Retention, advance, allowance remaining, framework reservation, monetary-minimum exposure and integration status remain event-backed/derived positions; no editable duplicate ledger.
+
+Second-ledger check: **CLEAN**.
+
+ADR-0004: **OPEN as intended**.
+
+P1.1 reopen: **NO**.
+
+### Review B non-blocking carry-forward
+
+1. Dual framework minimums must be allowed simultaneously.
+2. ADR-0022 rounding policy has a hard-invariant dependency because tolerance ceilings use it.
+3. P1.5 must define persisted `economic_component` matching grain for cross-fulfillment anti-double-counting.
+4. Primary evidence still must test framework/call-off, remeasurement, instructed work, fulfillment, valuation and ERP practices.
 
 ---
 
-## Internal Review B remediation sanity result
+## Complete provisional process set
 
-`FAIL_INTERNAL = 0`
+- **P01** Demand / planning / package / cost attribution / RequirementAllocation
+- **P02** Vendor qualification / contextual eligibility / bidder selection
+- **P03** Tender event / immutable release / addenda
+- **P04** External participation / intent / decline / bid submission/revision
+- **P05** Bid normalization / leveling / comparison
+- **P06** Recommendation / DOA / governed award
+- **P07A** Commitment formation / original effective baseline
+- **P07B** Controlled commitment change / variation / instruction
+- **P07C/P07D** Composable fulfillment / receipt / valuation / certification / retention / advance
+- **P08** Commercial position / accounting authority / ERP reconciliation
+- **P09** Cross-cutting deterministic control plane
+- **P10** Long-lead / procurement schedule / expediting
+- **P11** Commercial closeout / security / warranty
+- **P12** External technical/material approval dependency interface
 
-Affected tests passed provisionally for:
-- non-consuming framework + multiple call-offs;
-- remeasurement without fake variation;
-- firm quantity hard limit;
-- provisional-sum allowance;
-- daywork / instructed-unagreed work;
-- instruction inside existing remeasurable scope;
-- mixed supply/install fulfillment;
-- milestone consultancy;
-- governed over-receipt tolerance;
-- ERP mapping defect;
-- external authority return;
-- forward certification correction;
-- physical receipt reversal.
-
-Two non-blocking watches remain:
-1. guaranteed-minimum framework drawdown mechanics;
-2. exact cross-mechanism anti-double-counting grain for mixed fulfillment/stored materials.
-
-No new P13 process is justified.
+No new P13 process is justified unless evidence/critique proves a missing lifecycle.
 
 ---
 
-## Second-ledger guard
+## Review C — ACTIVE
+
+Canonical packet:
+
+`04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_REVIEW_C_CONTROLS_OVERLAYS_FULL_GRAPH_PACKET_V0_2.md`
+
+Review C attacks:
+- P09 BPM/workflow-engine creep;
+- P10 Primavera/master-schedule creep;
+- P11 banking/legal/warranty-platform creep;
+- P12 CDE/submittal-platform creep;
+- whole-graph object inflation;
+- second-XL subsystem risk;
+- missing core construction lifecycle;
+- first-live-tender adoption burden;
+- Review A/B regression;
+- open ADR anchoring;
+- whether blind primary evidence can still overturn the model.
+
+Review C must PASS/remediate before P1.2 moves to primary challenge/closure work.
+
+---
+
+## One-XL gravity guardrail
 
 P07 remains the intended single XL commercial gravity well.
 
-Reject expansion that creates:
-- full GL/AP/cash ledger;
-- full inventory/warehouse ERP;
-- generalized claims/legal platform;
-- second editable retention/advance/current-balance ledger;
-- mandatory deep ERP connector before first live tender.
-
-P08 field/event authority + reconciliation remains bounded support.
+Reject expansion that turns:
+- P08 into full accounting ERP/GL/AP/cash;
+- P09 into programmable BPM/low-code;
+- P10 into CPM/master scheduling;
+- P11 into banking/legal/insurance/warranty CRM;
+- P12 into full CDE/submittal platform;
+- P07 fulfillment into inventory/WMS.
 
 ---
 
@@ -243,37 +185,27 @@ P08 field/event authority + reconciliation remains bounded support.
 - ADR-0022 Money/rounding/calculation order
 - ADR-0023 Numbering/concurrency/fiscal semantics
 
-P1.1 reopen remains **NO**.
-
----
-
-## Review C
-
-Prepared but blocked until Review B narrow recheck returns:
-
-`PASS — P07/P08 coherent; proceed to Review C`
-
-Review C will attack P09–P12 + complete P01–P12 burden/completeness.
+Review B added a hard dependency on deterministic ADR-0022 policy use, but did not resolve its physical architecture.
 
 ---
 
 ## P1.2 closure requirements still unmet
 
 Before formal P1.2 close:
+- Review C PASS/remediation;
 - 3–5 workflow reconstructions;
 - at least 3 independent contractor workflows;
 - at least 1 UAE independent case;
 - at least 1 outside founder prior pattern;
-- at least 1 original contractor bid-leveling artifact decomposed;
+- at least 1 original contractor bid-leveling/comparison artifact decomposed;
 - supplier-side friction evidence;
 - contradiction/variant/unmatched reconciliation;
-- primary corroboration status;
-- Review B/C blockers resolved.
+- primary corroboration/contradiction status.
 
 Architecture progress is not commercial validation.
 
 ## Next action
 
-Run **Review B narrow recheck** using `P1_2_REVIEW_B_NARROW_RECHECK_PROMPT_V0_1.md` and the current remediation/checkpoint.
+Run **external Review C v0.2**.
 
-Do not proceed to Review C until external PASS.
+Do not start structural freeze or product build from Review A/B PASS alone.
