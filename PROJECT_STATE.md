@@ -11,8 +11,8 @@
 - P1.0 final gate: **CP-05 PASS / CLOSED**
 - P1.1 final gate: **PASS — FROZEN / P1.2 UNLOCKED**
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
-- P1.2 state: **SOURCING P01–P06 HOSTILE REVIEW FAIL / B1–B4 REMEDIATED / NARROW RE-REVIEW REQUIRED**
-- P07 Commitment / Commercial Core: **BLOCKED pending sourcing re-review PASS**
+- P1.2 sourcing state: **B1–B6 REMEDIATED / FINAL NARROW HOSTILE RE-REVIEW REQUIRED**
+- P07 Commitment / Commercial Core: **BLOCKED pending sourcing PASS**
 - P1.3 formal competitor reconstruction: **LOCKED pending final P1.2 gate**
 - Product code: NOT STARTED
 - Phase 2 build decomposition: LOCKED
@@ -20,11 +20,11 @@
 
 ## P1.2 operating rule
 
-Missing independent primary evidence is **not a day-to-day progress blocker**.
+Missing independent primary evidence is not a day-to-day progress blocker.
 
-The project may continue provisionally using logical/domain reasoning, official top-tier competitor documentation/training/product tours, professional best practice and high-quality public implementation material.
+Provisional architecture work may use logical/domain reasoning, official top-tier competitor documentation/training/product tours, professional best practice and high-quality public implementation material.
 
-Such findings are `SECONDARY_REFERENCE` and remain reversible.
+Such findings are `SECONDARY_REFERENCE` and reversible.
 
 Authority order:
 1. PRIMARY_CONTRACTOR_EVIDENCE
@@ -36,37 +36,32 @@ Authority order:
 
 Higher-authority evidence may overturn lower-authority conclusions.
 
-Secondary reference work cannot satisfy the independent-workflow gate, original bid-leveling artifact gate, or close evidence-dependent ADRs by itself.
+Secondary work cannot satisfy the independent-workflow gate, original bid-leveling artifact gate, or close evidence-dependent ADRs by itself.
 
 ## Hypothesis framing control
 
-P01–P06 are **falsifiable candidate decompositions**, not accepted entity architecture or validated contractor workflow.
+P01–P06 are falsifiable candidate decompositions, not accepted final entity architecture or validated contractor workflow.
 
 Candidate labels may later collapse into events, projections, value objects, relationship records or disappear.
 
 Independent primary cases must be captured verbatim before mapping to candidate concepts.
 
-`ADR-0003 Procurement structural root` remains `PROPOSED / PENDING`.
+- `ADR-0003 Procurement structural root` remains `PROPOSED / PENDING`.
+- `ADR-0004 PO and Subcontract type model` remains `PROPOSED / PENDING`.
 
-`ADR-0004 PO and Subcontract type model` remains `PROPOSED / PENDING`.
-
-## Current authoritative artifacts
+## Current authoritative P1.2 sourcing artifacts
 
 | Artifact | Status | Location |
 |---|---|---|
-| Phase 1 Roadmap v1.3 | FROZEN / GOVERNING | `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md` |
-| P1.1 Frozen Baseline v1.0 | FROZEN | `04_phases/phase_1/P1.1_thesis_beachhead_release_boundary/P1_1_FROZEN_BASELINE_V1_0.md` |
-| P1.2 Workplan v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_WORKPLAN_V0_1.md` |
-| CAL-001 founder calibration | PARTIAL / CALIBRATION | `04_phases/phase_1/P1.2_primary_workflow_evidence/cases/CAL_001_PERFLEX_FOUNDER_CALIBRATION_V0_1.md` |
-| Secondary Reference Policy v0.1 | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SECONDARY_REFERENCE_POLICY_V0_1.md` |
-| Best-Practice Reference Baseline v0.1 | SECONDARY / PROVISIONAL | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_BEST_PRACTICE_REFERENCE_V0_1.md` |
-| P01–P06 detailed process artifacts v0.1 | HISTORICAL PROVISIONAL INPUT | `04_phases/phase_1/P1.2_primary_workflow_evidence/processes/` |
-| Sourcing Subgraph Checkpoint v0.1 | SUPERSEDED FOR CURRENT INTEGRATION | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_1.md` |
-| Sourcing Critique Remediation v0.1 | BINDING PROVISIONAL DELTA | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_CRITIQUE_REMEDIATION_V0_1.md` |
-| Sourcing Subgraph Checkpoint v0.2 | CURRENT / READY FOR RE-REVIEW | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_2.md` |
-| Secondary Reference Sources | ACTIVE | `04_phases/phase_1/P1.2_primary_workflow_evidence/registers/secondary_reference_sources.csv` |
+| P01–P06 detailed v0.1 process artifacts | HISTORICAL PROVISIONAL INPUT | `04_phases/phase_1/P1.2_primary_workflow_evidence/processes/` |
+| Sourcing Checkpoint v0.1 | SUPERSEDED | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_1.md` |
+| Critique Remediation v0.1 | SUPERSEDED BY v0.2 FOR ALLOCATION SEMANTICS | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_CRITIQUE_REMEDIATION_V0_1.md` |
+| Sourcing Checkpoint v0.2 | SUPERSEDED BY v0.3 | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_2.md` |
+| Critique Remediation v0.2 | CURRENT BINDING PROVISIONAL DELTA | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_CRITIQUE_REMEDIATION_V0_2.md` |
+| Sourcing Checkpoint v0.3 | CURRENT / READY FOR FINAL RE-REVIEW | `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_SOURCING_SUBGRAPH_CHECKPOINT_V0_3.md` |
+| Final Narrow Recheck Prompt v0.1 | READY | `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_FINAL_RECHECK_PROMPT_V0_1.md` |
 
-Where v0.1 process wording conflicts with the remediation artifact/checkpoint v0.2, the newer remediation/checkpoint controls current provisional interpretation until later consolidation.
+Where historical process wording conflicts with current remediation/checkpoint, v0.2 remediation + v0.3 checkpoint control current provisional interpretation until later consolidation.
 
 ## Frozen P1.1 boundary
 
@@ -81,112 +76,87 @@ Frozen closed-graph hypothesis:
 
 `Tenant/Company → Legal Entity + Contracting Posture → Project → Budget/Cost Structure → Demand {MR | Package} → Vendor + Minimum Compliance State → Tender/RFQ → Invite/External Task Access → {Respond | Decline/No-Bid} → Quote/Revision → Canonical Bid-Line Structure → Comparison → Governed Award + Justification → Commitment → [Controlled Change] → Valuation/Progress Event → Retention/Advance/Recoupment Positions → Derived Commercial Balance → Evidence/Audit → Reconciliation/External Interface`
 
-The hostile review concluded **P1.1 REOPEN = NO**.
+Hostile review/reviews continue to return **P1.1 REOPEN = NO**.
 
 ## P1.2 primary calibration
 
-CAL-001 supports a real sourcing-to-commitment skeleton:
+CAL-001 supports the real skeleton:
 
 `look-ahead / lead-time coordination → requisition → RFQ/RFP → quotation → technical/commercial comparison → approval → {LPO/PO | subcontract} → delivery / external technical approval as applicable → GRN / downstream administration → Accounts handoff`
 
-CAL-001 remains founder calibration and counts as **0 independent workflows**.
+CAL-001 remains founder calibration and counts as 0 independent workflows.
 
-## P01–P06 hostile review result
+## Sourcing hostile-review history
 
-External hostile review returned:
-
-`FAIL — remediate blockers before P07`
+### Initial review — FAIL
 
 Blockers:
-1. supplier-confirmed negotiated/agreed basis had no singular truth owner and buyer-ingested submissions lacked explicit provenance separation;
-2. award recommendation risked conflating internal evaluated amount with supplier-agreed contractable amount;
-3. `DemandAllocation` + `AwardAllocation` + future commitment allocation created competing quantity/balance writers;
-4. frozen comparison did not explicitly freeze applied FX/tax transformation basis.
+1. B1 supplier-agreed basis ownership/provenance;
+2. B2 evaluated amount vs contractable amount;
+3. B3 competing allocation writers;
+4. B4 missing FX/tax snapshot freeze.
 
-Additional required correction:
-- canonical lineage implicitly routed every sourcing path through `ProcurementPackage`, partially closing ADR-0003 in practice.
+Additional correction: candidate lineage implicitly privileged `ProcurementPackage`, partly anchoring ADR-0003.
 
-No P1.1 reopening was required.
+### First remediation / re-review
 
-## Remediation now applied
+Claude re-review concluded:
+- B1 CLOSED;
+- B2 CLOSED;
+- B4 CLOSED;
+- B3 `RequirementAllocation` lineage cure ACCEPTED;
+- ADR-0003/ADR-0004 anchoring CLEAN;
+- P1.1 REOPEN = NO.
 
-### Supplier commercial basis
+New blockers introduced by the remediation:
+- B5 hard quantity/scope correctness was conflated with value/budget control;
+- B6 package-led planned procurement could reach tender without first entering the single allocation authority.
 
-Every supplier-confirmed economic change that may become contractual must materialize as an immutable `BidSubmission` revision.
+## Current B5/B6 remediation
 
-Clarification/thread/email is evidence, not the authoritative commercial basis.
+### B5 — allocation scope vs value separated
 
-Submission provenance separates:
-- commercial origin = supplier;
-- capture mode = supplier direct or buyer on behalf;
-- source artifact;
-- supplier confirmation identity where available;
-- buyer ingestion actor where applicable;
-- receipt/capture timestamps and review status.
+`RequirementAllocation` now owns requirement-scope consumption only.
 
-### Award basis
+Hard basis options:
+- `QUANTITY_BASIS`;
+- `SCOPE_PARTITION_BASIS`;
+- `HYBRID`.
 
-`AwardRecommendation` and `AwardDecision` now carry:
-- `evaluated_basis` — internal comparison-derived decision basis;
-- `contractable_agreed_basis` — supplier-confirmed basis authorized for contractual conversion.
+For measurable demand:
 
-P07 may consume only the approved contractable basis.
+`sum(active leaf allocated quantity) <= current authorized requirement quantity`
 
-### Allocation authority
+No routine allocation-level override exists.
 
-`DemandAllocation` and `AwardAllocation` are superseded as separate authorities by one canonical `RequirementAllocation` lineage at requirement grain.
+Additional quantity requires prior governed change to the authorized requirement basis.
 
-Sourcing, award and commitment are progression/bindings on the same lineage.
+For lump-sum/document-driven scope, explicit scope partition identity provides the hard conservation dimension. Candidate references include section, BOQ/price-schedule line/group, deliverable, lot or defined work-scope segment.
 
-Split creates child allocation leaves and closes the parent from active-balance counting.
+Default: one authorized scope partition cannot be consumed by multiple active award/commitment leaves unless the authorized scope basis explicitly permits shared/joint responsibility.
 
-`sum(active leaf allocations) <= authorized basis` unless controlled overbuy/change exists.
+Estimated/target/planning value is non-authoritative allocation metadata only.
 
-P07 must bind commitment to existing allocation leaf/leaves instead of creating another allocation ledger.
+Award above estimate is a commercial variance/approval/budget event, not an allocation correctness error.
 
-### FX/tax reproducibility
+P06 may use budget variance for governance; P07 / ADR-0005 / ADR-0011 later resolve authoritative commitment-budget-accounting ownership.
 
-`BidSubmission` preserves source currency/tax posture.
+### B6 — all routes enter allocation before tender
 
-`ComparisonSnapshot` freezes applied FX rate, source, fixing date/time/policy, tax-normalization basis and rounding/calculation reference required to reproduce historical rankings.
+Closed allocation origin families:
+1. `DEMAND_LINE`
+2. `PLANNED_REQUIREMENT`
 
-### ADR-0003 neutrality
+`PLANNED_REQUIREMENT` is an authorized planning basis anchored to:
 
-`ProcurementPackage` is optional.
+`Project → Budget/Cost Structure`
 
-Valid candidate routes include:
+Closed V1 planning source evidence types:
+- `ESTIMATE_LINE`;
+- `PROCUREMENT_PLAN_LINE`;
+- `LONG_LEAD_PLAN_ITEM`.
 
-`DemandLine → RequirementAllocation → TenderEvent`
-
-and
-
-`DemandLine → RequirementAllocation → ProcurementPackage → TenderEvent`
-
-and package-led planning before detailed demand:
-
-`Estimate / Procurement Plan / Long-lead Trigger → ProcurementPackage → TenderEvent`
-
-ADR-0003 remains open.
-
-### Object simplification
-
-Current provisional simplifications:
-- `BidderCandidate` + `BidderSelection` + invitation lifecycle → `TenderParticipant` at tender×vendor grain, while preserving distinct dated facts/transitions;
-- `EligibilityEvaluation` → dated event/value on TenderParticipant by default;
-- `PreferredBidderSelection` durable object removed; working preference becomes comparison annotation/event;
-- `ExternalAccessGrant` remains separate security capability.
-
-### Approval history
-
-Approval reproducibility must preserve policy version, actual approver identity, resolved role/role-assignment context and delegation evidence.
-
-Standard V1 approval configuration should have a small default core; additional dimensions remain additive.
-
-### Bid reveal
-
-Blind-bid/open/controlled-reveal mode must have a deterministic reveal condition and auditable actual reveal time/actor.
-
-## Current integrated sourcing candidate lineage
+Current candidate routes:
 
 Demand-led direct:
 
@@ -196,13 +166,56 @@ Demand-led packaged:
 
 `DemandLine → RequirementAllocation → ProcurementPackage → TenderEvent`
 
-Package-led planning:
+Planned/package-led before MR:
 
-`Estimate / Procurement Plan / Long-lead Trigger → ProcurementPackage → TenderEvent`
+`Project + Budget/Cost Structure + PLANNED_REQUIREMENT → RequirementAllocation → [optional ProcurementPackage] → TenderEvent`
 
-Then:
+Later detailed demand reconciles to the existing allocation lineage and cannot create a second allocation for already-covered scope.
 
-`TenderEvent → immutable TenderRelease vN/Addenda → TenderParticipant → bounded access → BidSubmission v1..n → normalization/internal evaluation → frozen ComparisonSnapshot → AwardRecommendation {evaluated_basis + contractable_agreed_basis} → effective DOA ApprovalCase → AwardDecision → same RequirementAllocation lineage → P07`
+## Other sourcing corrections retained
+
+### Supplier commercial basis
+Every supplier-confirmed material economic change becomes an immutable `BidSubmission` revision. Clarification/email/thread evidence cannot itself be authoritative contractable basis.
+
+Buyer-on-behalf capture preserves supplier commercial origin, immutable source evidence, ingestion actor and timestamps/review status.
+
+### Award basis
+`AwardRecommendation` / `AwardDecision` preserve:
+- `evaluated_basis` — internal comparison basis;
+- `contractable_agreed_basis` — supplier-confirmed basis approved for contract conversion.
+
+P07 may consume only the approved `contractable_agreed_basis`.
+
+### FX/tax
+`BidSubmission` preserves source currency/tax posture.
+
+`ComparisonSnapshot` freezes applied FX rate/source/fixing date and tax/calculation/rounding basis so historical ranking is reproducible.
+
+### Participation simplification
+- `TenderParticipant` groups candidate/selection/invitation shell at tender×vendor grain while keeping facts dated and distinct;
+- eligibility evaluation defaults to dated participant event/value;
+- vendor qualification remains reusable vendor evidence;
+- durable preferred-bidder object removed;
+- external access grant remains separate security capability.
+
+## Current integrated sourcing lineage
+
+From either origin family:
+
+`RequirementAllocation`
+`→ [optional ProcurementPackage]`
+`→ TenderEvent`
+`→ immutable TenderRelease vN/Addenda`
+`→ TenderParticipant`
+`→ bounded external access`
+`→ BidSubmission v1..n`
+`→ source-linked normalization + internal evaluation`
+`→ frozen ComparisonSnapshot`
+`→ AwardRecommendation {evaluated_basis + contractable_agreed_basis}`
+`→ effective DOA ApprovalCase`
+`→ AwardDecision`
+`→ same RequirementAllocation leaf/leaves bound to award`
+`→ P07 commitment binding to same lineage`
 
 ## P1.2 final closure — still later
 
@@ -220,8 +233,10 @@ These are audit/closure requirements, not day-to-day progress blockers.
 
 ## Next action
 
-Run a **narrow hostile re-review** of the sourcing remediation/checkpoint v0.2.
+Run the **final narrow hostile re-review** of B5/B6 using:
 
-P07 remains blocked until that review returns:
+`04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_SOURCING_FINAL_RECHECK_PROMPT_V0_1.md`
+
+P07 remains blocked until:
 
 `PASS — sourcing subgraph coherent; proceed to P07`
