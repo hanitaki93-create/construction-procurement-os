@@ -7,20 +7,22 @@
 
 - Project: **Construction Procurement OS**
 - Phase: **Phase 1 — Deterministic Architecture & Product Specification**
-- Active subphase: **P1.3 — Competitor Reconstruction / hostile closure review**
+- Active subphase: **P1.3 — Competitor Reconstruction / hostile closure remediation**
 - P1.0: **CP-05 PASS / CLOSED**
 - P1.1: **PASS / FROZEN**
 - P1.2: **PASS / CLOSED**
-- P1.3 internal gate: **PASS / EXTERNAL HOSTILE CLOSURE REVIEW PENDING**
-- P1.4: **LOCKED** until P1.3 external hostile review passes
+- P1.3 internal gate: **PASS**
+- P1.3 hostile closure review: **FAIL — BL-10 / BL-11**
+- P1.3 remediation: **COMPLETE / NARROW EXTERNAL RECHECK PENDING**
+- P1.4: **LOCKED** until P1.3 narrow recheck passes
 - Product code: **NOT STARTED**
 - Phase 2/3 build: **LOCKED**
 - Process invention: **PAUSED** unless later evidence proves a missing lifecycle
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 
-Current P1.3 internal verdict:
+Current P1.3 status:
 
-`INTERNAL PASS — competitor reconstruction is complete enough for hostile closure review; P1.4 remains locked.`
+`HOSTILE REVIEW FAIL REMEDIATED — narrow recheck pending; P1.4 remains locked.`
 
 ---
 
@@ -151,127 +153,149 @@ Canonical:
 
 ### Terminology crosswalk
 
-**PASS** — competitor terminology mapped back to P01–P12 rather than replacing the contractor evidence model.
+**PASS** — competitor terminology maps back to P01–P12 rather than replacing contractor evidence.
 
 Canonical:
 - `04_phases/phase_1/P1.3_competitor_reconstruction/registers/P1_3_TERMINOLOGY_CROSSWALK_V0_1.csv`
 
-### Commercial/adoption evidence
-
-Kept separate from architecture truth.
-
-Canonical:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_WAVE_3_ADOPTION_MONETIZATION_V0_1.md`
-- `04_phases/phase_1/P1.3_competitor_reconstruction/registers/P1_3_COMPLAINT_ADOPTION_RISK_REGISTER_V0_1.csv`
-
-Current commercial posture:
+### Commercial/adoption posture
 
 `CONTINUE — NOT PMF PROOF`
 
+Closest specialist incumbent on the same rail: **ProcurePro**.
+
 Candidate first monetization rail:
 
-`RFQ/tender -> supplier response capture -> normalization/leveling -> recommendation/approval -> award/handoff`
+`requirement -> RFQ/tender -> supplier response capture -> normalization/leveling -> recommendation/approval -> award/handoff`
+
+Candidate differentiation remains hypothesis-level:
+- GCC/UAE contractor operating fit;
+- four-layer comparison truth;
+- arbitrary-source bid comparability;
+- commercial-truth expansion path without full ERP;
+- small-footprint deployment.
+
+No claim of superiority or PMF is made.
 
 ---
 
-## P1.3 best-of-each inheritance
+## P1.3 hostile closure review — FAIL / REMEDIATED
+
+External hostile review result:
+
+`FAIL — remediate blocker(s) before P1.4`
+
+### BL-10 — Kojo inheritance / first surface
+
+Accepted and remediated.
+
+Binding interpretation:
+
+> Kojo inheritance in A0–A3 means **low-friction material/request intake UX only**, feeding the same sourcing/comparison/award rail.
+
+It does **not** introduce a direct-to-order first-release surface.
+
+Direct-source/direct-purchase remains a legitimate P1.2 domain route but is deferred from A0–A3 and activated later with commercial/commitment execution under requirement authority, justification and approval controls.
 
 Canonical:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_DESIGN_INHERITANCE_REGISTER_V0_1.md`
+- `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_FIRST_RAIL_AND_ACTIVATION_BOUNDARY_V0_1.md`
 
-Current thesis:
+### BL-11 — evidence / external access burden
 
-> **ProcurePro focus + Procore/BuildingConnected bid UX + CMiC/Vista commercial/finalization rigor + Ariba lifecycle discipline + Aconex evidence ownership + Kojo low-friction field/material UX — bounded by P1.1 one-XL scope, P1.2 contractor truth and activation discipline.**
+Accepted and remediated.
 
-This is architecture input, not a promise that all capabilities ship in V1.
+Classification:
 
-Explicitly reject:
-- universal fixed comparison form;
-- portal-only supplier participation;
-- mutation of supplier-origin truth during leveling;
-- full ERP/GL/AP/inventory ownership as prerequisite;
-- construction-network marketplace as prerequisite;
-- generalized BPM;
-- CPM/master scheduling;
-- full CDE;
-- payment/banking platform;
-- enterprise implementation before first sourcing value.
+`EVIDENCE / EXTERNAL ACCESS SUBSTRATE = L SHARED SUBSTRATE / NOT XL`
+
+Own:
+- transaction evidence/provenance;
+- immutable/versioned source attachment records;
+- bounded tenant/project/tender/task-scoped guest access;
+- source organization/actor/time/channel and version lineage.
+
+Reference externally authoritative CDE/ERP/bank/legal/master-correspondence records.
+
+Explicitly refuse:
+- general document management;
+- transmittals/correspondence platform;
+- markup/design/submittal review engine;
+- CDE replacement;
+- enterprise records management;
+- legal hold/eDiscovery;
+- retention/redaction/classification policy engine;
+- mandatory supplier network/portal.
+
+Email is a capture channel. Automatic email-to-structured-bid parsing is not an A0–A3 architecture prerequisite.
+
+Canonical:
+- `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_EVIDENCE_EXTERNAL_ACCESS_BOUNDARY_V0_1.md`
+
+### Remediation package
+
+- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_HOSTILE_REVIEW_REMEDIATION_V0_1.md`
+- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_HOSTILE_REVIEW_FAIL_CHECKPOINT_V0_1.md`
+- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_HOSTILE_NARROW_RECHECK_PACKET_V0_1.md`
+
+Internal remediation result:
+
+`FAIL_INTERNAL = 0`
 
 ---
 
-## P1.3 inheritance conflict audit
+## Adoption / normalization economics
 
-Canonical:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_INHERITANCE_CONFLICT_AUDIT_V0_1.md`
+A0–A3 remains the first-value activation surface:
+- A0 bootstrap
+- A1 first sourcing event
+- A2 comparison
+- A3 governed award/handoff
 
-Internal verdict:
+A4 later commercial/commitment execution and controlled direct-source route.
 
-`PASS WITH FORWARD OBLIGATIONS`
+A5 optional enterprise/portfolio overlays.
 
-Key containment rule:
+A2 must be measured against the contractor's existing Excel/manual comparison workflow.
 
-> **inheritance is semantic reuse, not cumulative feature scope.**
+Pilot metrics:
+- supplier response receipt -> comparison-ready elapsed time;
+- buyer manual-touch minutes per response;
+- mapping/coverage decisions;
+- clarification loops;
+- reusable schema/mapping leverage;
+- current manual baseline.
 
-Only P07 remains the intended independent XL gravity well.
-
----
-
-## P1.3 adoption-burden audit
-
-Canonical:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_ADOPTION_BURDEN_AUDIT_V0_1.md`
-
-Internal verdict:
-
-`PASS WITH ACTIVATION BOUNDARY`
-
-Activation layers:
-- A0 workspace bootstrap
-- A1 first RFQ/tender
-- A2 first comparison
-- A3 governed award
-- A4 internal commitment/commercial execution — deferred from first sourcing value
-- A5 enterprise/portfolio overlays — optional/later
+Architecture PASS does not imply commercial PASS if normalization remains economically worse than the incumbent workflow.
 
 P1.1 adoption guard remains:
-- standard setup to first live tender <=5 working days from clean inputs
-- bespoke named connectors required before first live tender = 0
-
-P1.4/P1.5 may not make A4/A5 configuration a hidden prerequisite to A1-A3 without controlled justification.
+- standard setup to first live tender <=5 working days from clean inputs;
+- bespoke named connectors required before first live tender = 0.
 
 ---
 
-## P1.3 hostile closure review
+## One-XL guardrail
 
-Prepared packet:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_HOSTILE_CLOSURE_REVIEW_PACKET_V0_1.md`
+P07 remains the intended single independent XL gravity well.
 
-Internal closure checkpoint:
-- `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_INTERNAL_CLOSURE_CHECKPOINT_V0_1.md`
-
-External hostile review must test:
-- matrix sufficiency;
-- state-machine depth;
-- best-of-each contradictions;
-- hidden second XL subsystem;
-- adoption burden / hidden downstream prerequisites;
-- P1.2 regression;
-- ADR anchoring;
-- commercial overclaim;
-- missing competitor archetype;
-- P1.4 readiness.
-
-P1.3 is **not formally closed** until this hostile review passes or valid blockers are remediated.
+Reject expansion that turns:
+- evidence/external access into CDE/records-management gravity;
+- P08 into full accounting ERP/GL/AP/cash;
+- P09 into programmable BPM/low-code;
+- P10 into CPM/master scheduling;
+- P11 into legal claims/banking/insurance/warranty platform;
+- P12 into full CDE/submittal platform;
+- fulfillment into inventory/WMS;
+- external participation into mandatory supplier network gravity.
 
 ---
 
-## Provisional ADR directions carried forward
+## ADR posture after P1.3 hostile review
 
-Status:
+Status class:
 
 `PROVISIONAL_DIRECTION_SET / PRIMARY_FALSIFIABLE / IMPLEMENTATION_FORM_OPEN`
 
-Applies to:
+Applies to prior directions:
 - ADR-0003 Requirement-authority/structural-root direction
 - ADR-0008 bounded built-in workflow controls
 - ADR-0013 event-derived status
@@ -279,24 +303,37 @@ Applies to:
 - ADR-0019 effective dating/version binding
 - ADR-0021 OWN/MIRROR/REFERENCE integration authority model
 
-Other structural ADRs remain open, including ADR-0004, ADR-0005, ADR-0007, ADR-0010, ADR-0011, ADR-0012, ADR-0015, ADR-0018, ADR-0020, ADR-0022 and ADR-0023.
+Now also applies to:
+- **ADR-0012 external identity/access direction** — low-friction task-scoped guest/email/buyer-on-behalf participation, no mandatory persistent signup; persistent supplier identity/network/authentication/tenancy mechanics remain open.
 
-ADR-0022 retains a hard dependency on deterministic rounding wherever tolerance/conversion participates in conservation.
+Further strengthened but not closed:
+- ADR-0007 — actual procurement milestones derive from domain events; physical long-lead model open.
+- ADR-0005 — accounting integration/authority required; ownership split open.
+- ADR-0015 — posting/finalization affects editability; correction persistence model open.
+- ADR-0018 — workflow governs domain commands but is not financial truth; exact seam open.
+
+Still materially unresolved by competitor evidence:
+- **ADR-0010 GCC semantics** — route to GCC/UAE primary/regulatory/contractual evidence; do not infer from Western competitor products.
+
+Other structural ADRs remain open including ADR-0004, ADR-0011, ADR-0020, ADR-0022 and ADR-0023.
+
+ADR-0022 retains hard dependency on deterministic rounding wherever tolerance/conversion participates in conservation.
 
 ---
 
 ## Next action
 
-Run the **P1.3 hostile closure review** using `P1_3_HOSTILE_CLOSURE_REVIEW_PACKET_V0_1.md`.
+Run the **P1.3 narrow hostile recheck** using:
+
+`04_phases/phase_1/P1.3_competitor_reconstruction/audits/P1_3_HOSTILE_NARROW_RECHECK_PACKET_V0_1.md`
 
 If PASS:
 - record P1.3 final verdict;
+- close P1.3;
 - unlock P1.4 Boundary, Ownership & Tenancy Contract.
 
 If FAIL:
-- independently assess each finding;
-- remediate only valid defects;
-- rerun narrow recheck;
-- do not protect sunk P1.3 work.
+- independently assess only the remaining defect;
+- remediate without reopening already-clean competitor breadth unless directly contradicted.
 
 Product code remains locked.
