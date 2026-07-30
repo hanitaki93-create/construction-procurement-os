@@ -3,39 +3,54 @@
 **Updated:** 2026-07-30  
 **Canonical status file:** this document
 
+---
+
 ## Position
 
 - Project: **Construction Procurement OS**
 - Phase: **Phase 1 — Deterministic Architecture & Product Specification**
-- Active subphase: **P1.4 — Boundary, Ownership & Tenancy Contract**
+- Active subphase: **P1.5 — Commercial Core**
 - P1.0: **CP-05 PASS / CLOSED**
 - P1.1: **PASS / FROZEN**
 - P1.2: **PASS / CLOSED**
 - P1.3: **PASS / CLOSED**
-- P1.4: **ACTIVE / UNLOCKED**
-- P1.5+: **LOCKED** until P1.4 gate passes
-- Product code: **NOT STARTED**
+- P1.4: **PASS / CLOSED / FROZEN**
+- P1.5: **ACTIVE / UNLOCKED**
+- P1.6+: **LOCKED** until dependencies/gates permit
+- Product code: **NOT STARTED / LOCKED**
 - Phase 2/3 build: **LOCKED**
 - Process invention: **PAUSED** unless later evidence proves a missing lifecycle
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 
 Current status:
 
-`P1.3 PASS / CLOSED — begin P1.4 Boundary, Ownership & Tenancy Contract.`
+`P1.4 PASS / CLOSED / FROZEN — begin P1.5 Commercial Core.`
 
 ---
 
-## Canonical next-chat handoff
+# Canonical next-chat handoff
 
 Read first:
 
-- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_ENTRY_HANDOFF_V0_1.md`
+- `04_phases/phase_1/P1.5_commercial_core/P1_5_ENTRY_HANDOFF_V0_1.md`
 
-The next chat should use GitHub as canonical truth, read this state file and the handoff before making structural claims, and fetch exact ADR files before changing ADR status/wording.
+Then read:
+
+- `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md`
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FROZEN_BOUNDARY_CONTRACT_V1_0.md`
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_CHECKPOINT_V1_0.md`
+- current `02_research/control/adr_log.csv`
+
+GitHub remains canonical truth. Fetch exact affected ADR/current files before changing structural decisions.
+
+Do not restart broad competitor research.
+
+Do not start product code.
 
 ---
 
-## Evidence authority carried forward
+# Evidence authority carried forward
 
 1. PRIMARY_CONTRACTOR_EVIDENCE
 2. PRIMARY_TRANSACTION_ARTIFACT
@@ -56,11 +71,11 @@ Frozen structural envelope:
 
 > UAE private-sector contractor procurement organizations acting as buyers of material and/or subcontract commitments, with explicit procurement/commercial authority and an accounting posture the platform must coexist with.
 
-Frozen burden controls include:
+Frozen burden controls:
 
 - 84 controlled scope areas;
-- one independent XL SPINE gravity well unless an IMPOSSIBLE invariant forces reopening;
-- current intended XL gravity well = **P07 commitment/change/valuation/commercial truth**;
+- one independent XL SPINE gravity well unless an IMPOSSIBLE invariant forces controlled reopening;
+- intended and frozen independent XL = **P07 commitment/change/valuation/commercial truth**;
 - standard configuration to first live tender target ≤5 working days from clean inputs;
 - bespoke named connectors required before first live tender = 0.
 
@@ -76,34 +91,23 @@ Do not mutate P1.1 silently.
 
 Final verdict:
 
-`PASS — P1.2 primary workflow evidence gate satisfied; proceed to P1.3 competitor reconstruction.`
+`PASS — P1.2 primary workflow evidence gate satisfied.`
 
 Canonical:
 
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/P1_2_FINAL_VERDICT.md`
 - `04_phases/phase_1/P1.2_primary_workflow_evidence/audits/P1_2_FINAL_PRIMARY_RECONCILIATION_V0_1.md`
 
-Review A sourcing: **PASS**  
-Review B commercial core/accounting seam: **PASS**  
-Review C full graph: **PASS**
-
-Primary comparison-artifact gate: **PASS**.
-
 Binding comparison conclusion:
 
 > **standardize the comparison grammar, not one comparison form.**
 
-P05 direction includes:
+Four semantic comparison layers remain distinct:
 
-- package-specific ComparisonSchema;
-- immutable supplier quotation/revision truth;
-- hierarchical buyer comparison basis;
-- many-to-many BidLineMapping;
-- missing/excluded/additional/alternate/bundled coverage states;
-- technical equivalence/deviation separate from price;
-- buyer EvaluationAdjustment with provenance;
-- immutable ComparisonSnapshot;
-- supplier-confirmed contractable basis before commitment.
+1. supplier source submission/revision;
+2. normalized representation;
+3. buyer evaluation adjustment;
+4. supplier-confirmed contractable basis.
 
 P1.2 evidence debt preserved:
 
@@ -139,68 +143,26 @@ No P13 process is justified by current evidence.
 
 Final verdict:
 
-`PASS — P1.3 competitor reconstruction can close; unlock P1.4.`
+`PASS — P1.3 competitor reconstruction can close.`
 
 Canonical closure:
 
 - `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_FINAL_VERDICT.md`
 - `04_phases/phase_1/P1.3_competitor_reconstruction/P1_3_FINAL_CHECKPOINT_V0_1.md`
 
-Final controlled matrix:
-
-- 14 products/references
-- 32 dimensions
-- 448 controlled cells
-- 306 evidenced
-- 124 explicit `UNKNOWN_PUBLIC_EVIDENCE`
-- 18 `N/A_OUTSIDE_PRODUCT_BOUNDARY`
-- 0 silent blanks
-
-Canonical matrix:
-
-- `04_phases/phase_1/P1.3_competitor_reconstruction/registers/P1_3_COMPETITOR_MATRIX_FINAL_V0_2.csv`
-
-State-machine gate: **PASS** using Procore + CMiC, with SAP Ariba corroboration.
-
 Final inheritance rule:
 
 > **Inheritance is semantic reuse, not cumulative feature scope.**
 
-Current synthesis:
-
-> ProcurePro focus + Procore/BuildingConnected bid UX + CMiC/Vista commercial/finalization rigor + Ariba lifecycle discipline + Aconex evidence ownership + Kojo low-friction intake UX — bounded by P1.1 one-XL scope, P1.2 contractor truth and activation discipline.
-
-No incumbent becomes the ontology.
-
----
-
-## P1.3 final hostile-review closures
-
-### BL-10 — CLOSED
-
-Kojo inheritance in A0–A3 means intake UX only.
-
-It does not create a direct-order first-release surface.
-
-Direct-source/direct-purchase remains a valid later A4 commercial-execution route subject to requirement authority, justification/approval and commitment controls.
-
-### BL-11 — CLOSED
-
-Evidence / external access classification:
+Evidence/external access remains:
 
 `L SHARED SUBSTRATE / NOT XL`
 
 Own transaction evidence/provenance and bounded external-grant history.
 
-Reference externally authoritative CDE/ERP/bank/legal/master-correspondence records.
+Reference externally authoritative CDE/ERP/bank/legal/master records.
 
-Refuse full CDE, records management, correspondence/transmittal, markup/review, legal hold/eDiscovery, policy-engine and mandatory supplier-network scope.
-
-Email is a capture channel. Automatic email-to-structured-bid parsing is not an A0–A3 architecture prerequisite.
-
-Second XL check: **CLEAN**.
-
-P1.2 regression: **NO**.
+Refuse full CDE, records management, legal hold/eDiscovery, generalized policy engine and mandatory supplier-network scope.
 
 ---
 
@@ -223,7 +185,7 @@ Activation tiers:
 - A2 comparison
 - A3 governed award/handoff
 - A4 later commercial/commitment execution, including controlled direct-source route
-- A5 optional enterprise/portfolio overlays
+- A5 optional enterprise/portfolio/advanced-AI overlays
 
 A0–A3 must remain independently usable without:
 
@@ -231,133 +193,254 @@ A0–A3 must remain independently usable without:
 - P07 execution;
 - CDE implementation;
 - ERP implementation;
-- advanced AI.
-
-Pilot/commercial success should be tested using **comparison-worthy packages**, not total procurement volume.
-
-A2 normalization economics must be benchmarked against contractor Excel/manual comparison.
-
-Commercial posture:
-
-`CONTINUE — NOT PMF PROOF`
-
-Closest known specialist incumbent on the same rail: **ProcurePro**.
-
-Candidate differentiation remains hypothesis-level:
-
-- GCC/UAE contractor operating fit;
-- four-layer comparison truth;
-- arbitrary-source bid comparability;
-- commercial-truth expansion path without full ERP;
-- small-footprint deployment.
+- persistent supplier network/account;
+- generalized CPM/BPM;
+- WMS/inventory;
+- advanced AI;
+- cross-tenant shared-learning mode.
 
 ---
 
 # One-XL guardrail
 
-P07 remains the intended single independent XL gravity well.
+P07 remains the single independent XL gravity well.
 
 Reject expansion that creates another independent XL in:
 
 - accounting/GL/AP/cash;
-- generalized BPM;
+- RequirementAllocation/value duplication;
+- workflow/BPM;
 - CPM/master scheduling;
 - legal claims/banking/insurance;
 - CDE/records management;
 - inventory/WMS;
-- mandatory supplier network;
-- evidence/external access.
+- supplier network;
+- evidence/audit;
+- tenancy/identity;
+- integration;
+- AI/agent memory or cross-tenant data network.
 
 ---
 
-# ADR posture entering P1.4
+# P1.4 — PASS / CLOSED / FROZEN
 
-Status class:
+Final verdict:
 
-`PROVISIONAL_DIRECTION_SET / PRIMARY_FALSIFIABLE / IMPLEMENTATION_FORM_OPEN`
+`PASS — P1.4 boundary, ownership and tenancy contract is frozen; P1.5 Commercial Core is unlocked.`
 
-Applies to:
+Canonical closure:
 
-- ADR-0003 Requirement-authority/structural-root direction
-- ADR-0008 bounded built-in workflow controls
-- ADR-0013 event-derived status
-- ADR-0014 deep provenance for load-bearing events
-- ADR-0019 effective dating/version binding
-- ADR-0021 OWN/MIRROR/REFERENCE integration authority
-- ADR-0012 external identity/access direction
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FROZEN_BOUNDARY_CONTRACT_V1_0.md`
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_CHECKPOINT_V1_0.md`
 
-ADR-0012 direction:
+External audit record:
 
-- low-friction task-scoped external participation;
-- no mandatory persistent tender signup;
-- guest/email/buyer-on-behalf permitted with provenance;
-- least-privilege scoped access.
+- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/audits/P1_4_CLAUDE_ROUND_2_VERDICT_V0_1.md`
 
-ADR-0012 still open:
+Dual-model audit outcome:
 
-- persistent supplier identity/account;
-- cross-tenant identity/network;
-- authentication mechanism;
-- organization hierarchy/persistence.
+- internal post-remediation PASS;
+- Claude Round 2 PASS;
+- blockers NONE;
+- G1–G9 PASS;
+- P1.1 REOPEN = NO;
+- P1.2 REGRESSION = NO;
+- P1.3 REOPEN = NO;
+- SECOND XL = CLEAN;
+- A0–A3 ACTIVATION = CLEAN.
 
-Strengthened, not closed:
+## Frozen P1.4 boundary
 
-- ADR-0007 — actual procurement milestones derive from events; physical model open
-- ADR-0005 — accounting integration/authority required; ownership split open
-- ADR-0015 — posting/finalization affects editability; correction persistence model open
-- ADR-0018 — workflow governs commands but is not financial truth; seam open
+### Tenancy/legal authority
 
-Still materially unresolved:
+- tenant = customer isolation/config/security boundary;
+- one project belongs to one tenant;
+- tenant may contain multiple legal entities;
+- ContractingAuthorityContext expresses load-bearing legal/contracting authority;
+- bounded evidence-backed multi-party/unincorporated authority is supported without a JV platform;
+- contracting context never implies partner access.
 
-- ADR-0010 GCC semantics — primary/regulatory/contractual evidence debt
-- ADR-0004 commitment physical model
-- ADR-0011 budget/cost attribution authority/timing
-- ADR-0020 in-flight configuration binding
-- ADR-0022 money/rounding/calculation order
-- ADR-0023 numbering/concurrency/fiscal semantics
+### Identity/access
 
-Fetch exact ADR files before making final status claims.
+- reusable technical identity is allowed;
+- business relationships remain tenant-private;
+- internal authorization and external grants are separate semantic models;
+- external grant cannot bypass P09/role/delegation/DOA/domain authorization;
+- persistent supplier account is optional;
+- buyer-on-behalf provenance is preserved.
+
+### Authority vocabulary
+
+`OWN / MIRROR / REFERENCE / OUT`
+
+applies at load-bearing fact/field/event grain.
+
+One authoritative source/writer per effective period.
+
+No dual master.
+
+Authority transfer is governed and history-preserving.
+
+### Load-bearing test
+
+A fact/event/evidence/policy/config value is load-bearing when at least one applies:
+
+1. governed outcome dependence;
+2. counterfactual materiality;
+3. reconstruction necessity.
+
+P1.5 may catalogue concrete facts but cannot redefine the test by implementation convenience.
+
+### Evidence/lifecycle/residency
+
+- product owns integrity/provenance of governed transaction evidence;
+- external authoritative records remain reference/narrow mirror;
+- no edit-in-place historical rewrite;
+- offboarding separates capability from historical truth;
+- retention needs valid basis, not forever;
+- eligible payload disposition does not reverse domain history;
+- disposition tombstone requires its own valid basis;
+- post-termination disposition authority is explicit;
+- bounded export/return does not create records-management scope;
+- tenant-level declared primary residency region for in-scope product-hosted data;
+- backup/DR/telemetry classification remains later NFR work;
+- region migration is governed/effective-dated;
+- no UAE/GCC localization requirement asserted without evidence.
+
+### Effective dating/config
+
+- historical actions use governing versions;
+- load-bearing config binds to relevant case/event;
+- current security capability is checked for every new action;
+- revoked access is not preserved by policy snapshot;
+- silent in-flight rebinding is forbidden;
+- physical temporal storage remains later design.
+
+### Accounting/integration
+
+- product owns procurement/commercial truth in activated domains;
+- P07 product commercial truth is not co-mastered by ERP;
+- external accounting may own AP/payment/GL/job-cost facts;
+- certification and accounting posting are distinct;
+- P08 owns mapping/reconciliation, not accounting balances;
+- connector is never business authority;
+- load-bearing external values expose freshness/conflict semantics;
+- sync rejection does not justify changing commercial truth merely to pass integration.
+
+### AI/data isolation
+
+- tenant isolation covers direct disclosure and model-mediated/derived effect;
+- shared foundation models/tools/agent implementations are allowed;
+- tenant context is isolated per authorized invocation;
+- shared learned tenant business knowledge is OUT by default;
+- rule binds third-party model/sub-processor paths as well as product-owned paths;
+- future cross-tenant benchmarking/shared learning requires separately governed participation;
+- agents act through bounded domain operations and cannot become arbitrary commercial/accounting truth writers.
+
+## ADRs accepted at P1.4 closure
+
+- ADR-0005 — Accounting and commercial ownership seam
+- ADR-0012 — External vendor identity and access model
+- ADR-0014 — Document provenance ownership and depth
+- ADR-0018 — Workflow-to-financial-state seam
+- ADR-0020 — Configuration binding for in-flight instances
+- ADR-0021 — Field-level integration authority and staleness
+- ADR-0025 — Data residency region declaration and governed migration
+- ADR-0026 — Cross-tenant data isolation and shared-learning boundary
+
+ADR-0024 remains ACCEPTED.
+
+Still open by design include ADR-0003/0004/0006/0008/0009/0010/0011/0015/0019/0022/0023.
 
 ---
 
-# P1.4 — ACTIVE
+# P1.5 — ACTIVE / UNLOCKED
 
-P1.4 is **Boundary, Ownership & Tenancy Contract**.
+P1.5 is **Commercial Core**.
 
-Expected controlled outputs include:
+Objective:
 
-- per-entity/object ownership table: `OWN / MIRROR / REFERENCE / OUT`;
-- authoritative system by load-bearing object/field/event;
-- accounting/commercial seam;
-- tenant/company/legal-entity hierarchy;
-- branch/BU/JV posture where structurally required;
-- project/legal-entity relationship;
-- tenancy isolation and cross-tenant rules;
-- internal identity boundary;
-- external vendor/subcontractor identity/access boundary;
-- evidence ownership/provenance boundary;
-- data-residency ADR/position;
-- early integration authority boundaries.
+> Produce one internally consistent model of data, commercial value, lifecycle and authority.
 
-P1.4 gate must freeze the V1 SPINE boundary contract so no core object remains ambiguous about ownership/authority and no unresolved identity/residency choice would force P1.5 commercial-core replanning.
+The four tracks are concurrent and interlocking.
 
-### Mandatory entry obligations
+## P1.5a — Entities & Master Data
 
-1. **Internal authorization vs external grants** — decide whether P09 internal authorization and external task/evidence grants share a substrate or remain separate linked models.
-2. **Immutable evidence vs offboarding/deletion** — reconcile transaction history, tenant deletion/offboarding, data residency and external evidence ownership.
-3. **Classification attribute vs policy engine** — sensitivity/access classification may be stored metadata; do not expand into a configurable information-governance engine.
+- entity dictionary;
+- attributes/types;
+- cardinalities;
+- master vs transaction;
+- numbering;
+- immutability;
+- revision semantics;
+- P1.4 ownership inheritance.
 
-### P1.4 must preserve
+## P1.5b — Cost Ledger & Posting Semantics
 
-- P1.1 frozen scope;
-- P1.2 primary evidence hierarchy;
-- P1.3 anti-union inheritance rule;
-- first-rail A0–A3 independence;
-- one-XL guardrail;
-- FT-02/06/09/10 evidence debt;
-- no mandatory supplier network;
-- no full ERP/accounting ownership;
-- no full CDE/records management.
+- commercial financial-event types;
+- canonical derivation formula for each commercial balance;
+- pending/approved/committed semantics;
+- certification;
+- actual/paid distinction;
+- retention;
+- forecasts;
+- reversal/adjustment;
+- financial periods;
+- cut-off/backdating;
+- multi-currency/FX;
+- tax timing;
+- external GL/AP seam.
+
+## P1.5c — Lifecycles & State Machines
+
+For every SPINE transaction:
+
+- states;
+- transitions;
+- guards;
+- side effects;
+- emitted events;
+- reversibility;
+- supersession/cancellation.
+
+## P1.5d — Authority / Approval / Audit / Concurrency
+
+- role/permission model;
+- approval policies;
+- authority limits;
+- delegation;
+- ball-in-court;
+- audit-event catalogue;
+- simultaneous-edit/concurrency rules.
+
+## P1.5 roadmap augmentation
+
+P1.5 owns the audit/history invariant and must define append-only commercial/audit history compatible with controlled redaction/tombstoning while preserving:
+
+- immutable record/event identity;
+- financial meaning and derived-balance integrity;
+- referential integrity;
+- evidence that a redaction/tombstone action occurred;
+- authority/audit trail for that action.
+
+Projection/derivation evolution must be explicit, versioned and non-silent.
+
+Adding future event types must not rewrite historical event meaning.
+
+## P1.5 gate
+
+P1.5 may close only when:
+
+- every derived balance has one canonical derivation over commercial financial events;
+- every SPINE transaction has a complete lifecycle;
+- every transition names guard, authority, financial effect, event and reversibility;
+- golden threads 1–4 execute on paper with zero architecture invention;
+- P1.5 Ceiling Test passes;
+- P1.5 Closed Sub-graph Gate passes;
+- hostile red-team gate passes.
+
+P1.5 must keep P07 as the only independent XL gravity well and preserve A0–A3 independence.
 
 ---
 
@@ -365,16 +448,16 @@ P1.4 gate must freeze the V1 SPINE boundary contract so no core object remains a
 
 Read:
 
-`04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_ENTRY_HANDOFF_V0_1.md`
+`04_phases/phase_1/P1.5_commercial_core/P1_5_ENTRY_HANDOFF_V0_1.md`
 
 Then:
 
-1. read GitHub skill;
-2. fetch this current `PROJECT_STATE.md`;
-3. read P1.3 final verdict/checkpoint;
-4. read P1.1 frozen baseline and P1.2 final verdict/reconciliation;
-5. fetch exact affected ADR files;
-6. create **P1.4 workplan**;
-7. begin object/authority inventory and OWN/MIRROR/REFERENCE/OUT boundary reconstruction.
-
-Do **not** start P1.5 or product code.
+1. fetch current `PROJECT_STATE.md`;
+2. read roadmap v1.3 and P1.4 frozen boundary contract/final checkpoint;
+3. fetch exact current affected ADR rows/files;
+4. read P1.2 commercial/sourcing checkpoints and evidence debt relevant to the first P1.5 decisions;
+5. create `P1_5_WORKPLAN_V0_1.md`;
+6. run P1.5a–d as concurrent reconciliation tracks;
+7. establish early load-bearing fact/event catalogue and golden-thread checkpoints;
+8. do not begin with database tables;
+9. do not start product code.
