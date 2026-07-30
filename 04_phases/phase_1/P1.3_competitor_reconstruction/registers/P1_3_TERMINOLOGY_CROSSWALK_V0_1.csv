@@ -1,0 +1,43 @@
+competitor_term,competitor,canonical_p1_2_mapping,notes,status
+Procurement Schedule,ProcurePro,P10 LongLead/ProcurementSchedule overlay,"operational schedule; actual progress should derive from canonical events",MAPPED
+Tenders & Price Breakdowns,ProcurePro,P03 TenderEvent/Release + P04 Response + P05 ComparisonSchema,"structured price breakdown useful but not sole quote truth",MAPPED
+Compare & Recommend,ProcurePro,P05 ComparisonSnapshot + P06 AwardRecommendation,"operationally connected but semantically distinct",MAPPED
+Contract Creation,ProcurePro,P07A Commitment formation,"exact formation/effectiveness semantics public-evidence limited",MAPPED_WITH_GAP
+Bid Package,Procore,P03 TenderEvent/Release,"not equivalent to ProcurementPackage root",MAPPED
+Bid Form,Procore,P03 ResponseStructure / P05 ComparisonSchema,"typed amount/unit/include-exclude/alternate fields",MAPPED
+Bidder / Bid Recipient,Procore,P04 TenderParticipant + Invitation,"intent/submission are separate facts",MAPPED
+Bid Leveling,Procore,P05 ComparisonSnapshot/EvaluationAdjustment,"our model preserves supplier original separately from leveled adjustment",MAPPED
+Soft Award,Procore,P06 AwardDecision/provisional selection semantics,"explicitly not commitment",MAPPED
+Commitment,Procore,P07 Commitment semantic role,"PO or subcontract downstream",MAPPED
+Custom Bid Form,BuildingConnected,P03 ResponseStructure / P05 ComparisonSchema,"scope-specific form",MAPPED
+TradeTapp qualification,BuildingConnected,P02 VendorQualification/Eligibility context,"risk context not supplier price truth",MAPPED
+Project Bid Item,CMiC,P01 authorized requirement/cost context candidate,"do not assume exclusive physical-scope identity",MAPPED_WITH_CAUTION
+Buy Out Item,CMiC,P05 mapping/evaluation scope + P06/P07 handoff,"supports one-to-many/manual mapping",MAPPED
+Bid Package,CMiC,P03 TenderEvent/Release,"package convenience around project phase/material/service",MAPPED
+Bid Analysis / Buy Out,CMiC,P05 Comparison + P06 selection,"selection can hand to purchase",MAPPED
+Requisition,CMiC,P01 Demand/Requirement basis,"approved before PO generation in documented path",MAPPED
+Purchase Order,CMiC,P07 Commitment goods-oriented behavior,"financial/accounting integration deeper than our boundary",MAPPED
+Subcontract,CMiC,P07 Commitment subcontract-oriented behavior,"ADR-0004 physical model remains open",MAPPED
+Material Request,Kojo,P01 Demand/MR,"field-first ordinary material path",MAPPED
+Sourcing Grid,Kojo,P05 comparison/source selection,"may include warehouse/buyouts beyond our V1 boundary",MAPPED
+Tender / Bid,Aconex,P03/P04 sourcing event/participation,"secure document/communication-heavy tender model",MAPPED
+Guest User,Aconex,P04 ExternalAccessGrant/task-focused participation,"borrow bounded access not CDE identity dependence",MAPPED
+Supplier Documents,Aconex,P12 TechnicalApprovalDependency/EvidenceReference,"procurement dependency only in our boundary",MAPPED
+Business Process,Primavera Unifier,P09 governed operation/workflow + domain transaction,"general BP engine is broader than our V1 control plane",MAPPED_WITH_REJECTED_GENERALITY
+Cost Type BP,Primavera Unifier,P07/P08 commercial transaction/event family,"contracts/PO/change/invoice/payment examples",MAPPED
+Cost Sheet,Primavera Unifier,P08/P1.8 derived commercial/reporting projection,"must not become duplicate editable ledger",MAPPED
+Payment Application,Textura,P07D claim/certification/payment interface,"jurisdiction-specific mechanics not universalized",MAPPED
+Supplier Request,SAP Ariba,P02 supplier onboarding/request,"distinct from registration/qualification",MAPPED
+Supplier Registration,SAP Ariba,P02 VendorQualificationRecord/lifecycle,"profile/registration process",MAPPED
+Qualification / Preferred,SAP Ariba,P02 contextual qualification/preferred state,"specific domain/category context",MAPPED
+Sourcing Relationship,SAP Ariba,P04 sourcing participation relationship,"separate from fulfillment/trading relationship",MAPPED
+Sourcing Event,SAP Ariba,P03 TenderEvent,"Preview/Open/Pending Selection/Completed lifecycle",MAPPED
+Award Scenario,SAP Ariba,P06 AwardRecommendation/scenario analysis,"supports split quantities/percentages",MAPPED
+Fulfillment Relationship,SAP Ariba,P07/P08 external transaction relationship,"separate from sourcing relation",MAPPED
+Sourcing Event,Coupa,P03/P04/P06 sourcing lifecycle,"enterprise sourcing terminology",MAPPED
+Supplier Actionable Notification,Coupa,P04 bounded external task/action channel,"email action pattern",MAPPED
+Supplier Portal,Coupa,P04 optional external access channel,"must not be mandatory V1 behavior",MAPPED
+Work Order,JobTread,P07 commitment/service-order analogue,"SMB terminology; not canonical ontology",REFERENCE_ONLY
+Purchase Order,JobTread,P07 goods/service commitment analogue,"used as adoption benchmark",REFERENCE_ONLY
+RFQ,Buildxact,P03 sourcing event analogue,"adoption benchmark only",REFERENCE_ONLY
+Purchase Order,Buildxact,P07 commitment analogue,"adoption benchmark only",REFERENCE_ONLY
