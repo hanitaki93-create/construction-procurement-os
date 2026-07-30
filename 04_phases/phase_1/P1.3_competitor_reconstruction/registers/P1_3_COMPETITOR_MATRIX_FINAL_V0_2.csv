@@ -1,0 +1,15 @@
+competitor,wave,D01,D02,D03,D04,D05,D06,D07,D08,D09,D10,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24,D25,D26,D27,D28,D29,D30,D31,D32,evidence_ids,detail_source,matrix_status
+ProcurePro,1,E,E,U,U,U,E,E,E,E,E,E,E,U,U,U,U,E,U,U,U,U,E,E,U,E,E,E,U,E,E,E,E,P13-SRC-001;002;003;004;005,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Procore Bidding / Financials,1,E,E,E,E,E,E,E,E,E,E,E,E,E,U,E,U,U,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,P13-SRC-006;007;008;009;010;011;P13-RISK-001;002;003,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Autodesk BuildingConnected / TradeTapp,1,E,E,U,E,E,E,E,U,E,E,E,E,U,U,U,U,U,U,U,U,U,E,E,E,E,E,U,E,U,E,E,E,P13-SRC-012;013,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+CMiC,1,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,U,U,U,E,E,E,E,E,E,E,E,U,E,U,E,E,E,P13-SRC-014;015;016;017;018,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Kojo,1,E,E,U,U,U,E,E,E,E,E,E,E,U,E,E,U,U,U,U,U,U,E,E,E,E,E,U,E,E,E,E,E,P13-SRC-019;020,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Oracle Aconex,2,E,E,E,E,U,E,E,E,E,U,U,U,U,N,N,N,N,E,E,E,E,E,E,E,E,E,U,E,U,E,E,E,P13-SRC-024,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Primavera Unifier,2,E,E,U,U,U,E,U,U,U,U,E,E,E,U,E,U,U,E,E,E,E,E,E,E,E,E,U,E,U,E,E,E,P13-SRC-025;026;027;028;029,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Oracle Textura,2,E,E,U,E,E,N,N,E,E,N,E,E,N,N,E,E,N,E,E,E,E,E,E,E,E,E,U,E,U,E,E,E,P13-SRC-030,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Trimble Vista,2,E,E,U,E,U,E,E,U,E,U,E,E,E,E,E,U,U,U,E,E,E,U,E,E,E,E,U,E,U,E,E,E,P13-SRC-031;032;033;034,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+SAP Ariba,2,E,E,U,E,E,E,E,E,E,E,E,E,U,U,U,U,U,U,E,E,E,E,E,E,E,E,U,E,E,E,E,E,P13-SRC-035;036;037;038,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Coupa,2,E,E,U,E,U,E,E,E,E,E,E,E,U,E,E,U,U,U,E,E,E,E,E,E,E,E,U,E,E,E,E,E,P13-SRC-039;040;041;P13-RISK-004;005;006,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+JobTread,3,E,E,E,E,U,E,E,E,E,U,U,E,U,U,U,U,U,U,U,U,E,E,E,E,E,E,E,E,U,E,E,E,P13-SRC-021;022,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Buildxact,3,E,E,E,E,U,E,E,U,E,U,U,E,U,U,U,U,U,U,U,U,E,E,E,E,E,E,E,E,U,E,E,E,P13-SRC-023,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
+Qotera UAE,3,E,E,U,E,U,E,E,E,E,E,U,N,N,N,N,N,N,N,U,E,U,E,E,U,N,E,U,E,E,E,E,E,P13-SRC-042,P1.3 wave reconstruction + design inheritance + terminology crosswalk,COMPLETE_NO_BLANKS
