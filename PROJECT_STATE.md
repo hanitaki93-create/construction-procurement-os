@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated:** 2026-08-01  
+**Updated:** 2026-08-02  
 **Canonical repository:** `hanitaki93-create/construction-procurement-os`
 
 ---
@@ -8,152 +8,176 @@
 # 1. Current position
 
 - Project: **Construction Procurement OS**
-- Completed phase: **Phase 1 — Deterministic Architecture & Product Specification**
+- Phase 1: **PASS / CLOSED / FROZEN**
 - Active phase: **Phase 2 — Build Decomposition**
-- P1.0: **CP-05 PASS / CLOSED**
-- P1.1–P1.10: **PASS / CLOSED / FROZEN as applicable**
-- P1.11: **PASS / CLOSED / FROZEN**
-- Phase 1 architecture: **COMPLETE / INTERNALLY VALIDATED**
-- External/build/pilot/commercial validation: **PENDING**
-- Phase 2 build decomposition: **ACTIVE / UNLOCKED**
+- P2.1 physical architecture: **INTERNAL HOSTILE RECHECK PASS / CLAUDE AUDIT PENDING**
+- P2.2 build-block dependency graph: **INTERNAL HOSTILE PASS / CLAUDE AUDIT PENDING**
+- P2.3 first build prompt: **B01-P01 INTERNAL PASS / EXTERNAL AUDIT PENDING / EXECUTION LOCKED**
 - Product/frontend/AI code: **NOT STARTED / LOCKED**
-- Physical architecture: **MAY BE DESIGNED AND AUDITED IN PHASE 2**
-- Product implementation: **LOCKED pending separate authorization and ordered V1/V2 decision**
+- P07 implementation: **LOCKED pending V4**
+- AI implementation/activation: **LOCKED pending V6**
+- External/build/pilot/commercial validation: **PENDING**
 
 Current status:
 
-`Claude P1.11 Round 2 PASS. BL-P111-04 closed. G1–G17 PASS. No P1.1–P1.10 reopen. Second XL clean. A0–A3 clean. Phase 1 final master package frozen. Phase 2 decomposition unlocked; code remains locked.`
+`A strong modular-monolith physical architecture has been selected and internally remediated. The system uses separate API/worker/internal-web/external-web deployables, PostgreSQL 18 authoritative state/outbox/jobs/initial search, versioned S3-compatible object storage, fail-closed RLS execution context, explicit cross-store evidence and external-effect protocols, and provider-neutral deployment/observability seams. An 18-block dependency graph maps all MR-001–MR-092. B01-P01 is complete as a locked candidate. One combined Claude hostile audit is pending before freeze and prompt release.`
 
 ---
 
 # 2. Controlling Phase 1 package
 
-Master freeze:
-
 `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_FROZEN.md`
 
-Exact incorporated master body:
+Phase 1 remains controlling. Any semantic contradiction requires explicit `CHG-*` reconciliation.
 
-- path: `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_CANDIDATE_V0_2.md`
-- blob SHA: `692e55558efa2b2ce89ef0b75c557b2ffca6bb7f`
+---
 
-Final checkpoints:
+# 3. Selected P2.1 architecture
 
-- `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_FINAL_CHECKPOINT_V1_0.md`
-- `04_phases/phase_1/PHASE_1_FINAL_CHECKPOINT_V1_0.md`
+Baseline:
 
-External verdict:
+- Node.js 24 LTS / TypeScript strict / pnpm workspace;
+- Fastify 5 API and worker shell;
+- React 19.2 + Vite 8.1 separate internal/external browser apps;
+- PostgreSQL 18 authoritative relational state plus append-only occurrences/events/corrections;
+- PostgreSQL RLS, outbox/jobs and initial FTS/trigram search;
+- Kysely/`pg` explicit SQL and SQL-first forward migrations;
+- S3-compatible versioned object storage through a product adapter;
+- OpenTelemetry/OTLP;
+- Vitest/property tests/Testcontainers/Playwright;
+- OCI containers/provider-neutral managed runtime.
 
-- `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/audits/P1_11_CLAUDE_ROUND_2_VERDICT_V1_0.md`
+Not baseline:
+
+- microservices;
+- mandatory Kafka/RabbitMQ/Redis;
+- OpenSearch/warehouse;
+- Kubernetes/service mesh;
+- full event sourcing;
+- supplier network/account prerequisite;
+- named connector prerequisite;
+- production P07 or AI.
+
+Controlling candidate:
+
+`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_CANDIDATE_V0_2.md`
 
 Supporting controls:
 
-- no-narrowing conformance PASS;
-- 92-requirement traceability and correction;
-- action/surface/API/report catalogue;
-- golden-thread atlas/results;
-- watch/debt reconciliation through W-99;
-- canonical ADR ledger and ADR source/history manifest.
+- alternatives and decision matrix;
+- targeted official technical evidence;
+- module/data/runtime map;
+- NFR/security/deployment proof map;
+- initial hostile FAIL, remediation and 128-scenario recheck PASS.
 
 ---
 
-# 3. Final Phase 1 result
+# 4. P2.1 internal result
 
-Claude’s final verdict:
+Closed blockers:
 
-`PASS — P1.11 Golden-Thread Validation, Red Team & Master Specification can close; Phase 1 architecture is complete and internally validated, subject to the ordered external/build/pilot/commercial gates.`
+- BL-P21-01 — exact cross-store evidence/artifact acknowledgment and restore;
+- BL-P21-02 — pooled RLS/worker context fail-closed protocol;
+- BL-P21-03 — job lease versus external-effect indeterminacy;
+- BL-P21-04 — enforceable module write ownership in shared database;
+- BL-P21-05 — browser/job/schema/release compatibility and rollback.
 
-Claude independently executed and passed:
+Internal gates:
 
-- GT-10 communication-gated effectiveness;
-- GT-12 connector effect indeterminacy;
-- GT-13 closed-period certified correction;
-- GT-20 incomplete-context AI;
-- GT-08 variation, advance, retention and buyer recovery.
+- PA-G1–PA-G13: PASS
+- PA-G14: PASS through P2.2 decomposition
+- PA-G15: PASS / code remains locked
+
+---
+
+# 5. P2.2 build program
+
+Controlling graph:
+
+`04_phases/phase_2_build_decomposition/P2_2_BUILD_BLOCK_DEPENDENCY_GRAPH_V0_1.md`
+
+18 major blocks:
+
+1. engineering foundation;
+2. platform kernel;
+3. async/event/publication/reconciliation;
+4. evidence/files/communication;
+5. requirements/allocation;
+6. sourcing/RFQ/grants/issue;
+7. supplier submissions/revisions/buyer capture;
+8. field/schema/normalization/comparison;
+9. recommendation/approval/AwardDecision/handoff;
+10. internal conventional web;
+11. external secure-task participation;
+12. reporting/controls/search/export;
+13. integration/migration/provider-neutral email;
+14. NFR/security/restore/release hardening;
+15. deterministic A0–A3 validation/pilot instrumentation;
+16. P07 commitment/change — V4 gated;
+17. P07 claims/certification/correction/reporting — V4 gated;
+18. AI substrate/capabilities — V6 gated.
 
 Traceability:
 
-- 66 fully traced;
-- 19 physical proof required;
-- 5 external validation required;
-- 1 legal evidence required;
-- 1 non-SPINE deferral;
-- 0 architecture gaps.
+- MR-001–MR-092 mapped: 92/92;
+- physical-proof rows with proof blocks: 19/19;
+- external-validation rows with decision gates: 5/5;
+- architecture gaps introduced: 0.
 
-Only ADR-0010 and ADR-0011 remain proposed/non-blocking.
+Every completed block must commit a `BlockCompletionEvidenceManifest`; successors cannot rely on a block without it.
 
 ---
 
-# 4. Frozen product boundary
+# 6. First build prompt
 
-A0–A3:
+Candidate:
 
-`authorized requirement / RequirementAllocation / optional ProcurementPackage`
-`→ RFQ/tender`
-`→ supplier source response/revision`
-`→ normalization/comparison`
-`→ recommendation/approval`
-`→ AwardDecision`
-`→ external handoff`
+`04_phases/phase_2_build_decomposition/build_prompts/B01_P01_ENGINEERING_FOUNDATION_RUNTIME_SKELETON_V0_1.md`
 
-A0–A3 remains complete without P07, named connectors, persistent supplier account/network, warehouse/BI, chat or AI.
+It creates only:
 
-P07 commitment/change/valuation/commercial truth remains the sole independent XL.
+- pinned monorepo/toolchain;
+- API/worker/internal-web/external-web shells;
+- package boundaries;
+- PostgreSQL migration foundation;
+- object/scanner adapter foundations;
+- local infrastructure;
+- observability bootstrap;
+- tests/CI/containers/security/SBOM;
+- documentation and completion evidence.
 
-Architecture completion is not contractor/supplier, product, market or commercial validation.
+It explicitly excludes tenant/business schemas, authentication, product operations, evidence acceptance, procurement workflows, reporting, P07 and AI.
 
----
+Execution remains locked until:
 
-# 5. Active Phase 2 handoff
-
-Entry artifact:
-
-`04_phases/phase_2_build_decomposition/P2_0_ENTRY_HANDOFF_V0_1.md`
-
-Canonical next artifact:
-
-`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_WORKPLAN_V0_1.md`
-
-Phase 2 objective:
-
-1. choose and hostile-audit physical architecture under frozen semantics;
-2. compile approximately 12–18 dependency-ordered major build blocks;
-3. define acceptance, migration, rollback and hostile-test gates;
-4. generate the first executable build prompt after the architecture/decomposition gates pass and authorization status is explicit.
-
-Expected distance to first build prompt:
-
-- one focused physical-architecture/decomposition run if clean;
-- two runs if physical architecture requires remediation.
+1. combined Claude P2 PASS;
+2. P2.1/P2.2 freeze and final checkpoint;
+3. explicit implementation authorization;
+4. recorded V1/V2 sequencing decision.
 
 ---
 
-# 6. Remaining ordered gates
+# 7. Canonical next handoff
 
-Still incomplete and mandatory:
+Send Claude:
 
-- FT-02, FT-06, FT-09/CR-02 and FT-10;
-- primary contractor/supplier evidence;
-- prototype comprehension;
-- deterministic thin-slice proof;
-- P07 feasibility;
-- NFR physical verification;
-- AI capability evaluation/activation;
-- controlled live pilot;
-- GCC/legal evidence where applicable;
-- commercial/market validation.
+1. `04_phases/phase_2_build_decomposition/audits/P2_1_P2_2_CLAUDE_SELF_CONTAINED_HOSTILE_AUDIT_PACKET_V0_1.md`
+2. `04_phases/phase_2_build_decomposition/audits/P2_1_P2_2_CLAUDE_HOSTILE_AUDIT_PROMPT_V0_1.md`
+3. `04_phases/phase_2_build_decomposition/build_prompts/B01_P01_ENGINEERING_FOUNDATION_RUNTIME_SKELETON_V0_1.md`
+
+Required PASS:
+
+`PASS — P2.1 physical architecture and P2.2 build decomposition can freeze; B01-P01 is ready for execution after explicit implementation authorization and the recorded V1/V2 sequencing decision.`
 
 ---
 
-# 7. Locks and change control
+# 8. Locks
 
 Do not:
 
-- reinterpret the frozen Phase 1 semantics during physical design;
-- treat the master summary as deleting a more-specific frozen clause;
-- start product/frontend/AI code without separate authorization;
-- begin P07 implementation before its feasibility/authorization gate;
-- mark external/build/pilot/commercial validation complete;
-- introduce a second XL, universal root or hidden truth writer.
-
-Any later semantic contradiction requires explicit `CHG-*` architecture reconciliation and equivalent review. Physical choices may proceed only when they preserve the frozen master package.
+- freeze P2.1/P2.2 before external PASS;
+- execute B01 before explicit authorization and V1/V2 decision;
+- generate executable P07/AI prompts before V4/V6;
+- add a broker/search/cache/service as a new authority or prerequisite;
+- reinterpret frozen Phase 1 semantics;
+- claim physical, external, pilot or commercial validation from documentation alone.
