@@ -8,115 +8,83 @@
 # 1. Current position
 
 - Project: **Construction Procurement OS**
-- Phase: **Phase 1 — Deterministic Architecture & Product Specification**
-- Active subphase: **P1.11 — Golden-Thread Validation, Red Team & Master Specification**
+- Completed phase: **Phase 1 — Deterministic Architecture & Product Specification**
+- Active phase: **Phase 2 — Build Decomposition**
 - P1.0: **CP-05 PASS / CLOSED**
-- P1.1: **PASS / FROZEN**
-- P1.2: **PASS / CLOSED**
-- P1.3: **PASS / CLOSED**
-- P1.4: **PASS / CLOSED / FROZEN**
-- P1.5: **PASS / CLOSED / FROZEN**
-- P1.6: **PASS / CLOSED / FROZEN**
-- P1.7: **PASS / CLOSED / FROZEN**
-- P1.8: **PASS / CLOSED / FROZEN**
-- P1.9: **PASS / CLOSED / FROZEN**
-- P1.10: **PASS / CLOSED / FROZEN**
-- P1.11: **ACTIVE / CLAUDE ROUND 1 FAIL ON BL-P111-04 ONLY / REMEDIATED / INTERNAL POST-REMEDIATION PASS / CLAUDE ROUND 2 PENDING**
-- Phase 1 final closure: **LOCKED pending Claude Round 2 PASS and final checkpoint**
-- Phase 2 build decomposition: **LOCKED pending P1.11 final checkpoint**
+- P1.1–P1.10: **PASS / CLOSED / FROZEN as applicable**
+- P1.11: **PASS / CLOSED / FROZEN**
+- Phase 1 architecture: **COMPLETE / INTERNALLY VALIDATED**
+- External/build/pilot/commercial validation: **PENDING**
+- Phase 2 build decomposition: **ACTIVE / UNLOCKED**
 - Product/frontend/AI code: **NOT STARTED / LOCKED**
-- Physical architecture/vendor selection: **NOT STARTED / LOCKED**
+- Physical architecture: **MAY BE DESIGNED AND AUDITED IN PHASE 2**
+- Product implementation: **LOCKED pending separate authorization and ordered V1/V2 decision**
 
 Current status:
 
-`Claude Round 1 confirmed the architecture threads but found a master-spec precedence defect: the summary could outrank more-specific frozen clauses. The master has been remediated with a general-versus-specific rule, mandatory non-exhaustive source pointers, local closure of the GT-10/GT-12/GT-20 omissions and a published no-narrowing check. W-92–W-96 are closed. Internal post-remediation recheck PASS. Claude Round 2 pending.`
+`Claude P1.11 Round 2 PASS. BL-P111-04 closed. G1–G17 PASS. No P1.1–P1.10 reopen. Second XL clean. A0–A3 clean. Phase 1 final master package frozen. Phase 2 decomposition unlocked; code remains locked.`
 
 ---
 
-# 2. Canonical next handoff
+# 2. Controlling Phase 1 package
 
-Send Claude the Round-2 evidence bundle and exact prompt:
+Master freeze:
 
-1. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/audits/P1_11_CLAUDE_ROUND_2_SELF_CONTAINED_FINAL_AUDIT_PACKET_V0_1.md`
-2. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/audits/P1_11_CLAUDE_ROUND_2_FINAL_HOSTILE_AUDIT_PROMPT_V0_1.md`
-3. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_CANDIDATE_V0_2.md`
-4. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_MASTER_SPECIFICATION_NO_NARROWING_CONFORMANCE_CHECK_V0_1.md`
-5. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_MASTER_REQUIREMENT_TRACEABILITY_MATRIX_V0_1.md`
-6. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_TRACEABILITY_COUNT_CORRECTION_V0_2.md`
-7. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_WATCH_OPEN_DEBT_RECONCILIATION_V0_1.md`
-8. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_GOLDEN_THREAD_ATLAS_V0_1.md`
-9. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_GOLDEN_THREAD_EXECUTION_RESULTS_V0_1.md`
-10. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_ACTION_SURFACE_API_REPORT_CATALOGUE_V0_1.md`
-11. `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/audits/P1_11_INTERNAL_POST_CLAUDE_ROUND_1_RECHECK_V0_1.md`
+`04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_FROZEN.md`
 
-GitHub remains canonical truth.
+Exact incorporated master body:
 
----
+- path: `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_CANDIDATE_V0_2.md`
+- blob SHA: `692e55558efa2b2ce89ef0b75c557b2ffca6bb7f`
 
-# 3. BL-P111-04 remediation
+Final checkpoints:
 
-The remediated master is a navigation/integration/precedence contract, not a replacement encyclopedia.
+- `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/P1_11_FINAL_CHECKPOINT_V1_0.md`
+- `04_phases/phase_1/PHASE_1_FINAL_CHECKPOINT_V1_0.md`
 
-Binding rule:
+External verdict:
 
-> The master governs explicit direct conflicts and explicit supersession only. Where it is silent, summarizing, less specific or navigational, the applicable phase-frozen contract, final checkpoint and incorporated watch closure bind in full. Silence, omission, abbreviation or generalized wording never narrows or deletes a frozen clause.
+- `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/audits/P1_11_CLAUDE_ROUND_2_VERDICT_V1_0.md`
 
-A frozen clause may be changed only through an explicit `CHG-*` record with exact clause identification, evidence/authority, ADR/thread regression and equivalent hostile review.
+Supporting controls:
 
-Every architecture summary is marked `SUMMARY POINTER — NON-EXHAUSTIVE` and cites its controlling source.
-
-The master now states locally:
-
-- GT-10 snapshot consumption and retraction-before-establishment behavior;
-- GT-12 uncorrelated-observation retention/quarantine;
-- GT-20 complete safe outcome set when mandatory context cannot fit a stricter budget;
-- GT-13 MaterialityAndUsePolicy-bound restatement obligation.
+- no-narrowing conformance PASS;
+- 92-requirement traceability and correction;
+- action/surface/API/report catalogue;
+- golden-thread atlas/results;
+- watch/debt reconciliation through W-99;
+- canonical ADR ledger and ADR source/history manifest.
 
 ---
 
-# 4. No-narrowing result
+# 3. Final Phase 1 result
 
-Published conformance result:
+Claude’s final verdict:
 
-- missing paths: 0;
-- missing pointers: 0;
-- direct conflicts: 0;
-- unreviewed supersessions: 0;
-- narrowed taxonomies/registries: 0;
-- broadened authority/truth paths: 0;
-- weakened guards/recovery/failure states: 0;
-- weakened validation/activation gates: 0;
-- hidden architecture gaps: 0;
-- unresolved architecture questions: 0.
+`PASS — P1.11 Golden-Thread Validation, Red Team & Master Specification can close; Phase 1 architecture is complete and internally validated, subject to the ordered external/build/pilot/commercial gates.`
 
-Internal replays GT-10, GT-12, GT-13 and GT-20 all PASS with zero architecture questions.
+Claude independently executed and passed:
 
----
+- GT-10 communication-gated effectiveness;
+- GT-12 connector effect indeterminacy;
+- GT-13 closed-period certified correction;
+- GT-20 incomplete-context AI;
+- GT-08 variation, advance, retention and buyer recovery.
 
-# 5. Traceability and watch status
-
-Correct 92-requirement totals:
+Traceability:
 
 - 66 fully traced;
 - 19 physical proof required;
 - 5 external validation required;
 - 1 legal evidence required;
-- 1 non-SPINE deferral — ADR-0011 detailed suspense/attribution mechanics;
+- 1 non-SPINE deferral;
 - 0 architecture gaps.
 
-W-14–W-91 remain reconciled. W-92–W-96 are closed:
-
-- W-92 — versioned MaterialityAndUsePolicy governs restatement;
-- W-93 — non-SPINE item identified;
-- W-94 — product-registered AI source admission;
-- W-95 — provider-profile-specific, non-inherited SUFFICIENT_PASS;
-- W-96 — cross-functional independent V1/V2 adjudication.
-
-Only ADR-0010 and ADR-0011 remain proposed and non-blocking.
+Only ADR-0010 and ADR-0011 remain proposed/non-blocking.
 
 ---
 
-# 6. Frozen product boundary
+# 4. Frozen product boundary
 
 A0–A3:
 
@@ -132,33 +100,60 @@ A0–A3 remains complete without P07, named connectors, persistent supplier acco
 
 P07 commitment/change/valuation/commercial truth remains the sole independent XL.
 
-Architecture closure is not product, market or commercial validation.
+Architecture completion is not contractor/supplier, product, market or commercial validation.
 
 ---
 
-# 7. Locks and next action
+# 5. Active Phase 2 handoff
+
+Entry artifact:
+
+`04_phases/phase_2_build_decomposition/P2_0_ENTRY_HANDOFF_V0_1.md`
+
+Canonical next artifact:
+
+`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_WORKPLAN_V0_1.md`
+
+Phase 2 objective:
+
+1. choose and hostile-audit physical architecture under frozen semantics;
+2. compile approximately 12–18 dependency-ordered major build blocks;
+3. define acceptance, migration, rollback and hostile-test gates;
+4. generate the first executable build prompt after the architecture/decomposition gates pass and authorization status is explicit.
+
+Expected distance to first build prompt:
+
+- one focused physical-architecture/decomposition run if clean;
+- two runs if physical architecture requires remediation.
+
+---
+
+# 6. Remaining ordered gates
+
+Still incomplete and mandatory:
+
+- FT-02, FT-06, FT-09/CR-02 and FT-10;
+- primary contractor/supplier evidence;
+- prototype comprehension;
+- deterministic thin-slice proof;
+- P07 feasibility;
+- NFR physical verification;
+- AI capability evaluation/activation;
+- controlled live pilot;
+- GCC/legal evidence where applicable;
+- commercial/market validation.
+
+---
+
+# 7. Locks and change control
 
 Do not:
 
-- close P1.11/Phase 1 before Claude Round 2 PASS;
-- unlock Phase 2 before final checkpoint;
-- start product/frontend/AI code;
-- mark contractor/supplier/prototype/build/P07/NFR/AI/pilot/commercial validation complete;
-- allow the master summary to narrow a frozen phase contract;
-- introduce a second XL or hidden truth writer.
+- reinterpret the frozen Phase 1 semantics during physical design;
+- treat the master summary as deleting a more-specific frozen clause;
+- start product/frontend/AI code without separate authorization;
+- begin P07 implementation before its feasibility/authorization gate;
+- mark external/build/pilot/commercial validation complete;
+- introduce a second XL, universal root or hidden truth writer.
 
-On Claude FAIL:
-
-- record the exact verdict;
-- remediate narrowly;
-- rerun complete no-invention/no-narrowing checks;
-- keep Phase 1/Phase 2/code locked.
-
-On Claude PASS:
-
-- record verdict and close any final watches;
-- issue the frozen Phase 1 master specification;
-- issue final P1.11 and Phase 1 verdict/checkpoint;
-- mark architecture complete/internally validated while external/build/pilot/commercial validation remains pending;
-- unlock Phase 2 build decomposition only;
-- keep implementation locked until separate authorization and ordered V1/V2 gate decision.
+Any later semantic contradiction requires explicit `CHG-*` architecture reconciliation and equivalent review. Physical choices may proceed only when they preserve the frozen master package.
