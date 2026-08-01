@@ -20,18 +20,19 @@
 - P1.6: **PASS / CLOSED / FROZEN**
 - P1.7: **PASS / CLOSED / FROZEN**
 - P1.8: **PASS / CLOSED / FROZEN**
-- P1.9: **ACTIVE / UNLOCKED**
-- P1.10+: **LOCKED** until dependencies/gates permit
+- P1.9: **ACTIVE / INTERNAL HOSTILE RECHECK PASS / CLAUDE AUDIT PENDING**
+- P1.10+: **LOCKED** until P1.9 external PASS, ADR reconciliation and final checkpoint
 - Product code: **NOT STARTED / LOCKED**
-- Phase 2/3 build: **LOCKED**
-- Frontend/dashboard/BI/warehouse implementation: **NOT STARTED / LOCKED**
+- Frontend implementation: **NOT STARTED / LOCKED**
+- Dashboard/BI/warehouse implementation: **NOT STARTED / LOCKED**
 - AI implementation: **NOT STARTED / LOCKED**
+- Phase 2/3 build: **LOCKED**
 - Process invention: **PAUSED** unless evidence proves a missing lifecycle
 - Governing roadmap: **Phase 1 Roadmap v1.3 — FROZEN**
 
 Current status:
 
-`P1.8 PASS / CLOSED / FROZEN — begin P1.9 User Experience & Interaction Model.`
+`P1.9 integrated candidate v0.2 internal hostile recheck PASS — Claude hostile audit pending. Do not close P1.9, accept candidate ADRs, unlock P1.10 or start product/frontend code until external PASS and final checkpoint.`
 
 ---
 
@@ -39,26 +40,27 @@ Current status:
 
 Read first:
 
-- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_ENTRY_HANDOFF_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/audits/P1_9_CLAUDE_SELF_CONTAINED_HOSTILE_AUDIT_PACKET_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/audits/P1_9_CLAUDE_HOSTILE_AUDIT_PROMPT_V0_1.md`
 
 Then read as needed:
 
-- `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md`
-- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FROZEN_BOUNDARY_CONTRACT_V1_0.md`
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FROZEN_COMMERCIAL_CORE_V1_0.md`
-- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FROZEN_EVIDENCE_DOCUMENT_COMMUNICATION_MODEL_V1_0.md`
-- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_FROZEN_INTEGRATION_MIGRATION_API_CONTRACT_V1_0.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_INTEGRATED_USER_EXPERIENCE_INTERACTION_CANDIDATE_V0_2.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/audits/P1_9_INTERNAL_HOSTILE_AUDIT_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/audits/P1_9_INTERNAL_AUDIT_REMEDIATION_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/audits/P1_9_INTERNAL_HOSTILE_RECHECK_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_ENTRY_HANDOFF_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_WORKPLAN_V0_1.md`
+- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_TARGETED_OFFICIAL_UX_PRACTICE_EVIDENCE_V0_1.md`
 - `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FROZEN_REPORTING_ANALYTICS_CONTROL_MODEL_V1_0.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_ADR_RECONCILIATION_V1_0.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FINAL_CHECKPOINT_V1_0.md`
+- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_FROZEN_INTEGRATION_MIGRATION_API_CONTRACT_V1_0.md`
 - `02_research/control/adr_log.csv`
 
 GitHub remains canonical truth.
 
-Fetch existing files and SHAs before replacement updates.
+Do not start P1.10, product code, frontend implementation, dashboard/BI/warehouse selection or AI implementation.
 
-Do not start product code, frontend implementation, dashboard/BI/warehouse selection or AI implementation.
+Do not accept ADR-0016 or ADR-0038–ADR-0041 until Claude PASS and final reconciliation.
 
 ---
 
@@ -78,9 +80,9 @@ Burden controls:
 
 A0–A3:
 
-`requirement / material request / package`
+`authorized requirement / material request / optional package`
 `→ RFQ/tender`
-`→ supplier response capture`
+`→ supplier response/revision`
 `→ normalization/comparison`
 `→ recommendation/approval`
 `→ AwardDecision`
@@ -90,7 +92,7 @@ A0–A3 remains usable without:
 
 - P07 execution;
 - named ERP/CDE/email connectors;
-- supplier account/network;
+- persistent supplier account/network;
 - CPM/BPM;
 - WMS/inventory;
 - public API/broker;
@@ -110,343 +112,256 @@ A0–A3 remains usable without:
 5. SECONDARY_REFERENCE — PROFESSIONAL PRACTICE
 6. INTERNAL_REASONING / HYPOTHESIS
 
-Competitor evidence never outranks P1.2 primary contractor evidence.
+Competitor/product evidence never outranks P1.2 primary contractor evidence or frozen architecture.
 
-A genuine primary contradiction may reopen a closed assumption only through controlled architecture change.
-
----
-
-# 5. P1.1–P1.3 frozen inheritance
-
-## P1.1
-
-- deterministic contractor procurement beachhead;
-- P07 sole XL;
-- ≤5 working days to first live tender from clean inputs;
-- zero named connector prerequisite;
-- scope and anti-gravity controls.
-
-## P1.2
-
-Comparison grammar remains:
-
-1. supplier source submission/revision;
-2. normalized representation;
-3. buyer evaluation adjustment;
-4. supplier-confirmed contractable basis.
-
-Open primary evidence debt remains:
-
-- FT-02;
-- FT-06;
-- FT-09 / CR-02;
-- FT-10.
-
-## P1.3
-
-> Inheritance is semantic reuse, not cumulative feature scope.
-
-Evidence/external access remains shared substrate, not an XL.
+Open primary evidence debt remains FT-02, FT-06, FT-09/CR-02 and FT-10.
 
 ---
 
-# 6. P1.4 — PASS / CLOSED / FROZEN
+# 5. Frozen P1.4–P1.8 inheritance
 
-Canonical:
-
-- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FROZEN_BOUNDARY_CONTRACT_V1_0.md`
-- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FINAL_CHECKPOINT_V1_0.md`
-
-Frozen:
+## P1.4
 
 - tenant/project/ContractingAuthorityContext;
 - internal authorization ≠ external grant;
 - OWN/MIRROR/REFERENCE/OUT at load-bearing grain;
 - one authoritative source/writer per effective period;
-- historical authority/configuration binding;
 - connector never business authority;
 - product commercial truth ≠ external accounting truth;
 - evidence integrity/provenance without full CDE ownership;
 - residency/governed migration;
 - cross-tenant learned tenant-business influence OUT by default;
-- agents only through bounded domain operations.
+- agents only through bounded operations.
 
-Accepted include:
-
-- ADR-0005
-- ADR-0012
-- ADR-0014
-- ADR-0018
-- ADR-0020
-- ADR-0021
-- ADR-0024
-- ADR-0025
-- ADR-0026
-
----
-
-# 7. P1.5 — PASS / CLOSED / FROZEN
-
-Canonical:
-
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FROZEN_COMMERCIAL_CORE_V1_0.md`
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FINAL_CHECKPOINT_V1_0.md`
-
-Frozen:
+## P1.5
 
 - no universal procurement root;
 - RequirementAllocation owns scope consumption only;
 - AwardDecision ≠ Commitment;
 - one semantic Commitment core;
 - ScopeBasis ≠ ValuationBasis ≠ CapabilityProfile;
-- COMPONENT versus OBLIGATION effect subject;
-- one economic value contributes once;
-- closed CommercialEffectVector;
+- one economic value once and closed CommercialEffectVector;
 - exact decimal/versioned money/FX/tax;
 - claim ≠ assessment ≠ certification;
-- certification ≠ accounting posting/payment;
-- physical actual ≠ certified actual ≠ accounting-posted actual ≠ cash paid;
+- physical ≠ commercial/certified ≠ accounting-posted ≠ paid actual;
 - history-preserving correction;
-- TX-001–TX-056 closed membership;
 - workflow/evidence/integration/AI never directly writes commercial truth.
 
-Open/non-blocking:
+## P1.6
 
-- ADR-0010 — GCC legal/statutory/rate specifics;
-- ADR-0011 — detailed attribution/suspense mechanics.
-
----
-
-# 8. P1.6 — PASS / CLOSED / FROZEN
-
-Canonical:
-
-- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FROZEN_EVIDENCE_DOCUMENT_COMMUNICATION_MODEL_V1_0.md`
-- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_CHECKPOINT_V1_0.md`
-
-Frozen:
-
-- immutable EvidenceVersion and content/source/occurrence/locator distinctions;
-- immutable RelianceBinding;
-- mandatory ReconstructionAnchorTest and materialization policy;
+- immutable EvidenceVersion/content/source/capture/location/reliance distinctions;
 - exact issued artifact/member identity;
-- issue/dispatch/delivery/read/ack/content/domain effect separation;
-- CommunicationSatisfactionSnapshot and established-once domain effect;
-- later evidence correction cannot automatically reverse/retime domain truth;
-- retention/redaction/disposition controls;
-- AI-derived content remains source-linked and non-authoritative.
+- issue/dispatch/delivery/read/ack/content/domain-effect separation;
+- evidence correction/retraction cannot automatically reverse domain truth;
+- bounded retention/redaction/disposition;
+- AI-derived content source-linked and non-authoritative.
 
-Accepted:
-
-- ADR-0027
-- ADR-0028
-
----
-
-# 9. P1.7 — PASS / CLOSED / FROZEN
-
-Canonical:
-
-- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_FROZEN_INTEGRATION_MIGRATION_API_CONTRACT_V1_0.md`
-- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_ADR_RECONCILIATION_V1_0.md`
-- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_FINAL_CHECKPOINT_V1_0.md`
-
-Frozen:
+## P1.7
 
 - exactly QUERY / PROPOSAL / COMMAND / ASYNC_OPERATION;
-- exact execution-authority modes and delegated intersection;
+- common OperationRegistry and bounded service/domain action;
+- stable idempotency/result recovery;
 - DomainEvent ≠ IntegrationEvent ≠ TransportEnvelope ≠ ExternalObservation;
 - immutable PublicationIntent;
-- closed effect stages including EFFECT_INDETERMINATE;
+- closed effect stages including EFFECT_INDETERMINATE and PARTIAL_EFFECT;
 - timeout/absence is not proof of no effect;
-- indeterminate retry/rebind/cancel restrictions;
 - ConnectorProfile/AuthorityMapping and no co-master;
-- provider-neutral email port and V1 conforming-adapter target;
-- migration classes/manifests/MigrationAcceptanceProfile;
-- future chat/agents use the same bounded operations;
-- mandatory internal integration substrate with optional external activation;
-- A0–A3 no-connector path.
+- migration truth/provenance/limitation;
+- manual/file adapters and A0–A3 no-connector path;
+- future chat/agents use the same operations.
 
-Accepted:
+## P1.8
 
-- ADR-0006
-- ADR-0029
-- ADR-0030
-- ADR-0031
-- ADR-0032
-
----
-
-# 10. P1.8 — PASS / CLOSED / FROZEN
-
-Final verdict:
-
-`PASS — P1.8 Reporting, Analytics & Control Model is frozen; P1.9 may begin.`
-
-Canonical:
-
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FROZEN_REPORTING_ANALYTICS_CONTROL_MODEL_V1_0.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_ADR_RECONCILIATION_V1_0.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.8_reporting_analytics_control_model/P1_8_FINAL_CHECKPOINT_V1_0.md`
-
-External hostile-audit chain:
-
-- internal Round 1 FAIL → BL-P18-01/02/03 remediation;
-- internal Round 2 PASS;
-- Claude Round 1 FAIL → BL-P18-04;
-- partial-population/aggregation-quality remediation;
-- internal Round 3 PASS;
-- Claude Round 2 PASS / blockers none;
-- W-57–W-61 closed.
-
-Frozen reporting/analytics/control model:
-
-- MetricDefinitionVersion with source/grain/population/formula/time/quality/access/non-meaning;
-- closed metric classes and typed operator registry;
-- correction-safe contribution occurrence/lineage/conservation identities;
-- declared/system-resolvable/evaluable/caller-accessible/safely-disclosable population distinctions;
-- block/evaluated-subset/deterministic-range partial-population treatment;
-- explicit PRESENT/ZERO/subset/range/missing/unknown/unavailable/restricted/quarantined/blocked value states;
-- explicit source/effective/recorded/observed/known-at/as-of/execution/publication time;
-- generic ACTUAL prohibited; named physical/commercial/accounting/cash and exact subtypes;
-- projection/report definition/execution/result/snapshot/artifact/issue/restatement separation;
-- five reconstruction levels;
-- complete ResultQualityVector and MaterialityAndUsePolicy;
-- report-level decision-use composition;
-- issue-time versus current subsequent-reliance assessment;
-- mandatory gap-resolution restatement beyond declared materiality;
-- retrospective population narrowing treated as semantic change/restatement;
-- target-scope MetricAggregationQualityRule;
-- currency/time/actual/access/comparability and anti-double-count controls;
-- tenant-private supplier-performance boundary;
-- control observations remain derived, not business state;
-- immutable report/export/evidence/query/chat seam;
-- no BI/warehouse/formula/CPM/GRC/supplier-network/AI-insight second XL;
-- A0–A3 minimum report pack with no connector, AI, P07 or warehouse.
-
-Accepted:
-
-- ADR-0033
-- ADR-0034
-- ADR-0035
-- ADR-0036
-- ADR-0037
-
-P1.9 inherited correctness obligations include:
-
-- no subset-as-total rendering;
-- no range-as-midpoint rendering;
-- visible population/gap/limitation context at the decision surface;
-- no hidden stale/restricted/indeterminate/evidence/migration/reconciliation limitations;
-- issued/current/restated and issue-time/current-reliance distinctions;
-- restricted drill-through without absence inference;
-- conventional UI complete without chat.
+- metric/projection/report/snapshot/result identities;
+- declared/evaluated/restricted population distinctions;
+- closed partial-population treatment and value states;
+- time/status/actual-family separation;
+- quality vector/materiality/decision-use assessment;
+- report-use composition and current subsequent reliance;
+- issued/current/restated/reconstruction distinctions;
+- contribution/comparability/double-count controls;
+- load-bearing limitation rendering inherited by P1.9;
+- supplier/control/report/chat boundaries;
+- A0–A3 reporting without connector or AI.
 
 ---
 
-# 11. P1.9 — ACTIVE / UNLOCKED
+# 6. P1.9 governing thesis
 
-Entry handoff:
+> **The interface may simplify interaction, but it may never simplify away authority, evidence, uncertainty, population, decision-use or correction meaning.**
 
-- `04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_ENTRY_HANDOFF_V0_1.md`
-
-Objective:
-
-Define deterministic interaction, task, navigation, approval, external-party, evidence, reporting-limitation, recovery, accessibility and conventional-UI/chat-coexistence meaning without allowing the interface to bypass authority or become a second truth owner.
-
-P1.9 owns:
-
-- interaction/operation grammar;
-- internal task surfaces;
-- approval/authority/irreversible-action UX;
-- external-party participation and ADR-0016;
-- evidence/document/communication UX;
-- report subset/range/limitation/historical-reliance UX;
-- control-observation/work-queue UX;
-- error/recovery/offline/accessibility/localization semantics;
-- conventional UI completeness without chat.
-
-P1.9 does not select frontend technology, component library or visual design system and does not start product code.
-
-First controlled artifact:
-
-`P1_9_WORKPLAN_V0_1.md`
+P1.9 decides interaction meaning, task structure, disclosure, recovery and channel obligations. It does not select frontend framework, component library, pixels, database/cache/search, renderer, AI model or product code.
 
 ---
 
-# 12. Current ADR posture
+# 7. P1.9 current candidate
 
-Accepted through P1.8:
+## Interaction grammar
 
-- ADR-0001–ADR-0009;
-- ADR-0012–ADR-0015;
-- ADR-0018–ADR-0037 as individually recorded.
+Every affordance is QUERY, PROPOSAL, COMMAND, ASYNC_OPERATION, NAVIGATION or LOCAL_PRESENTATION.
 
-Still proposed/open:
+Every command binds exact operation/version, principal/represented principal, tenant/project/authority context, target/member versions, authority/DOA, evidence/guards, consequences, idempotency and recovery.
 
-- ADR-0010 — GCC statutory/legal/rate specifics / non-blocking;
-- ADR-0011 — detailed attribution/suspense mechanics / non-blocking;
-- ADR-0016 — external-party UX priority / P1.9;
-- ADR-0017 — broader AI-readiness / P1.10.
+No hidden command through navigation, filter, drag/drop, auto-save, import, annotation or chat.
 
-Canonical decision details:
+## Pre-transmission recovery
 
-- `02_research/control/adr_log.csv`
+`InteractionContinuationAnchor` exists before the first effect-bearing transmission and binds logical command, context, target, preview/confirmation and idempotency.
+
+Proven pre-acceptance failure can resume under the same anchor. Possible acceptance/effect permits lookup/reconciliation only. Blind resend is prohibited.
+
+## Outcomes and bulk
+
+`InteractionOutcomeEnvelope` preserves acceptance, operational status, effect stage, item result and recovery.
+
+Bulk uses exactly:
+
+- ATOMIC_DOMAIN_SET;
+- INDEPENDENT_ITEMS_CONTINUE;
+- INDEPENDENT_ITEMS_STOP_ON_BLOCKING;
+- ORDERED_DEPENDENT.
+
+False external atomicity and whole-batch retry after unknown effect are prohibited.
+
+## Work context/navigation
+
+Every view binds exact tenant/project/ContractingAuthorityContext and canonical subject/version/as-of. Navigation/tasks/queues/history are derived and cannot become a universal case root or manual state writer.
+
+## Approval
+
+Approval binds exact proposal/version and current authority/DOA/delegation. Approval outcome remains distinct from downstream command and domain effect.
+
+## External participation / ADR-0016 candidate
+
+Bounded hybrid:
+
+- secure task link;
+- email/file response;
+- buyer-on-behalf capture;
+- optional persistent workspace;
+- structured file round-trip;
+- manual/offline fallback.
+
+No account/network prerequisite.
+
+ExternalTaskGrant binds tenant-private relationship, exact contact/mailbox/team, task/version, operations, assurance, confidentiality, transfer/revocation and occurrences. Forwarding never transfers access.
+
+`ExternalSubmissionAcceptancePolicy` and closed dispositions decide evidence-only, provisional, valid, rejected, withdrawn, superseded, late-limited and quarantined submissions. Only valid/explicit late-accepted responses enter governed response population.
+
+## Evidence/communication
+
+Source, capture, normalized, evaluation, supplier-confirmed, issued, reference, annotation, correction/retraction and disposition/redaction remain distinct.
+
+Upload is untrusted capture. Issued member set immutable. Provider acceptance is not delivery/read/ack/domain effect.
+
+## Reporting disclosure
+
+`LoadBearingDisclosureBundle`, `SurfaceDisclosureProfile` and `DisclosureParityManifest` preserve value state, population, subset/range, use block, actual/time, quality, issue/restatement and current reliance through decision, compact, mobile, export, print and chat surfaces.
+
+Decision-critical “not total,” range, blocked/limited use and current reliance consequences are inline/adjacent—not tooltip/badge/color/drill-only.
+
+## Errors/recovery/accessibility
+
+Errors are typed; generic retry is prohibited where effect may exist. Offline/manual/file fallback preserves operation/evidence semantics.
+
+Keyboard, assistive status/error/progress, consequential review/correction, responsive disclosure, mobile task support declaration, timezone/date/currency/unit and Arabic/RTL structural obligations are binding.
+
+## Conventional/chat coexistence
+
+All A0–A3 work remains complete without chat. Chat-supported actions use the same operations, preview, continuation, confirmation, outcome and disclosure. Session memory/inference is not authority. P1.10 owns reasoning/autonomy.
 
 ---
 
-# 13. One-XL guardrail
+# 8. Targeted official evidence
 
-P07 remains the sole independent XL gravity well.
+Official practice supports the bounded hybrid without governing architecture:
 
-Reject independent XL expansion in:
+- Procore demonstrates structured bid submission plus email attachment submission without sign-in and buyer-on-behalf capture;
+- Coupa demonstrates secure invitation-link/OTP access without mandatory account depending on settings, optional portal, terms/addenda, revisions, receipt/history and version-bound offline spreadsheet round-trip;
+- SAP demonstrates response teams/alternative/offline responses and also the onboarding/network gravity kept optional here;
+- Autodesk demonstrates centralized bid/task tracking and supplier-network gravity not adopted as prerequisite;
+- W3C supports consequential review/correction/reversal, error suggestions, programmatic status/progress and structural RTL handling.
 
-- accounting/GL/AP/cash;
-- RequirementAllocation/value duplication;
-- workflow/BPM;
-- CPM/master scheduling;
-- legal claims/banking/insurance;
-- CDE/records management;
-- inventory/WMS;
-- supplier network;
-- evidence/audit;
-- tenancy/identity;
-- integration/iPaaS;
-- BI/data warehouse/report builder;
-- page/form builder;
-- collaboration/chat suite;
-- GRC/case management;
-- AI/agent memory or cross-tenant data network.
+Primary UAE supplier-side evidence remains incomplete; later validation debt remains.
 
 ---
 
-# 14. Product/build lock
+# 9. P1.9 audit chain
 
-- Product code: NOT STARTED / LOCKED
-- Frontend/UI implementation: NOT STARTED
-- Dashboard/BI/warehouse implementation: NOT STARTED
-- Named connector implementation: NOT STARTED
-- Email provider selection: NOT DECIDED
-- Public API/broker/chat runtime: optional later activation
-- AI model/agent implementation: NOT STARTED
-- Phase 2 build prompting: LOCKED
-- Phase 3 validation/build: LOCKED
+Internal Round 1:
 
-Current work remains semantic architecture and specification only.
+`FAIL — four blockers.`
+
+- BL-P19-01 — response could be lost before any recovery identity reached user;
+- BL-P19-02 — captured external content versus valid organizational submission open;
+- BL-P19-03 — disclosure placement/parity ambiguous;
+- BL-P19-04 — bulk dependency/stop/indeterminate semantics incomplete.
+
+Remediation:
+
+- pre-transmission InteractionContinuationAnchor;
+- ExternalSubmissionAcceptancePolicy + disposition + actor assurance;
+- SurfaceDisclosureProfile + mandatory inline set + DisclosureParityManifest;
+- four BulkExecutionPolicy modes;
+- localization keys, contact transfer, fallback declaration, mobile support, copy policy and reauthentication safety.
+
+Internal recheck:
+
+`PASS — 114 hostile scenarios; G1–G16 PASS.`
+
+Regression:
+
+- P1.1–P1.8 reopening = NO;
+- SECOND XL = CLEAN;
+- A0–A3 = CLEAN;
+- product code/P1.10 = LOCKED.
 
 ---
 
-# 15. Immediate next action
+# 10. Candidate ADR posture
 
-Create:
+Still PROPOSED pending Claude PASS:
 
-`04_phases/phase_1/P1.9_user_experience_interaction_model/P1_9_WORKPLAN_V0_1.md`
+- ADR-0016 — bounded hybrid external-party UX;
+- ADR-0038 — interaction operation, continuation, bulk and typed outcome;
+- ADR-0039 — work context/navigation/no second root;
+- ADR-0040 — load-bearing disclosure/history/reliance interaction;
+- ADR-0041 — safe recovery/accessibility/localization/conventional-chat coexistence.
 
-P1.10+ remains locked.
+ADR-0017 remains P1.10-owned.
 
-Product code remains locked.
+---
+
+# 11. Current gate claim
+
+- G1 operation/authority/evidence/consequence/result — PASS.
+- G2 query/proposal/command/acceptance/effect — PASS.
+- G3 navigation/tasks/queues no second root — PASS.
+- G4 approval/DOA/delegation — PASS.
+- G5 evidence layers — PASS.
+- G6 communication occurrence/effect — PASS.
+- G7 limitation placement/parity — PASS.
+- G8 report history/current reliance — PASS.
+- G9 external low-friction/no network — PASS.
+- G10 grant/actor/submission validity — PASS.
+- G11 control queues no GRC truth — PASS.
+- G12 continuation/bulk/error/unknown recovery — PASS.
+- G13 accessibility/mobile/localization/RTL — PASS semantic floor.
+- G14 conventional A0–A3 no connector/account/chat/AI/P07 — PASS.
+- G15 regression/one XL/product-code lock — PASS.
+- G16 internal audit/readiness — PASS; Claude pending.
+
+---
+
+# 12. Immediate next action
+
+Send Claude:
+
+- `P1_9_CLAUDE_SELF_CONTAINED_HOSTILE_AUDIT_PACKET_V0_1.md`
+- `P1_9_CLAUDE_HOSTILE_AUDIT_PROMPT_V0_1.md`
+
+On FAIL: record, remediate narrowly, rerun internal audit and prepare Round 2.
+
+On PASS: record verdict, absorb non-blocking watches, reconcile ADR-0016/0038–0041, create frozen P1.9 contract/final verdict/checkpoint and then unlock P1.10.
+
+P1.9 remains active until then.
