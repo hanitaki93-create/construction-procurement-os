@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated:** 2026-07-31  
+**Updated:** 2026-08-01  
 **Canonical status file:** this document
 
 ---
@@ -9,15 +9,16 @@
 
 - Project: **Construction Procurement OS**
 - Phase: **Phase 1 — Deterministic Architecture & Product Specification**
-- Active subphase: **P1.6 — Evidence, Document & Communication Model**
+- Active subphase: **P1.7 — Integration, Migration & API Contracts**
 - P1.0: **CP-05 PASS / CLOSED**
 - P1.1: **PASS / FROZEN**
 - P1.2: **PASS / CLOSED**
 - P1.3: **PASS / CLOSED**
 - P1.4: **PASS / CLOSED / FROZEN**
 - P1.5: **PASS / CLOSED / FROZEN**
-- P1.6: **ACTIVE / UNLOCKED**
-- P1.7+: **LOCKED** until dependencies/gates permit
+- P1.6: **PASS / CLOSED / FROZEN**
+- P1.7: **ACTIVE / UNLOCKED**
+- P1.8+: **LOCKED** until dependencies/gates permit
 - Product code: **NOT STARTED / LOCKED**
 - Phase 2/3 build: **LOCKED**
 - Process invention: **PAUSED** unless later evidence proves a missing lifecycle
@@ -25,7 +26,7 @@
 
 Current status:
 
-`P1.5 PASS / CLOSED / FROZEN — begin P1.6 Evidence, Document & Communication Model.`
+`P1.6 PASS / CLOSED / FROZEN — begin P1.7 Integration, Migration & API Contracts.`
 
 ---
 
@@ -33,15 +34,16 @@ Current status:
 
 Read first:
 
-- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_ENTRY_HANDOFF_V0_1.md`
+- `04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_ENTRY_HANDOFF_V0_1.md`
 
 Then read:
 
 - `01_roadmaps/PHASE1_ROADMAP_V1_3_FROZEN.md`
 - `04_phases/phase_1/P1.4_boundary_ownership_tenancy_contract/P1_4_FROZEN_BOUNDARY_CONTRACT_V1_0.md`
 - `04_phases/phase_1/P1.5_commercial_core/P1_5_FROZEN_COMMERCIAL_CORE_V1_0.md`
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FINAL_VERDICT.md`
-- `04_phases/phase_1/P1.5_commercial_core/P1_5_FINAL_CHECKPOINT_V1_0.md`
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FROZEN_EVIDENCE_DOCUMENT_COMMUNICATION_MODEL_V1_0.md`
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_CHECKPOINT_V1_0.md`
 - current `02_research/control/adr_log.csv`
 
 GitHub remains canonical truth.
@@ -391,37 +393,158 @@ Later-owned:
 
 ---
 
-# P1.6 — ACTIVE / UNLOCKED
+# P1.6 — PASS / CLOSED / FROZEN
 
-P1.6 is **Evidence, Document & Communication Model**.
+Final verdict:
+
+`PASS — P1.6 Evidence, Document & Communication Model is frozen; P1.7 may begin.`
+
+Canonical:
+
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FROZEN_EVIDENCE_DOCUMENT_COMMUNICATION_MODEL_V1_0.md`
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_VERDICT.md`
+- `04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_FINAL_CHECKPOINT_V1_0.md`
+
+External hostile-audit record:
+
+- internal Round 1 FAIL → BL-P16-01/02/03 remediation
+- Claude Round 1 FAIL → BL-P16-04 remediation
+- Claude Round 2 FAIL → BL-P16-05 remediation
+- Claude Round 3 PASS / blockers none / G1–G15 PASS
+
+Regression result:
+
+- P1.1 REOPEN = NO
+- P1.2 REGRESSION = NO
+- P1.3 REOPEN = NO
+- P1.4 REOPEN = NO
+- P1.5 REOPEN = NO
+- SECOND XL = CLEAN
+- A0–A3 ACTIVATION = CLEAN
+
+## Frozen P1.6 evidence/document/communication substrate
+
+### Evidence identity
+
+Distinct:
+
+- EvidenceRecord;
+- immutable EvidenceVersion;
+- ContentIdentity / IntegrityAssertion;
+- SourcePrincipalRef / attribution basis;
+- CaptureObservation / CommunicationOccurrence;
+- SourceLocator;
+- EvidenceBinding;
+- immutable RelianceBinding;
+- DerivedObservation;
+- ValidationEvidence.
+
+Hash/filename/URL/current pointer never substitutes for source/business identity or authority.
+
+### External reconstruction
+
+Load-bearing external evidence requires:
+
+- authoritative source/system;
+- object/record identity;
+- exact immutable/historically addressable version;
+- proof that version is not a current-content alias.
+
+Materialization policy:
+
+- ANCHOR_ONLY;
+- ANCHOR_PLUS_LOCAL_CAPTURE;
+- LOCAL_CAPTURE_REQUIRED.
+
+If neither a passing anchor nor permitted local capture exists, the dependency remains unresolved.
+
+### Documents and issue
+
+- non-load-bearing drafts may remain mutable;
+- exact relied-on/submitted/issued version freezes at load-bearing trigger;
+- revision/supersession/addendum/replacement/withdrawal/reissue preserve history;
+- current/latest is projection;
+- exact issued artifact and issued-pack membership remain immutable.
+
+### Communications
+
+Distinct:
+
+- issue/send intent;
+- dispatch/send;
+- delivery/receipt;
+- read/open;
+- receipt acknowledgment;
+- substantive response/agreement evidence;
+- owning-domain acceptance/effectiveness.
+
+Pattern-B rules freeze addressees, channels, prerequisites, time/offset/calendar and completion mode before issue.
+
+### Established-once boundary
+
+Under OBSERVATION_COMPLETES_EFFECT:
+
+- first accepted satisfaction freezes CommunicationSatisfactionSnapshot;
+- one stable/idempotent owning-domain operation establishes one domain event;
+- the event is not recomputed from current evidence;
+- later evidence correction/retraction/fraud/late discovery cannot automatically reverse or retime it;
+- consequence changes require bounded owning-domain correction.
+
+### Retention / AI
+
+- retention requires explicit bounded basis;
+- preservation does not grant access;
+- restriction ≠ redaction ≠ disposition;
+- disposition never reverses domain truth;
+- AI/tool-derived content remains source-linked derived/proposed information and cannot write domain truth.
+
+## P1.6 ADR reconciliation
+
+Accepted:
+
+- ADR-0027 — Evidence identity/version/content-integrity/reconstruction-anchor model
+- ADR-0028 — Communication/transmittal/delivery/acknowledgment/domain-effect boundary
+
+Later-owned:
+
+- ADR-0006 → P1.7
+- ADR-0016 → P1.9
+- ADR-0017 → P1.10
+
+---
+
+# P1.7 — ACTIVE / UNLOCKED
+
+P1.7 is **Integration, Migration & API Contracts**.
 
 Objective:
 
-> Define the durable provenance substrate for commercial records and later AI.
+> Define authority-safe APIs, events, connectors, imports/exports and migrations over the frozen deterministic domain/evidence substrate without dual masters, arbitrary mutation or mandatory named-connector burden.
 
-Roadmap-required outputs:
+Primary outputs:
 
-- document identity;
-- versions/revisions;
-- supersession;
-- immutable issued versions;
-- hashing;
-- transmittals;
-- source-location references;
-- confidentiality;
-- retention;
-- message/thread model;
-- external communication capture rules;
-- email/portal/message-channel boundary.
+- bounded command/query API contract;
+- domain-event versus integration-event contract;
+- integration authority profile grammar;
+- connector capability/certification contract;
+- reconciliation/conflict/error taxonomy;
+- import/export/migration contract;
+- identity/reference mapping;
+- idempotency/retry/delivery/replay semantics;
+- asynchronous operation/status contract;
+- future agent/tool API boundary;
+- no-connector A0–A3 deployment profile;
+- ADR-0006 integration-depth decision.
 
-P1.6 gate:
+P1.7 must preserve:
 
-- every disputed commercial value can trace to a specific source version/location;
-- every externally communicated commercial commitment has a defined capture path.
-
-P1.6 must inherit P1.4 evidence/retention/residency authority and P1.5 commercial meaning.
-
-P1.6 must remain a bounded shared evidence/provenance/communication substrate, not a full CDE, records-management, email, collaboration or independent commercial-truth platform.
+- one authority per load-bearing fact/event/field;
+- connector/middleware never business authority;
+- P1.6 exact source/version/reconstruction semantics;
+- P1.5 bounded domain actions and correction semantics;
+- A0–A3 with zero bespoke named connector prerequisite;
+- P07 sole XL;
+- product-code lock.
 
 ---
 
@@ -429,15 +552,15 @@ P1.6 must remain a bounded shared evidence/provenance/communication substrate, n
 
 Read:
 
-`04_phases/phase_1/P1.6_evidence_document_communication_model/P1_6_ENTRY_HANDOFF_V0_1.md`
+`04_phases/phase_1/P1.7_integration_migration_api_contracts/P1_7_ENTRY_HANDOFF_V0_1.md`
 
 Then:
 
 1. fetch current `PROJECT_STATE.md`;
-2. read roadmap v1.3, P1.4 frozen boundary and P1.5 frozen Commercial Core;
-3. fetch current ADR log;
-4. create `P1_6_WORKPLAN_V0_1.md` before selecting storage technology;
-5. design evidence identity/provenance, revision/issue/supersession, communications/transmittals, confidentiality/retention/disposition and dispute-reconstruction together;
-6. continuously test CDE/records-management/email gravity;
-7. preserve minimal A0–A3 evidence burden;
+2. fetch current ADR log;
+3. read P1.4, P1.5 and P1.6 frozen contracts;
+4. create `P1_7_WORKPLAN_V0_1.md` before selecting technologies or named connectors;
+5. design API/actions/events/authority profiles/migration/reconciliation together;
+6. resolve ADR-0006 explicitly;
+7. continuously test integration-platform gravity and A0–A3 connector independence;
 8. do not start product code.
