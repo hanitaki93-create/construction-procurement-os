@@ -9,7 +9,9 @@
       "default": "./dist/public.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -b",
     "db": "node dist/cli.js",

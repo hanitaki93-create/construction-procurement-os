@@ -13,7 +13,10 @@ describe('foundation manifest compiler', () => {
 
   it('fails when one frozen source row is removed', () => {
     const input = createValidCompilerFixture();
-    const result = compileFoundationManifests({ ...input, coverage: input.coverage.filter((row) => row.sourceId !== 'MR-009') });
+    const result = compileFoundationManifests({
+      ...input,
+      coverage: input.coverage.filter((row) => row.sourceId !== 'MR-009'),
+    });
     expect(result.ok).toBe(false);
     expect(result.issues.some((entry) => entry.code === 'MISSING_SOURCE_COVERAGE')).toBe(true);
   });
@@ -34,7 +37,9 @@ describe('foundation manifest compiler', () => {
       entry.id === 'technical_object_016' ? { ...entry, invariantIds: [] } : entry,
     );
     const result = compileFoundationManifests({ ...input, objects });
-    expect(result.issues.some((entry) => entry.code === 'MISSING_OBJECT_REVERSE_REFERENCE')).toBe(true);
+    expect(result.issues.some((entry) => entry.code === 'MISSING_OBJECT_REVERSE_REFERENCE')).toBe(
+      true,
+    );
   });
 
   it('fails an effective-dated object without overlap disposition', () => {
@@ -45,7 +50,9 @@ describe('foundation manifest compiler', () => {
         : entry,
     );
     const result = compileFoundationManifests({ ...input, objects });
-    expect(result.issues.some((entry) => entry.code === 'MISSING_EFFECTIVE_PERIOD_DISPOSITION')).toBe(true);
+    expect(
+      result.issues.some((entry) => entry.code === 'MISSING_EFFECTIVE_PERIOD_DISPOSITION'),
+    ).toBe(true);
   });
 
   it('fails unknown references and unreconciled invariant candidates', () => {
@@ -59,7 +66,9 @@ describe('foundation manifest compiler', () => {
       newlyEncounteredInvariantCandidates: ['retention-disposition-race'],
     });
     expect(result.issues.some((entry) => entry.code === 'UNKNOWN_INVARIANT_REFERENCE')).toBe(true);
-    expect(result.issues.some((entry) => entry.code === 'UNRECONCILED_INVARIANT_CANDIDATE')).toBe(true);
+    expect(result.issues.some((entry) => entry.code === 'UNRECONCILED_INVARIANT_CANDIDATE')).toBe(
+      true,
+    );
   });
 
   it('fails an incomplete release compatibility manifest', () => {
@@ -69,6 +78,8 @@ describe('foundation manifest compiler', () => {
       releaseManifest: { ...input.releaseManifest, rollbackDeadline: '', conformance: 'PENDING' },
     });
     expect(result.issues.some((entry) => entry.code === 'INCOMPLETE_RELEASE_MANIFEST')).toBe(true);
-    expect(result.issues.some((entry) => entry.code === 'RELEASE_MANIFEST_NOT_CONFORMANT')).toBe(true);
+    expect(result.issues.some((entry) => entry.code === 'RELEASE_MANIFEST_NOT_CONFORMANT')).toBe(
+      true,
+    );
   });
 });

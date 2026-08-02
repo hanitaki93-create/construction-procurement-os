@@ -1,7 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { TransactionConflictError, withPrivateTransaction } from '../src/internal/transaction.js';
-import { createBarrier, createIntegrationPool, databaseErrorCode, dropSchema, uniqueSchema } from './test-support.js';
+import {
+  createBarrier,
+  createIntegrationPool,
+  databaseErrorCode,
+  dropSchema,
+  uniqueSchema,
+} from './test-support.js';
 
 const pool = createIntegrationPool('cpos-b01-effective-period-integration');
 const schema = uniqueSchema('testkit_effective');
@@ -46,21 +52,25 @@ describe('effective-period non-overlap foundation', () => {
   it('reproduces overlap under unprotected READ COMMITTED', async () => {
     const barrier = createBarrier(2);
     const insert = async (identity: string, start: string, end: string) =>
-      withPrivateTransaction(pool, { isolation: 'READ COMMITTED', logicalIdentity: identity }, async (transaction) => {
-        const prior = await transaction.query<{ count: string }>(
-          `SELECT COUNT(*)::int8 AS count FROM ${q('plain')}
+      withPrivateTransaction(
+        pool,
+        { isolation: 'READ COMMITTED', logicalIdentity: identity },
+        async (transaction) => {
+          const prior = await transaction.query<{ count: string }>(
+            `SELECT COUNT(*)::int8 AS count FROM ${q('plain')}
            WHERE scope_key = 'scope'
              AND effective_range && tstzrange($1::timestamptz, $2::timestamptz, '[)')`,
-          [start, end],
-        );
-        expect(prior.rows[0]?.count).toBe('0');
-        await barrier.arriveAndWait();
-        await transaction.query(
-          `INSERT INTO ${q('plain')} (scope_key, effective_range)
+            [start, end],
+          );
+          expect(prior.rows[0]?.count).toBe('0');
+          await barrier.arriveAndWait();
+          await transaction.query(
+            `INSERT INTO ${q('plain')} (scope_key, effective_range)
            VALUES ('scope', tstzrange($1::timestamptz, $2::timestamptz, '[)'))`,
-          [start, end],
-        );
-      });
+            [start, end],
+          );
+        },
+      );
 
     await Promise.all([
       insert('period-rc-a', '2026-08-01T00:00:00Z', '2026-09-01T00:00:00Z'),
@@ -72,14 +82,18 @@ describe('effective-period non-overlap foundation', () => {
   it('rejects concurrent overlap with a GiST exclusion constraint', async () => {
     const barrier = createBarrier(2);
     const insert = async (identity: string, start: string, end: string) =>
-      withPrivateTransaction(pool, { isolation: 'READ COMMITTED', logicalIdentity: identity }, async (transaction) => {
-        await barrier.arriveAndWait();
-        await transaction.query(
-          `INSERT INTO ${q('excluded')} (scope_key, effective_range)
+      withPrivateTransaction(
+        pool,
+        { isolation: 'READ COMMITTED', logicalIdentity: identity },
+        async (transaction) => {
+          await barrier.arriveAndWait();
+          await transaction.query(
+            `INSERT INTO ${q('excluded')} (scope_key, effective_range)
            VALUES ('scope', tstzrange($1::timestamptz, $2::timestamptz, '[)'))`,
-          [start, end],
-        );
-      });
+            [start, end],
+          );
+        },
+      );
 
     const settled = await Promise.allSettled([
       insert('period-cc3-a', '2026-08-01T00:00:00Z', '2026-09-01T00:00:00Z'),
@@ -94,22 +108,26 @@ describe('effective-period non-overlap foundation', () => {
   it('uses SERIALIZABLE for an application-normalized temporal predicate', async () => {
     const barrier = createBarrier(2);
     const insert = async (identity: string, start: string, end: string) =>
-      withPrivateTransaction(pool, { isolation: 'SERIALIZABLE', logicalIdentity: identity }, async (transaction) => {
-        const prior = await transaction.query<{ count: string }>(
-          `SELECT COUNT(*)::int8 AS count FROM ${q('predicate')}
+      withPrivateTransaction(
+        pool,
+        { isolation: 'SERIALIZABLE', logicalIdentity: identity },
+        async (transaction) => {
+          const prior = await transaction.query<{ count: string }>(
+            `SELECT COUNT(*)::int8 AS count FROM ${q('predicate')}
            WHERE scope_key = 'application-normalized'
              AND start_at < $2::timestamptz
              AND end_at > $1::timestamptz`,
-          [start, end],
-        );
-        expect(prior.rows[0]?.count).toBe('0');
-        await barrier.arriveAndWait();
-        await transaction.query(
-          `INSERT INTO ${q('predicate')} (scope_key, start_at, end_at)
+            [start, end],
+          );
+          expect(prior.rows[0]?.count).toBe('0');
+          await barrier.arriveAndWait();
+          await transaction.query(
+            `INSERT INTO ${q('predicate')} (scope_key, start_at, end_at)
            VALUES ('application-normalized', $1::timestamptz, $2::timestamptz)`,
-          [start, end],
-        );
-      });
+            [start, end],
+          );
+        },
+      );
 
     const settled = await Promise.allSettled([
       insert('period-cc4-a', '2026-08-01T00:00:00Z', '2026-09-01T00:00:00Z'),

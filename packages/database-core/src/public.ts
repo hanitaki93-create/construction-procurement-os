@@ -2,7 +2,12 @@ import { Kysely, PostgresDialect, sql } from 'kysely';
 import type { Pool } from 'pg';
 
 import { scanDatabaseCatalog, type CatalogFinding } from './internal/catalog-scan.js';
-import { migrationStatus, runMigrations, type MigrationResult, type MigrationStatus } from './internal/migrations.js';
+import {
+  migrationStatus,
+  runMigrations,
+  type MigrationResult,
+  type MigrationStatus,
+} from './internal/migrations.js';
 import { createPrivatePool, type PrivatePoolOptions } from './internal/pool.js';
 
 interface EmptyTechnicalDatabase {}
@@ -18,7 +23,10 @@ export interface DatabaseHealth {
 
 export interface DatabaseRuntime {
   health(): Promise<DatabaseHealth>;
-  migrationStatus(options: { readonly directory: string; readonly schema?: string }): Promise<MigrationStatus>;
+  migrationStatus(options: {
+    readonly directory: string;
+    readonly schema?: string;
+  }): Promise<MigrationStatus>;
   migrate(options: {
     readonly directory: string;
     readonly buildId: string;
@@ -59,10 +67,7 @@ export function createDatabaseRuntime(options: DatabaseRuntimeOptions): Database
   };
 }
 
-export type {
-  CatalogFinding,
-  CatalogFindingKind,
-} from './internal/catalog-scan.js';
+export type { CatalogFinding, CatalogFindingKind } from './internal/catalog-scan.js';
 export type {
   AppliedMigration,
   MigrationFile,

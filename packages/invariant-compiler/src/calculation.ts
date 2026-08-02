@@ -17,7 +17,11 @@ export function validateCalculationPlan(plan: CalculationPlan): readonly string[
   if (!Number.isSafeInteger(plan.outputScale) || plan.outputScale < 0 || plan.outputScale > 18) {
     issues.push('outputScale must be an integer from 0 to 18');
   }
-  if (!Number.isSafeInteger(plan.overflowDigits) || plan.overflowDigits < 1 || plan.overflowDigits > 38) {
+  if (
+    !Number.isSafeInteger(plan.overflowDigits) ||
+    plan.overflowDigits < 1 ||
+    plan.overflowDigits > 38
+  ) {
     issues.push('overflowDigits must be an integer from 1 to 38');
   }
   if (plan.operator === 'DIVIDE') {
@@ -39,11 +43,7 @@ function normalizeDecimal(value: Decimal, scale: number, mode: Decimal.Rounding)
   return value.toDecimalPlaces(scale, mode).toFixed(scale);
 }
 
-export function executeCalculationPlan(
-  plan: CalculationPlan,
-  left: string,
-  right: string,
-): string {
+export function executeCalculationPlan(plan: CalculationPlan, left: string, right: string): string {
   const issues = validateCalculationPlan(plan);
   if (issues.length > 0) throw new Error(`invalid calculation plan: ${issues.join('; ')}`);
 
@@ -64,9 +64,12 @@ export function executeCalculationPlan(
     case 'DIVIDE': {
       if (rightValue.isZero()) throw new Error('division by zero');
       const intermediateScale = plan.divisionIntermediateScale;
-      if (intermediateScale === undefined) throw new Error('division intermediate scale is missing');
+      if (intermediateScale === undefined)
+        throw new Error('division intermediate scale is missing');
       result = new Decimal(
-        leftValue.dividedBy(rightValue).toDecimalPlaces(intermediateScale, roundingModes[plan.roundingMode]),
+        leftValue
+          .dividedBy(rightValue)
+          .toDecimalPlaces(intermediateScale, roundingModes[plan.roundingMode]),
       );
       break;
     }
@@ -74,6 +77,7 @@ export function executeCalculationPlan(
 
   const normalized = normalizeDecimal(result, plan.outputScale, roundingModes[plan.roundingMode]);
   const digits = normalized.replace(/[-.]/gu, '').replace(/^0+/u, '').length || 1;
-  if (digits > plan.overflowDigits) throw new Error('calculation result exceeds declared precision');
+  if (digits > plan.overflowDigits)
+    throw new Error('calculation result exceeds declared precision');
   return normalized;
 }

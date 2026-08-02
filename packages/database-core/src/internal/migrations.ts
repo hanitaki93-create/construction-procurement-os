@@ -62,7 +62,8 @@ export async function readMigrationFiles(directory: string): Promise<readonly Mi
     if (!match) continue;
     const id = match[1];
     const name = match[2];
-    if (id === undefined || name === undefined) throw new Error(`invalid migration filename ${filename}`);
+    if (id === undefined || name === undefined)
+      throw new Error(`invalid migration filename ${filename}`);
     if (seenIds.has(id)) throw new Error(`duplicate migration ID ${id}`);
     seenIds.add(id);
     const sql = await readFile(path.join(directory, filename), 'utf8');
@@ -80,7 +81,10 @@ async function tableExists(client: PoolClient, schema: string): Promise<boolean>
   return result.rows[0]?.exists === true;
 }
 
-async function appliedMigrations(client: PoolClient, schema: string): Promise<readonly AppliedMigration[]> {
+async function appliedMigrations(
+  client: PoolClient,
+  schema: string,
+): Promise<readonly AppliedMigration[]> {
   if (!(await tableExists(client, schema))) return [];
   const qualified = `${quoteIdentifier(schema)}.${quoteIdentifier('schema_migration')}`;
   const result = await client.query<{

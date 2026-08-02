@@ -28,7 +28,9 @@ if (exportsMap['.']?.types !== './dist/public.d.ts') {
   errors.push('database-core type export must resolve to dist/public.d.ts');
 }
 if (forbiddenExport.test(publicSource)) {
-  errors.push('database-core public source exports a raw client, pool, Kysely root, or private transaction');
+  errors.push(
+    'database-core public source exports a raw client, pool, Kysely root, or private transaction',
+  );
 }
 if (unrestrictedQuery.test(publicSource)) {
   errors.push('database-core public runtime exposes an unrestricted query method');

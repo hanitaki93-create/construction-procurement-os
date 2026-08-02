@@ -33,7 +33,8 @@ export interface AsyncBarrier {
 }
 
 export function createBarrier(participants: number): AsyncBarrier {
-  if (!Number.isSafeInteger(participants) || participants < 1) throw new Error('participants must be positive');
+  if (!Number.isSafeInteger(participants) || participants < 1)
+    throw new Error('participants must be positive');
   let arrived = 0;
   let release: (() => void) | undefined;
   const promise = new Promise<void>((resolve) => {

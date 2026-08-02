@@ -15,7 +15,10 @@ const divisionPlan: CalculationPlan = {
 
 describe('exact calculation plan', () => {
   it('rejects division without an intermediate scale', () => {
-    const issues = validateCalculationPlan({ ...divisionPlan, divisionIntermediateScale: undefined });
+    const issues = validateCalculationPlan({
+      ...divisionPlan,
+      divisionIntermediateScale: undefined,
+    });
     expect(issues).toContain('divisionIntermediateScale must be declared from outputScale to 36');
   });
 

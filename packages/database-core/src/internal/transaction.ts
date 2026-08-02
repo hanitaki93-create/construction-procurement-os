@@ -40,7 +40,9 @@ function databaseErrorCode(error: unknown): string | undefined {
   return typeof code === 'string' ? code : undefined;
 }
 
-function retryCode(code: string | undefined): 'SERIALIZATION_FAILURE' | 'DEADLOCK_DETECTED' | undefined {
+function retryCode(
+  code: string | undefined,
+): 'SERIALIZATION_FAILURE' | 'DEADLOCK_DETECTED' | undefined {
   if (code === '40001') return 'SERIALIZATION_FAILURE';
   if (code === '40P01') return 'DEADLOCK_DETECTED';
   return undefined;
@@ -76,7 +78,9 @@ export async function withPrivateTransaction<Result>(
       );
       const observed = isolationResult.rows[0]?.transaction_isolation.toUpperCase();
       if (observed !== options.isolation) {
-        throw new Error(`transaction isolation mismatch: requested ${options.isolation}, observed ${String(observed)}`);
+        throw new Error(
+          `transaction isolation mismatch: requested ${options.isolation}, observed ${String(observed)}`,
+        );
       }
 
       const transaction: PrivateTransaction = {
@@ -103,5 +107,9 @@ export async function withPrivateTransaction<Result>(
     }
   }
 
-  throw new TransactionConflictError('RETRY_EXHAUSTED', 'unreachable retry state', retryMaximum + 1);
+  throw new TransactionConflictError(
+    'RETRY_EXHAUSTED',
+    'unreachable retry state',
+    retryMaximum + 1,
+  );
 }

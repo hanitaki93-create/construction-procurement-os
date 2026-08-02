@@ -1,10 +1,7 @@
 import type { Pool } from 'pg';
 
 export type CatalogFindingKind =
-  | 'SECURITY_DEFINER'
-  | 'CONTEXT_MUTATION'
-  | 'SET_ROLE'
-  | 'BYPASS_RLS_ROLE';
+  'SECURITY_DEFINER' | 'CONTEXT_MUTATION' | 'SET_ROLE' | 'BYPASS_RLS_ROLE';
 
 export interface CatalogFinding {
   readonly kind: CatalogFindingKind;

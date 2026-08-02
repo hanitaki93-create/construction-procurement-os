@@ -19,14 +19,17 @@ async function migrationDirectory(files: Readonly<Record<string, string>>): Prom
   const directory = await mkdtemp(path.join(os.tmpdir(), 'cpos-b01-migrations-'));
   temporaryDirectories.push(directory);
   await Promise.all(
-    Object.entries(files).map(async ([filename, sql]) => writeFile(path.join(directory, filename), sql)),
+    Object.entries(files).map(async ([filename, sql]) =>
+      writeFile(path.join(directory, filename), sql),
+    ),
   );
   return directory;
 }
 
 afterAll(async () => {
   for (const schema of schemas) await dropSchema(pool, schema);
-  for (const directory of temporaryDirectories) await rm(directory, { recursive: true, force: true });
+  for (const directory of temporaryDirectories)
+    await rm(directory, { recursive: true, force: true });
   await pool.end();
 });
 

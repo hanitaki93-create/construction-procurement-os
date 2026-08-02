@@ -1,9 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import {
-  TransactionConflictError,
-  withPrivateTransaction,
-} from '../src/internal/transaction.js';
+import { TransactionConflictError, withPrivateTransaction } from '../src/internal/transaction.js';
 import {
   createBarrier,
   createIntegrationPool,
@@ -32,7 +29,9 @@ beforeAll(async () => {
   await pool.query('CREATE EXTENSION IF NOT EXISTS btree_gist');
   await pool.query(`CREATE SCHEMA "${schema}"`);
   await pool.query(`CREATE TABLE ${q('basis')} (id int PRIMARY KEY, capacity int NOT NULL)`);
-  await pool.query(`CREATE TABLE ${q('consumption')} (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, amount int NOT NULL)`);
+  await pool.query(
+    `CREATE TABLE ${q('consumption')} (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, amount int NOT NULL)`,
+  );
   await pool.query(`CREATE TABLE ${q('guard')} (guard_key text PRIMARY KEY)`);
   await pool.query(`INSERT INTO ${q('basis')} (id, capacity) VALUES (1, 100)`);
   await resetAllocation();
@@ -108,7 +107,8 @@ describe('cross-row concurrency foundation', () => {
           WHERE b.id = 1
           GROUP BY b.capacity
         `);
-        if ((remaining.rows[0]?.remaining ?? 0) < 20) throw new Error('ALLOCATION_CONSERVATION_CONFLICT');
+        if ((remaining.rows[0]?.remaining ?? 0) < 20)
+          throw new Error('ALLOCATION_CONSERVATION_CONFLICT');
         await transaction.query(`INSERT INTO ${q('consumption')} (amount) VALUES (20)`);
       },
     );
@@ -156,7 +156,10 @@ describe('cross-row concurrency foundation', () => {
     const result = await withPrivateTransaction(
       pool,
       { isolation: 'READ COMMITTED', logicalIdentity: 'missing-guard' },
-      async (transaction) => transaction.query(`SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'absent' FOR UPDATE`),
+      async (transaction) =>
+        transaction.query(
+          `SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'absent' FOR UPDATE`,
+        ),
     );
     expect(result.rowCount).toBe(0);
   });
@@ -168,13 +171,19 @@ describe('cross-row concurrency foundation', () => {
         pool,
         { isolation: 'READ COMMITTED', logicalIdentity: identity },
         async (transaction) => {
-          await transaction.query(`INSERT INTO ${q('guard')} (guard_key) VALUES ('shared') ON CONFLICT DO NOTHING`);
-          const locked = await transaction.query(`SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'shared' FOR UPDATE`);
+          await transaction.query(
+            `INSERT INTO ${q('guard')} (guard_key) VALUES ('shared') ON CONFLICT DO NOTHING`,
+          );
+          const locked = await transaction.query(
+            `SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'shared' FOR UPDATE`,
+          );
           expect(locked.rowCount).toBe(1);
         },
       );
     await Promise.all([createAndLock('lazy-guard-a'), createAndLock('lazy-guard-b')]);
-    const count = await pool.query<{ count: string }>(`SELECT COUNT(*)::int8 AS count FROM ${q('guard')}`);
+    const count = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::int8 AS count FROM ${q('guard')}`,
+    );
     expect(count.rows[0]?.count).toBe('1');
   });
 
@@ -187,8 +196,12 @@ describe('cross-row concurrency foundation', () => {
         pool,
         { isolation: 'READ COMMITTED', logicalIdentity: identity },
         async (transaction) => {
-          await transaction.query(`SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'a' FOR UPDATE`);
-          await transaction.query(`SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'b' FOR UPDATE`);
+          await transaction.query(
+            `SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'a' FOR UPDATE`,
+          );
+          await transaction.query(
+            `SELECT guard_key FROM ${q('guard')} WHERE guard_key = 'b' FOR UPDATE`,
+          );
         },
       );
     await expect(Promise.all([ordered('ordered-a'), ordered('ordered-b')])).resolves.toBeDefined();
@@ -204,10 +217,16 @@ describe('cross-row concurrency foundation', () => {
       ]);
       const opposite = async (client: typeof left, key: 'a' | 'b') => {
         await barrier.arriveAndWait();
-        return client.query(`SELECT guard_key FROM ${q('guard')} WHERE guard_key = '${key}' FOR UPDATE`);
+        return client.query(
+          `SELECT guard_key FROM ${q('guard')} WHERE guard_key = '${key}' FOR UPDATE`,
+        );
       };
       const settled = await Promise.allSettled([opposite(left, 'b'), opposite(right, 'a')]);
-      expect(settled.some((entry) => entry.status === 'rejected' && databaseErrorCode(entry.reason) === '40P01')).toBe(true);
+      expect(
+        settled.some(
+          (entry) => entry.status === 'rejected' && databaseErrorCode(entry.reason) === '40P01',
+        ),
+      ).toBe(true);
     } finally {
       await Promise.allSettled([left.query('ROLLBACK'), right.query('ROLLBACK')]);
       left.release();
