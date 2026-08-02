@@ -61,7 +61,7 @@ function boolean(env: NodeJS.ProcessEnv, key: string, fallback: boolean): boolea
 }
 
 function logLevel(env: NodeJS.ProcessEnv): LogLevel {
-  const value = (env.LOG_LEVEL?.trim().toLowerCase() || 'info') as LogLevel;
+  const value = (env['LOG_LEVEL']?.trim().toLowerCase() || 'info') as LogLevel;
   if (!allowedLogLevels.has(value)) {
     throw new ConfigurationError('LOG_LEVEL must be debug, info, warn, or error');
   }
