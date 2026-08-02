@@ -35,7 +35,10 @@ async function fetchReadiness(): Promise<ReadinessResponse> {
 
 function ExternalApp() {
   const [locale, setLocale] = useState<SupportedLocale>('en');
-  const readiness = useQuery({ queryKey: ['external-technical-readiness'], queryFn: fetchReadiness });
+  const readiness = useQuery({
+    queryKey: ['external-technical-readiness'],
+    queryFn: fetchReadiness,
+  });
 
   useEffect(() => {
     document.documentElement.lang = locale;

@@ -1,10 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 
-import type {
-  HealthComponent,
-  LivenessResponse,
-  ReadinessResponse,
-} from '@cpos/contracts';
+import type { HealthComponent, LivenessResponse, ReadinessResponse } from '@cpos/contracts';
 import { technicalOpenApiDocument } from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
 import type { TechnicalLogger } from '@cpos/observability';
@@ -24,7 +20,11 @@ export interface BuildApiOptions {
   readonly now?: () => Date;
 }
 
-export function buildApi({ config, logger, now = () => new Date() }: BuildApiOptions): FastifyInstance {
+export function buildApi({
+  config,
+  logger,
+  now = () => new Date(),
+}: BuildApiOptions): FastifyInstance {
   const app = Fastify({
     bodyLimit: config.bodyLimitBytes,
     connectionTimeout: config.requestTimeoutMs,

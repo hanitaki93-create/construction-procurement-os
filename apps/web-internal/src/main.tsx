@@ -64,7 +64,8 @@ function InternalApp() {
       : {
           surface: 'Internal workspace',
           nav: 'Workspace actions',
-          intro: 'This is a technical shell only. No procurement actions or business authority exist yet.',
+          intro:
+            'This is a technical shell only. No procurement actions or business authority exist yet.',
           runtime: 'Runtime readiness',
           build: 'Build identity',
           loading: 'Checking technical components.',

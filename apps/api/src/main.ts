@@ -4,7 +4,10 @@ import { createTechnicalLogger } from '@cpos/observability';
 import { buildApi } from './app.js';
 
 const config = loadRuntimeConfig('api');
-const logger = createTechnicalLogger({ service: config.serviceName, minimumLevel: config.logLevel });
+const logger = createTechnicalLogger({
+  service: config.serviceName,
+  minimumLevel: config.logLevel,
+});
 const app = buildApi({ config, logger });
 let closing = false;
 
@@ -27,7 +30,11 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
 
 try {
   await app.listen({ host: config.host, port: config.port });
-  logger.info('api_started', { host: config.host, port: config.port, buildId: config.build.buildId });
+  logger.info('api_started', {
+    host: config.host,
+    port: config.port,
+    buildId: config.build.buildId,
+  });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });
   process.exitCode = 1;

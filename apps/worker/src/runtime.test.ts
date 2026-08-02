@@ -7,7 +7,11 @@ import { createWorkerRuntime, workerLanes } from './runtime.js';
 describe('B01 worker runtime', () => {
   it('registers the exact empty lane set and transitions cleanly', () => {
     const runtime = createWorkerRuntime({
-      logger: createTechnicalLogger({ service: 'worker-test', minimumLevel: 'error', sink: () => {} }),
+      logger: createTechnicalLogger({
+        service: 'worker-test',
+        minimumLevel: 'error',
+        sink: () => {},
+      }),
       now: () => new Date('2026-08-02T00:00:00.000Z'),
     });
 
@@ -19,7 +23,11 @@ describe('B01 worker runtime', () => {
 
   it('rejects duplicate starts while ready', () => {
     const runtime = createWorkerRuntime({
-      logger: createTechnicalLogger({ service: 'worker-test', minimumLevel: 'error', sink: () => {} }),
+      logger: createTechnicalLogger({
+        service: 'worker-test',
+        minimumLevel: 'error',
+        sink: () => {},
+      }),
     });
     runtime.start();
     expect(() => runtime.start()).toThrow(/cannot start/u);

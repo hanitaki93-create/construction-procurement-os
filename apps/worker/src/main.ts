@@ -4,7 +4,10 @@ import { createTechnicalLogger } from '@cpos/observability';
 import { createWorkerRuntime } from './runtime.js';
 
 const config = loadRuntimeConfig('worker');
-const logger = createTechnicalLogger({ service: config.serviceName, minimumLevel: config.logLevel });
+const logger = createTechnicalLogger({
+  service: config.serviceName,
+  minimumLevel: config.logLevel,
+});
 const runtime = createWorkerRuntime({ logger });
 const ready = runtime.start();
 
