@@ -18,13 +18,30 @@ on:
       - 'vitest.config.ts'
       - 'scripts/**'
       - 'packages/tooling-config/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/b01-f1-foundation.yml'
+      - '.node-version'
+      - '.npmrc'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig*.json'
+      - 'eslint.config.mjs'
+      - 'prettier.config.mjs'
+      - '.prettierignore'
+      - 'vitest.config.ts'
+      - 'scripts/**'
+      - 'packages/tooling-config/**'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: b01-f1-${{ github.ref }}
+  group: b01-f1-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -34,7 +51,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Check out exact branch revision
+      - name: Check out exact revision
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
@@ -68,7 +85,7 @@ jobs:
           fi
 
       - name: Commit generated lockfile to the B01 branch
-        if: steps.lockfile.outputs.created == 'true'
+        if: github.event_name == 'push' && steps.lockfile.outputs.created == 'true'
         shell: bash
         run: |
           set -euo pipefail
