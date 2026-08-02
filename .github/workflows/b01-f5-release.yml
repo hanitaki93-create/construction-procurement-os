@@ -1,0 +1,188 @@
+name: B01 F5 Release Evidence
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.dockerignore'
+      - '.gitleaks.toml'
+      - '.github/workflows/b01-f5-release.yml'
+      - 'apps/**'
+      - 'infra/containers/**'
+      - 'package.json'
+      - 'playwright.config.ts'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/containers.mjs'
+      - 'scripts/supply-chain.mjs'
+      - 'tests/e2e/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b01-f5-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browsers:
+    name: Chromium Firefox WebKit and mobile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Install exact dependency graph and browser engines
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Run browser isolation accessibility RTL and mobile proof
+        shell: bash
+        run: pnpm test:e2e
+
+  release:
+    name: OCI secret dependency SBOM and vulnerability proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --frozen-lockfile
+
+      - name: Build four exact OCI images
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          BUILD_ID: b01-f5-ci
+          RELEASE_ID: b01-v1-candidate
+        run: pnpm containers:build
+
+      - name: Smoke non-root images and release metadata
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          BUILD_ID: b01-f5-ci
+          RELEASE_ID: b01-v1-candidate
+        run: pnpm containers:smoke
+
+      - name: Scan repository for secrets
+        shell: bash
+        run: pnpm security:secrets
+
+      - name: Audit exact dependency graph
+        shell: bash
+        run: pnpm security:dependencies
+
+      - name: Generate CycloneDX source and image SBOMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm sbom
+          test "$(find artifacts/sbom -name '*.cdx.json' -type f | wc -l)" -eq 5
+          sha256sum artifacts/sbom/*.cdx.json
+
+      - name: Reject fixed high or critical container vulnerabilities
+        shell: bash
+        run: pnpm security:containers
+
+  rollback:
+    name: Scoped teardown and repository rollback proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --frozen-lockfile
+
+      - name: Prove B01 repository patch reverses in a disposable worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --binary origin/main...HEAD > /tmp/b01.patch
+          test -s /tmp/b01.patch
+          git worktree add --detach /tmp/cpos-b01-rollback HEAD
+          cd /tmp/cpos-b01-rollback
+          git apply --reverse --check /tmp/b01.patch
+          git apply --reverse /tmp/b01.patch
+          git diff --quiet origin/main --
+          git reset --hard HEAD
+          cd "$GITHUB_WORKSPACE"
+          git worktree remove --force /tmp/cpos-b01-rollback
+          echo CPOS_REPOSITORY_ROLLBACK_PASS
+
+      - name: Prove scoped infrastructure teardown preserves unrelated resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker volume create cpos-unrelated-sentinel-volume
+          docker run --detach --name cpos-unrelated-sentinel --label cpos.scope=unrelated node:24.18.0-bookworm-slim sleep 600
+          cleanup() {
+            docker rm --force cpos-unrelated-sentinel >/dev/null 2>&1 || true
+            docker volume rm cpos-unrelated-sentinel-volume >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          pnpm infra:up
+          pnpm infra:down
+          docker inspect cpos-unrelated-sentinel >/dev/null
+          docker volume inspect cpos-unrelated-sentinel-volume >/dev/null
+          docker volume inspect cpos-b01_cpos-postgres >/dev/null
+          CPOS_CONFIRM_DESTROY=YES pnpm infra:destroy
+          docker inspect cpos-unrelated-sentinel >/dev/null
+          docker volume inspect cpos-unrelated-sentinel-volume >/dev/null
+          if docker volume inspect cpos-b01_cpos-postgres >/dev/null 2>&1; then
+            echo 'B01 volume survived explicit destroy' >&2
+            exit 1
+          fi
+          echo CPOS_SCOPED_TEARDOWN_PASS
