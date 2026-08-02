@@ -63,7 +63,8 @@ const server = createServer(async (request, response) => {
       response.end();
       return;
     }
-    const file = (await existingFile(requested)) || (await existingFile(path.join(root, 'index.html')));
+    const file =
+      (await existingFile(requested)) || (await existingFile(path.join(root, 'index.html')));
     if (!file) {
       response.writeHead(404);
       response.end();
@@ -72,13 +73,17 @@ const server = createServer(async (request, response) => {
 
     const metadata = await stat(file);
     response.writeHead(200, {
-      'cache-control': file.endsWith('index.html') ? 'no-store' : 'public, max-age=31536000, immutable',
+      'cache-control': file.endsWith('index.html')
+        ? 'no-store'
+        : 'public, max-age=31536000, immutable',
       'content-length': metadata.size,
-      'content-type': contentTypes.get(path.extname(file).toLowerCase()) || 'application/octet-stream',
+      'content-type':
+        contentTypes.get(path.extname(file).toLowerCase()) || 'application/octet-stream',
       'x-content-type-options': 'nosniff',
       'x-frame-options': 'DENY',
       'referrer-policy': 'no-referrer',
-      'content-security-policy': "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+      'content-security-policy':
+        "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'",
     });
     if (request.method === 'HEAD') response.end();
     else createReadStream(file).pipe(response);
