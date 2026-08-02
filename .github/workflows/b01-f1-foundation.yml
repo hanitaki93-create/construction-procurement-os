@@ -1,0 +1,112 @@
+name: B01 F1 Foundation
+
+on:
+  push:
+    branches:
+      - build/b01-engineering-foundation
+    paths:
+      - '.github/workflows/b01-f1-foundation.yml'
+      - '.node-version'
+      - '.npmrc'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig*.json'
+      - 'eslint.config.mjs'
+      - 'prettier.config.mjs'
+      - '.prettierignore'
+      - 'vitest.config.ts'
+      - 'scripts/**'
+      - 'packages/tooling-config/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: b01-f1-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  foundation:
+    name: Node 24 foundation verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out exact branch revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Generate the first lockfile when absent
+        id: lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f pnpm-lock.yaml ]]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            pnpm install --lockfile-only
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit generated lockfile to the B01 branch
+        if: steps.lockfile.outputs.created == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git diff --cached --exit-code && exit 1 || true
+          git commit -m "B01 F1: generate exact pnpm lockfile"
+          git push origin HEAD:build/b01-engineering-foundation
+
+      - name: Install from the exact lockfile
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify root manifests
+        shell: bash
+        run: pnpm manifests:check
+
+      - name: Verify architecture boundaries
+        shell: bash
+        run: pnpm architecture:check
+
+      - name: Verify formatting
+        shell: bash
+        run: pnpm format:check
+
+      - name: Verify linting
+        shell: bash
+        run: pnpm lint
+
+      - name: Verify types
+        shell: bash
+        run: pnpm typecheck
+
+      - name: Run foundation tests
+        shell: bash
+        run: pnpm test
+
+      - name: Build foundation packages
+        shell: bash
+        run: pnpm build
