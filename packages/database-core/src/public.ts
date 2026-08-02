@@ -10,9 +10,9 @@ import {
 } from './internal/migrations.js';
 import { createPrivatePool, type PrivatePoolOptions } from './internal/pool.js';
 
-interface EmptyTechnicalDatabase {}
+type EmptyTechnicalDatabase = Record<string, never>;
 
-export interface DatabaseRuntimeOptions extends PrivatePoolOptions {}
+export type DatabaseRuntimeOptions = PrivatePoolOptions;
 
 export type DatabaseHealth =
   | Readonly<{
@@ -57,8 +57,9 @@ export function createDatabaseRuntime(options: DatabaseRuntimeOptions): Database
           SELECT current_setting('server_version') AS server_version
         `.execute(database);
         const serverVersion = result.rows[0]?.server_version;
-        if (serverVersion === undefined)
+        if (serverVersion === undefined) {
           throw new Error('PostgreSQL did not return server_version');
+        }
         return { state: 'ok', serverVersion, checkedAt };
       } catch (error: unknown) {
         return { state: 'unavailable', checkedAt, detail: normalizeError(error) };
