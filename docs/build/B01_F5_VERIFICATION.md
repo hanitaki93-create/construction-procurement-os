@@ -42,12 +42,12 @@
 
 All lanes passed on implementation head `1344a64454154bc624197b2a885bad9f8da9dafc`.
 
-| Workflow | Run | Job(s) | Result |
-| --- | ---: | --- | --- |
-| B01 Verification | `30764286699` | `91540162236` | PASS |
-| B01 F3 PostgreSQL | `30764286728` | `91540162411` | PASS |
-| B01 F4 Adapters | `30764286725` | `91540162338` | PASS |
-| B01 F5 Release Evidence | `30764286720` | `91540162441`, `91540162405`, `91540162439` | PASS |
+| Workflow                |           Run | Job(s)                                      | Result |
+| ----------------------- | ------------: | ------------------------------------------- | ------ |
+| B01 Verification        | `30764286699` | `91540162236`                               | PASS   |
+| B01 F3 PostgreSQL       | `30764286728` | `91540162411`                               | PASS   |
+| B01 F4 Adapters         | `30764286725` | `91540162338`                               | PASS   |
+| B01 F5 Release Evidence | `30764286720` | `91540162441`, `91540162405`, `91540162439` | PASS   |
 
 ## Browser proof
 

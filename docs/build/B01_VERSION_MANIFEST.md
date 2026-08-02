@@ -15,74 +15,74 @@
 
 ## Runtime and data platform
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| Node.js | `24.18.0` | Exact build, CI and OCI runtime line. |
-| pnpm | `10.34.0` | Exact workspace/build line; absent from runtime images. |
-| PostgreSQL | `18.4` | Real-service migration, exact-type, concurrency and catalog proof. |
+| Component  |  Selected | Evidence / disposition                                             |
+| ---------- | --------: | ------------------------------------------------------------------ |
+| Node.js    | `24.18.0` | Exact build, CI and OCI runtime line.                              |
+| pnpm       | `10.34.0` | Exact workspace/build line; absent from runtime images.            |
+| PostgreSQL |    `18.4` | Real-service migration, exact-type, concurrency and catalog proof. |
 
 ## Application framework
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| Fastify | `5.10.0` | API technical shell and process/container smoke. |
-| React | `19.2.8` | Internal and external technical shells. |
-| React DOM | `19.2.8` | Exactly aligned with React. |
-| Vite | `8.1.5` | Separate production builds and real E2E servers. |
-| `@vitejs/plugin-react` | `6.0.4` | Exact React/Vite integration line. |
-| TanStack React Query | `5.101.4` | Query-only use in B01; no product mutations. |
+| Component              |  Selected | Evidence / disposition                           |
+| ---------------------- | --------: | ------------------------------------------------ |
+| Fastify                |  `5.10.0` | API technical shell and process/container smoke. |
+| React                  |  `19.2.8` | Internal and external technical shells.          |
+| React DOM              |  `19.2.8` | Exactly aligned with React.                      |
+| Vite                   |   `8.1.5` | Separate production builds and real E2E servers. |
+| `@vitejs/plugin-react` |   `6.0.4` | Exact React/Vite integration line.               |
+| TanStack React Query   | `5.101.4` | Query-only use in B01; no product mutations.     |
 
 ## Language and quality tooling
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| TypeScript | `6.0.3` | Strict production/test/tooling graphs. |
-| ESLint | `9.39.5` | Exact flat-config line. |
-| `typescript-eslint` | `8.65.0` | Exact TypeScript/ESLint compatibility line. |
-| Prettier | `3.9.6` | Deterministic source formatting. |
-| Vitest | `4.1.10` | Unit and real-service integration tests. |
-| Playwright Test | `1.61.1` | Chromium, Firefox, WebKit and mobile proof. |
-| `playwright-core` | `1.61.1` | Exact peer required by Playwright/axe and OCI deploy graph. |
-| `@types/node` | `24.13.3` | Node 24 type line. |
-| `@types/react` | `19.2.17` | React 19.2 type line. |
-| `@types/react-dom` | `19.2.3` | React DOM 19.2 type line. |
+| Component           |  Selected | Evidence / disposition                                      |
+| ------------------- | --------: | ----------------------------------------------------------- |
+| TypeScript          |   `6.0.3` | Strict production/test/tooling graphs.                      |
+| ESLint              |  `9.39.5` | Exact flat-config line.                                     |
+| `typescript-eslint` |  `8.65.0` | Exact TypeScript/ESLint compatibility line.                 |
+| Prettier            |   `3.9.6` | Deterministic source formatting.                            |
+| Vitest              |  `4.1.10` | Unit and real-service integration tests.                    |
+| Playwright Test     |  `1.61.1` | Chromium, Firefox, WebKit and mobile proof.                 |
+| `playwright-core`   |  `1.61.1` | Exact peer required by Playwright/axe and OCI deploy graph. |
+| `@types/node`       | `24.13.3` | Node 24 type line.                                          |
+| `@types/react`      | `19.2.17` | React 19.2 type line.                                       |
+| `@types/react-dom`  |  `19.2.3` | React DOM 19.2 type line.                                   |
 
 ## Database and calculation libraries
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| `pg` | `8.22.0` | Private database-core dependency; real PostgreSQL proof. |
-| `@types/pg` | `8.20.0` | Matching type line. |
-| Kysely | `0.29.4` | Private database-core dependency; no public raw query handle. |
-| Decimal.js | `10.6.0` | Isolated 120-significant-digit product calculation context. |
+| Component   | Selected | Evidence / disposition                                        |
+| ----------- | -------: | ------------------------------------------------------------- |
+| `pg`        | `8.22.0` | Private database-core dependency; real PostgreSQL proof.      |
+| `@types/pg` | `8.20.0` | Matching type line.                                           |
+| Kysely      | `0.29.4` | Private database-core dependency; no public raw query handle. |
+| Decimal.js  | `10.6.0` | Isolated 120-significant-digit product calculation context.   |
 
 ## Object storage and file scanning
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| `@aws-sdk/client-s3` | `3.1015.0` | Versioned-object exact-byte contract. |
-| SeaweedFS local image | `chrislusf/seaweedfs:4.40` | Replaceable local S3/versioning proof substrate. |
-| ClamAV local image | `clamav/clamav:1.5.3` | Real INSTREAM clean/infected/unavailable/timeout proof. |
+| Component             |                   Selected | Evidence / disposition                                  |
+| --------------------- | -------------------------: | ------------------------------------------------------- |
+| `@aws-sdk/client-s3`  |                 `3.1015.0` | Versioned-object exact-byte contract.                   |
+| SeaweedFS local image | `chrislusf/seaweedfs:4.40` | Replaceable local S3/versioning proof substrate.        |
+| ClamAV local image    |      `clamav/clamav:1.5.3` | Real INSTREAM clean/infected/unavailable/timeout proof. |
 
 ## Observability
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| `@opentelemetry/api` | `1.9.0` | Stable API line. |
-| `@opentelemetry/sdk-node` | `0.221.0` | Node 24-compatible SDK line. |
-| `@opentelemetry/sdk-metrics` | `2.9.0` | Exact metrics SDK line used by Node SDK. |
-| `@opentelemetry/exporter-trace-otlp-http` | `0.221.0` | Exact OTLP HTTP trace exporter. |
-| `@opentelemetry/exporter-metrics-otlp-http` | `0.221.0` | Exact OTLP HTTP metric exporter. |
-| OTel Collector local image | `otel/opentelemetry-collector-contrib:0.157.0` | Replaceable local OTLP receiver/debug proof. |
+| Component                                   |                                       Selected | Evidence / disposition                       |
+| ------------------------------------------- | ---------------------------------------------: | -------------------------------------------- |
+| `@opentelemetry/api`                        |                                        `1.9.0` | Stable API line.                             |
+| `@opentelemetry/sdk-node`                   |                                      `0.221.0` | Node 24-compatible SDK line.                 |
+| `@opentelemetry/sdk-metrics`                |                                        `2.9.0` | Exact metrics SDK line used by Node SDK.     |
+| `@opentelemetry/exporter-trace-otlp-http`   |                                      `0.221.0` | Exact OTLP HTTP trace exporter.              |
+| `@opentelemetry/exporter-metrics-otlp-http` |                                      `0.221.0` | Exact OTLP HTTP metric exporter.             |
+| OTel Collector local image                  | `otel/opentelemetry-collector-contrib:0.157.0` | Replaceable local OTLP receiver/debug proof. |
 
 ## Release and security tooling
 
-| Component | Selected | Evidence / disposition |
-| --- | ---: | --- |
-| Gitleaks image | `zricethezav/gitleaks:v8.30.1` | Repository no-git redacted secret scan. |
-| Syft image | `anchore/syft:v1.44.0` | Source and four-image CycloneDX SBOMs. |
-| Trivy image | `aquasec/trivy:0.70.0` | Fixed high/critical runtime-image rejection. |
-| Node OCI base | `node:24.18.0-bookworm-slim` | Exact runtime base; package managers removed from final images. |
+| Component      |                       Selected | Evidence / disposition                                          |
+| -------------- | -----------------------------: | --------------------------------------------------------------- |
+| Gitleaks image | `zricethezav/gitleaks:v8.30.1` | Repository no-git redacted secret scan.                         |
+| Syft image     |         `anchore/syft:v1.44.0` | Source and four-image CycloneDX SBOMs.                          |
+| Trivy image    |         `aquasec/trivy:0.70.0` | Fixed high/critical runtime-image rejection.                    |
+| Node OCI base  |   `node:24.18.0-bookworm-slim` | Exact runtime base; package managers removed from final images. |
 
 ## Final exact-head compatibility proof
 

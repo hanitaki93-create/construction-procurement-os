@@ -96,6 +96,7 @@ Explicitly answer:
 Return exactly these sections:
 
 ### Verdict
+
 One of:
 
 - `PASS`
@@ -103,12 +104,15 @@ One of:
 - `FAIL`
 
 ### Scope inspected
+
 State the exact commit, files/areas inspected, commands or CI evidence independently checked and any access limitation.
 
 ### Acceptance gates 1–21
+
 A table with one row per frozen gate and `PASS`, `FAIL` or `NOT PROVEN`.
 
 ### Blocking findings
+
 For each blocker provide:
 
 - finding ID;
@@ -121,12 +125,15 @@ For each blocker provide:
 Write `None` only if genuinely none exist.
 
 ### New invariant candidates
+
 List every discovered invariant candidate and whether it is already registered. Any required unregistered invariant is blocking.
 
 ### Non-blocking observations
+
 Only items that require no correction before B01 acceptance.
 
 ### Final lock statement
+
 State explicitly whether B01 may be accepted and whether B02 may be unlocked. Project-owner acceptance remains separate even after an independent PASS.
 
 Do not propose implementation changes unless they remedy a specific finding. Do not mark B01 PASS from documentation quality alone.
