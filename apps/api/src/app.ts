@@ -18,6 +18,11 @@ const secureHeaders: Readonly<Record<string, string>> = {
   'x-frame-options': 'DENY',
 };
 
+function normalizeThrown(value: unknown): Readonly<{ name: string; message: string }> {
+  if (value instanceof Error) return { name: value.name, message: value.message };
+  return { name: 'UnknownThrownValue', message: String(value) };
+}
+
 export interface BuildApiOptions {
   readonly config: RuntimeConfig;
   readonly logger: TechnicalLogger;
@@ -62,10 +67,11 @@ export function buildApi({
   });
 
   app.setErrorHandler((error, request, reply) => {
+    const normalized = normalizeThrown(error);
     logger.error('http_request_failed', {
       requestId: request.id,
-      errorName: error.name,
-      errorMessage: error.message,
+      errorName: normalized.name,
+      errorMessage: normalized.message,
     });
     void reply.status(500).send({ status: 'error', requestId: request.id });
   });
