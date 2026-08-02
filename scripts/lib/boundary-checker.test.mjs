@@ -24,6 +24,20 @@ test('allows raw database libraries inside database-core', () => {
   assert.deepEqual(violations('packages/database-core/src/private.ts', 'pg'), []);
 });
 
+test('allows raw database libraries inside testkit', () => {
+  assert.deepEqual(violations('packages/testkit/src/database.ts', 'pg'), []);
+});
+
+test('rejects testkit imports from production code', () => {
+  const result = violations('apps/api/src/main.ts', '@cpos/testkit');
+  assert.equal(result.length, 1);
+  assert.match(result[0].message, /private to test and integration graphs/u);
+});
+
+test('allows testkit imports from test code', () => {
+  assert.deepEqual(violations('apps/api/src/app.test.ts', '@cpos/testkit'), []);
+});
+
 test('allows same-package private source imports only from the private test graph', () => {
   assert.deepEqual(
     violations(
