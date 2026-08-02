@@ -2,6 +2,13 @@ import { Decimal } from 'decimal.js';
 
 import type { CalculationPlan } from './types.js';
 
+const ExactDecimal = Decimal.clone({
+  precision: 120,
+  rounding: Decimal.ROUND_HALF_EVEN,
+  toExpNeg: -120,
+  toExpPos: 120,
+});
+
 const roundingModes = {
   HALF_UP: Decimal.ROUND_HALF_UP,
   HALF_EVEN: Decimal.ROUND_HALF_EVEN,
@@ -49,8 +56,8 @@ export function executeCalculationPlan(plan: CalculationPlan, left: string, righ
   const issues = validateCalculationPlan(plan);
   if (issues.length > 0) throw new Error(`invalid calculation plan: ${issues.join('; ')}`);
 
-  const leftValue = new Decimal(left);
-  const rightValue = new Decimal(right);
+  const leftValue = new ExactDecimal(left);
+  const rightValue = new ExactDecimal(right);
   let result: Decimal;
 
   switch (plan.operator) {
@@ -66,8 +73,9 @@ export function executeCalculationPlan(plan: CalculationPlan, left: string, righ
     case 'DIVIDE': {
       if (rightValue.isZero()) throw new Error('division by zero');
       const intermediateScale = plan.divisionIntermediateScale;
-      if (intermediateScale === undefined)
+      if (intermediateScale === undefined) {
         throw new Error('division intermediate scale is missing');
+      }
       result = leftValue
         .dividedBy(rightValue)
         .toDecimalPlaces(intermediateScale, roundingModes[plan.roundingMode]);
@@ -77,7 +85,8 @@ export function executeCalculationPlan(plan: CalculationPlan, left: string, righ
 
   const normalized = normalizeDecimal(result, plan.outputScale, roundingModes[plan.roundingMode]);
   const digits = normalized.replace(/[-.]/gu, '').replace(/^0+/u, '').length || 1;
-  if (digits > plan.overflowDigits)
+  if (digits > plan.overflowDigits) {
     throw new Error('calculation result exceeds declared precision');
+  }
   return normalized;
 }
