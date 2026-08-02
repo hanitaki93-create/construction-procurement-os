@@ -6,34 +6,42 @@ on:
       - build/b01-engineering-foundation
     paths:
       - '.github/workflows/b01-f1-foundation.yml'
+      - '.editorconfig'
+      - '.gitignore'
       - '.node-version'
       - '.npmrc'
+      - '.nvmrc'
+      - '.prettierignore'
+      - 'docs/build/**'
+      - 'eslint.config.mjs'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'tsconfig*.json'
-      - 'eslint.config.mjs'
       - 'prettier.config.mjs'
-      - '.prettierignore'
-      - 'vitest.config.ts'
       - 'scripts/**'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
       - 'packages/tooling-config/**'
   pull_request:
     branches:
       - main
     paths:
       - '.github/workflows/b01-f1-foundation.yml'
+      - '.editorconfig'
+      - '.gitignore'
       - '.node-version'
       - '.npmrc'
+      - '.nvmrc'
+      - '.prettierignore'
+      - 'docs/build/**'
+      - 'eslint.config.mjs'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'tsconfig*.json'
-      - 'eslint.config.mjs'
       - 'prettier.config.mjs'
-      - '.prettierignore'
-      - 'vitest.config.ts'
       - 'scripts/**'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
       - 'packages/tooling-config/**'
   workflow_dispatch:
 
@@ -92,13 +100,45 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pnpm-lock.yaml
-          git diff --cached --exit-code && exit 1 || true
+          git diff --cached --quiet && exit 1 || true
           git commit -m "B01 F1: generate exact pnpm lockfile"
           git push origin HEAD:build/b01-engineering-foundation
 
       - name: Install from the exact lockfile
         shell: bash
         run: pnpm install --frozen-lockfile
+
+      - name: Normalize B01 branch files
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm format
+          git add \
+            .github \
+            .editorconfig \
+            .gitignore \
+            .node-version \
+            .npmrc \
+            .nvmrc \
+            .prettierignore \
+            docs/build \
+            eslint.config.mjs \
+            package.json \
+            packages/tooling-config \
+            pnpm-workspace.yaml \
+            prettier.config.mjs \
+            scripts \
+            tsconfig.base.json \
+            tsconfig.json \
+            tsconfig.tools.json \
+            vitest.config.ts
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "B01 F1: normalize foundation formatting"
+            git push origin HEAD:build/b01-engineering-foundation
+          fi
 
       - name: Verify root manifests
         shell: bash
