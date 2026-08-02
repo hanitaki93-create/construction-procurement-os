@@ -5,8 +5,9 @@ on:
     branches:
       - build/b01-engineering-foundation
     paths:
-      - '.github/workflows/b01-branch-maintenance.yml'
+      - '.github/workflows/b01-*.yml'
       - '.env.example'
+      - 'migrations/**'
       - 'package.json'
       - 'pnpm-workspace.yaml'
       - 'tsconfig.json'
@@ -53,12 +54,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add .env.example .github apps package.json packages pnpm-lock.yaml pnpm-workspace.yaml scripts tsconfig.json
+          git add .env.example .github apps migrations package.json packages pnpm-lock.yaml pnpm-workspace.yaml scripts tsconfig.json
           if git diff --cached --quiet; then
             echo "B01_BRANCH_MAINTENANCE_NO_CHANGE"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "B01 F2: refresh lockfile and formatting"
+          git commit -m "B01 F3: refresh lockfile and formatting"
           git push origin HEAD:build/b01-engineering-foundation

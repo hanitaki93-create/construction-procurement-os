@@ -3,6 +3,8 @@
   "references": [
     { "path": "./packages/contracts" },
     { "path": "./packages/config" },
+    { "path": "./packages/database-core" },
+    { "path": "./packages/invariant-compiler" },
     { "path": "./packages/observability" },
     { "path": "./packages/tooling-config" },
     { "path": "./packages/ui-foundation" },

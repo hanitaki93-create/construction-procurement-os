@@ -9,12 +9,16 @@
     "pnpm": "10.34.0"
   },
   "scripts": {
-    "architecture:check": "node scripts/check-boundaries.mjs",
+    "architecture:check": "node scripts/check-boundaries.mjs && node scripts/check-database-public-surface.mjs",
     "build": "pnpm -r --if-present build",
+    "db:integration": "pnpm --filter @cpos/database-core test:integration",
+    "db:migrate": "pnpm --filter @cpos/database-core build && pnpm --filter @cpos/database-core db migrate",
+    "db:scan": "pnpm --filter @cpos/database-core build && pnpm --filter @cpos/database-core db scan",
+    "db:status": "pnpm --filter @cpos/database-core build && pnpm --filter @cpos/database-core db status",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
-    "manifests:check": "node scripts/check-root-manifest.mjs",
+    "manifests:check": "node scripts/check-root-manifest.mjs && pnpm --filter @cpos/invariant-compiler check",
     "smoke": "node scripts/smoke-api.mjs && node apps/worker/dist/main.js --check",
     "start:api": "pnpm --filter @cpos/api start",
     "start:worker": "pnpm --filter @cpos/worker start",

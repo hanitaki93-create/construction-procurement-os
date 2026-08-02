@@ -25,3 +25,7 @@ catalog:
   '@opentelemetry/api': 1.9.0
   '@opentelemetry/sdk-node': 0.221.0
   '@opentelemetry/exporter-trace-otlp-http': 0.221.0
+  pg: 8.22.0
+  '@types/pg': 8.20.0
+  kysely: 0.29.4
+  decimal.js: 10.6.0

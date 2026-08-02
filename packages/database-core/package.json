@@ -1,0 +1,30 @@
+{
+  "name": "@cpos/database-core",
+  "version": "0.0.0-b01",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/public.d.ts",
+      "default": "./dist/public.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b",
+    "db": "node dist/cli.js",
+    "test": "vitest run --exclude integration/**/*.integration.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.test.json --pretty false"
+  },
+  "dependencies": {
+    "kysely": "catalog:",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
