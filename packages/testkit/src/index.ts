@@ -42,7 +42,9 @@ export interface ParticipantBarrier {
   readonly wait: () => Promise<void>;
 }
 
-export function createParticipantBarrier(participantCount: number): ParticipantBarrier {
+export function createParticipantBarrier(
+  participantCount: number,
+): ParticipantBarrier {
   if (!Number.isSafeInteger(participantCount) || participantCount < 1) {
     throw new Error('participantCount must be a positive safe integer');
   }
@@ -53,22 +55,35 @@ export function createParticipantBarrier(participantCount: number): ParticipantB
   return {
     async wait(): Promise<void> {
       arrived += 1;
-      if (arrived > participantCount) throw new Error('barrier participant count exceeded');
+      if (arrived > participantCount) {
+        throw new Error('barrier participant count exceeded');
+      }
       if (arrived === participantCount) release.resolve();
       await release.promise;
     },
   };
 }
 
-export function canonicalTestSchemaName(prefix: string, uniqueToken: string): string {
-  const normalizedPrefix = prefix.trim().toLowerCase().replaceAll(/[^a-z0-9_]/gu, '_');
-  const normalizedToken = uniqueToken.trim().toLowerCase().replaceAll(/[^a-z0-9_]/gu, '_');
+export function canonicalTestSchemaName(
+  prefix: string,
+  uniqueToken: string,
+): string {
+  const normalizedPrefix = prefix
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9_]/gu, '_');
+  const normalizedToken = uniqueToken
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9_]/gu, '_');
 
   if (!normalizedPrefix || !normalizedToken) {
     throw new Error('test schema prefix and token must not be empty');
   }
 
   const schema = `testkit_${normalizedPrefix}_${normalizedToken}`;
-  if (schema.length > 63) throw new Error('test schema name exceeds PostgreSQL identifier limit');
+  if (schema.length > 63) {
+    throw new Error('test schema name exceeds PostgreSQL identifier limit');
+  }
   return schema;
 }
