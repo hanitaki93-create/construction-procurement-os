@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-02  
 **Status:** IMPLEMENTED CANDIDATE / CLEAN-ROOM VERIFICATION ACTIVE  
-**Verification trigger:** exact dependency graph and formatting normalized at `eff679880e24aa760f70e8120a4c178cd9cb40d9`
+**Verification trigger:** exact-health typing and formatting normalized at `c3b28041e8ac59c91f68cf3b3e8b6f488dfe95b5`
 
 ## Candidate inventory
 
