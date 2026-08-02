@@ -1,10 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-  CreateBucketCommand,
-  DeleteBucketCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { CreateBucketCommand, DeleteBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
@@ -81,7 +77,9 @@ describe('versioned S3-compatible object adapter', () => {
     }
 
     const unversionedStore = createS3VersionedObjectStore(unversionedOptions);
-    await expect(unversionedStore.assertBucketReady()).rejects.toThrow(/versioning must be enabled/u);
+    await expect(unversionedStore.assertBucketReady()).rejects.toThrow(
+      /versioning must be enabled/u,
+    );
     unversionedStore.close();
   });
 
@@ -125,8 +123,8 @@ describe('versioned S3-compatible object adapter', () => {
     });
     created.push(reference);
 
-    await expect(
-      store.getVerifiedObject({ ...reference, sha256: '0'.repeat(64) }),
-    ).rejects.toThrow(/payload verification failed/u);
+    await expect(store.getVerifiedObject({ ...reference, sha256: '0'.repeat(64) })).rejects.toThrow(
+      /payload verification failed/u,
+    );
   });
 });

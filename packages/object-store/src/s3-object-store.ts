@@ -135,9 +135,7 @@ export function createS3VersionedObjectStore(
   return {
     async assertBucketReady(): Promise<void> {
       await client.send(new HeadBucketCommand({ Bucket: options.bucket }));
-      const status = await client.send(
-        new GetBucketVersioningCommand({ Bucket: options.bucket }),
-      );
+      const status = await client.send(new GetBucketVersioningCommand({ Bucket: options.bucket }));
       if (status.Status !== 'Enabled') {
         throw new Error('object-store bucket versioning must be enabled');
       }
@@ -200,7 +198,11 @@ export function createS3VersionedObjectStore(
       const versionId = requireVersionId(response.VersionId);
       const sha256 = response.Metadata?.[metadataChecksumKey];
       const size = response.ContentLength;
-      if (versionId !== reference.versionId || sha256 !== reference.sha256 || size !== reference.size) {
+      if (
+        versionId !== reference.versionId ||
+        sha256 !== reference.sha256 ||
+        size !== reference.size
+      ) {
         throw new Error('object-store metadata verification failed');
       }
       return {

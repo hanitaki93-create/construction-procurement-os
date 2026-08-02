@@ -5,13 +5,7 @@ import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 
 const safeInstrumentName = /^[a-z][a-z0-9_.-]{0,62}$/u;
-const permittedAttributeKeys = new Set([
-  'component',
-  'environment',
-  'lane',
-  'result',
-  'state',
-]);
+const permittedAttributeKeys = new Set(['component', 'environment', 'lane', 'result', 'state']);
 
 export interface TechnicalTelemetry {
   readonly enabled: boolean;
@@ -71,7 +65,11 @@ export async function startTechnicalTelemetry(
   }
   const base = endpoint.toString().replace(/\/$/u, '');
   const exportIntervalMs = options.exportIntervalMs ?? 5_000;
-  if (!Number.isSafeInteger(exportIntervalMs) || exportIntervalMs < 1_000 || exportIntervalMs > 60_000) {
+  if (
+    !Number.isSafeInteger(exportIntervalMs) ||
+    exportIntervalMs < 1_000 ||
+    exportIntervalMs > 60_000
+  ) {
     throw new Error('telemetry export interval must be from 1000 to 60000 milliseconds');
   }
 
@@ -112,7 +110,8 @@ export async function startTechnicalTelemetry(
     },
     addCounter(name: string, value = 1, attributes?: Attributes): void {
       const boundedName = instrumentName(name);
-      if (!Number.isFinite(value) || value < 0) throw new Error('telemetry counter value is invalid');
+      if (!Number.isFinite(value) || value < 0)
+        throw new Error('telemetry counter value is invalid');
       let counter = counters.get(boundedName);
       if (!counter) {
         counter = meter.createCounter(boundedName);

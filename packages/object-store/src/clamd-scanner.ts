@@ -20,7 +20,11 @@ function validateOptions(options: ClamdScannerOptions): void {
   if (!Number.isSafeInteger(options.port) || options.port < 1 || options.port > 65_535) {
     throw new Error('clamd port is invalid');
   }
-  if (!Number.isSafeInteger(options.timeoutMs) || options.timeoutMs < 10 || options.timeoutMs > 120_000) {
+  if (
+    !Number.isSafeInteger(options.timeoutMs) ||
+    options.timeoutMs < 10 ||
+    options.timeoutMs > 120_000
+  ) {
     throw new Error('clamd timeout must be from 10 to 120000 milliseconds');
   }
   if (
@@ -36,7 +40,9 @@ function framesForScan(bytes: Uint8Array): readonly Buffer[] {
   const frames: Buffer[] = [Buffer.from('zINSTREAM\0', 'ascii')];
   const chunkSize = 64 * 1024;
   for (let offset = 0; offset < bytes.byteLength; offset += chunkSize) {
-    const chunk = Buffer.from(bytes.subarray(offset, Math.min(offset + chunkSize, bytes.byteLength)));
+    const chunk = Buffer.from(
+      bytes.subarray(offset, Math.min(offset + chunkSize, bytes.byteLength)),
+    );
     const length = Buffer.allocUnsafe(4);
     length.writeUInt32BE(chunk.byteLength, 0);
     frames.push(length, chunk);
@@ -87,7 +93,10 @@ async function exchange(
       const newlineIndex = combined.indexOf(10);
       const boundary = nullIndex >= 0 ? nullIndex : newlineIndex;
       if (boundary >= 0) {
-        finish({ state: 'RESPONSE', value: combined.subarray(0, boundary).toString('utf8').trim() });
+        finish({
+          state: 'RESPONSE',
+          value: combined.subarray(0, boundary).toString('utf8').trim(),
+        });
       }
     });
 

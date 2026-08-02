@@ -24,7 +24,8 @@ async function listen(server: Server): Promise<number> {
     server.listen(0, '127.0.0.1', () => resolve());
   });
   const address = server.address();
-  if (typeof address !== 'object' || address === null) throw new Error('test server has no TCP address');
+  if (typeof address !== 'object' || address === null)
+    throw new Error('test server has no TCP address');
   return address.port;
 }
 
