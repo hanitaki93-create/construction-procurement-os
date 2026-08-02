@@ -9,21 +9,24 @@
 
 - Project: **Construction Procurement OS**
 - Phase 1: **PASS / CLOSED / FROZEN**
-- Active phase: **Phase 2 — Physical Architecture & Build Program**
+- Phase 2: **PASS / CLOSED / FROZEN**
+- Active stage: **B01 IMPLEMENTATION READINESS + V1 FIELD-EVIDENCE PREPARATION**
 - Claude Phase 2 Round 1: **FAIL BL-P21-06 / REMEDIATED**
-- Claude Phase 2 Round 2: **FAIL BL-P21-07 ONLY / REMEDIATED**
-- P2.1 physical architecture: **STANDALONE V1.0 FREEZE CANDIDATE / INTERNAL PASS / CLAUDE ROUND 3 PENDING**
-- P2.2 build program: **STANDALONE V1.0 FREEZE CANDIDATE / INTERNAL PASS / CLAUDE ROUND 3 PENDING**
-- Invariant register: **102 FAMILIES / 92-ROW SOURCE COVERAGE / INTERNAL PASS**
-- First build prompt: **B01-P01 V1.0 STANDALONE CANDIDATE / INTERNAL PASS / EXECUTION LOCKED**
-- Product/frontend/AI code: **NOT STARTED / LOCKED**
-- P07: **LOCKED pending V4**
-- AI: **LOCKED pending V6**
-- External/build/pilot/commercial validation: **PENDING**
+- Claude Phase 2 Round 2: **FAIL BL-P21-07 / REMEDIATED**
+- Claude Phase 2 Round 3: **PASS / NO BLOCKERS**
+- P2.1 physical architecture: **V1.0 FROZEN BY EXACT BLOB IDENTITY**
+- P2.2 build program: **V1.0 FROZEN / 18 MAJOR BLOCKS**
+- Invariant register: **102 FAMILIES / 92-ROW SOURCE COVERAGE / FROZEN**
+- First build prompt: **B01-P01 V1.0 READY / NOT YET AUTHORIZED OR EXECUTED**
+- Product/frontend/AI code: **NOT STARTED**
+- B02–B15: **LOCKED pending B01 PASS + V1 PASS + V2 PASS**
+- P07 B16–B17: **ADDITIONALLY LOCKED pending V4**
+- AI B18: **ADDITIONALLY LOCKED pending V6**
+- Product/market/pilot/commercial validation: **NOT CLAIMED**
 
 Current status:
 
-`Claude Round 2 confirmed BL-P21-06 and W-100–W-111 closed, then found BL-P21-07: the concurrency mechanisms were complete but the invariant input set lacked a completeness obligation. Phase 2 now has a product-authored InvariantRegisterVersion with 102 invariant families, a 92/92 Frozen-Clause Coverage Matrix, bidirectional source/register/object/operation compilation, EFFECTIVE_PERIOD_NON_OVERLAP, guard materialization/global lock order, exact numeric/int8 and SQL scale rules, block-local invariant evidence and an incremental no-unregistered-invariant gate. Standalone freeze candidates and B01 prompt are ready for final Claude Round 3.`
+`Claude Round 3 independently inspected the seven canonical artifacts, closed BL-P21-07, returned the exact required PASS, found zero blockers, passed PA-G1–PA-G15, confirmed the 18-block program is acyclic and declared B01-P01 v1.0 ready as drafted. Phase 2 is frozen by immutable Git blob identities. W-120–W-125 have explicit dispositions and owners. V1/V2 sequencing is decided: V1 then V2; B01 may run in parallel with V1 only after explicit implementation authorization; B02+ wait for V1 and V2 PASS.`
 
 ---
 
@@ -35,127 +38,168 @@ No Phase 1 reopen occurred.
 
 ---
 
-# 3. Final standalone Phase 2 freeze candidates
+# 3. Controlling Phase 2 freeze
 
-Physical architecture:
+Final checkpoint:
 
-`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_V1_0_CANDIDATE.md`
+`04_phases/phase_2_build_decomposition/CONSTRUCTION_PROCUREMENT_OS_PHASE2_FINAL_FREEZE_CHECKPOINT_V1_0.md`
 
-Invariant register:
+Checkpoint commit:
 
-`04_phases/phase_2_build_decomposition/P2_1_INVARIANT_REGISTER_V0_1.md`
+`a4446eddf18bb064fe0d30fa978d962d5b142dfd`
 
-Frozen source coverage:
+The checkpoint freezes exact Git blob identities rather than relying on mutable filename status labels.
 
-`04_phases/phase_2_build_decomposition/P2_1_FROZEN_CLAUSE_INVARIANT_COVERAGE_MATRIX_V0_1.md`
+Frozen package:
 
-Build program:
-
-`04_phases/phase_2_build_decomposition/P2_2_BUILD_PROGRAM_V1_0_CANDIDATE.md`
-
-Completion evidence:
-
-`04_phases/phase_2_build_decomposition/P2_2_BLOCK_COMPLETION_EVIDENCE_MANIFEST_TEMPLATE_V0_3.md`
-
-First build prompt:
-
-`04_phases/phase_2_build_decomposition/build_prompts/B01_P01_ENGINEERING_FOUNDATION_RUNTIME_SKELETON_V1_0_CANDIDATE.md`
-
-Internal recheck:
-
-`04_phases/phase_2_build_decomposition/audits/P2_INTERNAL_POST_CLAUDE_ROUND_2_RECHECK_V0_1.md`
+- P2.1 Physical Architecture v1.0 — blob `520178b0bbb4ff0e8f198784f858400c4422200d`;
+- Invariant Register v0.1 — blob `e94fd137eb0ef7f63261990edf443269b1368ad9`;
+- Frozen-Clause Coverage Matrix v0.1 — blob `494457cdd5d4778a1e71914b17df418fe6217913`;
+- P2.2 Build Program v1.0 — blob `61b8504520019559a316681c3ff276580287a163`;
+- Block Completion Evidence Template v0.3 — blob `143ed61068d809beaf7ca22526bdaf69ec086c41`;
+- B01-P01 v1.0 — blob `18c6e7a91a7e3af7dbf9d6d40e3c06f2ffeee5ad`.
 
 ---
 
-# 4. BL-P21-07 closure
+# 4. Independent final verdict
 
-Completeness is enforced in three directions:
+`04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_3_FINAL_VERDICT_V1_0.md`
 
-1. every frozen source row/clause maps to invariant(s) or an explicit non-state disposition;
-2. every invariant maps to owner, object families, enforcement and hostile proof;
-3. every mutable object/state-changing operation reverse-references every participating invariant.
+Commit:
 
-Compiler/freeze/operation activation fails on any missing direction.
+`e24a14bf7c0c5cecc574d9b49ae432b6c6793ea5`
 
-Every block completion manifest states that no frozen or newly encountered load-bearing invariant exists without a register entry. New candidates block PASS until reconciled.
+Verdict:
 
----
+`PASS — P2.1 physical architecture and P2.2 build program can freeze; B01-P01 v1.0 is ready for execution after explicit implementation authorization and the recorded V1/V2 sequencing decision.`
 
-# 5. W-112–W-119 closure
+Claude independently found:
 
-- guard rows exist before lock through eager or insert-on-conflict materialization;
-- all guard acquisition uses one global tuple/order;
-- numeric and int8 remain exact strings/checked bigint, never JS number;
-- SQL division/intermediate scale is declared and equivalent to the reference executor;
-- B01 concurrency fixtures use isolated test-only schema, not product migrations;
-- independent review occurs outside authoring session and can fail the block;
-- B01 has F1–F5 checkpoints but only final PASS unlocks B02;
-- final Claude package supplies actual standalone canonical documents, not wrapper summaries.
+- blockers: 0;
+- BL-P21-07: closed;
+- PA-G1–PA-G15: PASS;
+- B01: ready as drafted, no conditions;
+- Phase 1 reopen: NO;
+- second XL: CLEAN;
+- A0–A3 activation: CLEAN;
+- product code lock at audit: INTACT.
 
 ---
 
-# 6. Build program
+# 5. Final watches
 
-18 major blocks remain:
+`04_phases/phase_2_build_decomposition/P2_FINAL_WATCH_DISPOSITION_V1_0.md`
+
+Commit:
+
+`08be9f96ddfa6ec3c2613b45baa7676062d2d2bf`
+
+- W-120 four cross-row/state-transition profiles assigned;
+- W-121 exact clause-source compilation retained as fail-closed B01/B02 proof debt;
+- W-122 “0 claimed” wording preserved;
+- W-123 solo independent-review mechanism named;
+- W-124 B01 controlled by F1–F5;
+- W-125 unbuilt compiler/manifests remain physical proof, not documentation truth.
+
+Freeze-blocking watches: 0.
+
+---
+
+# 6. V1/V2 and build sequence
+
+`04_phases/phase_2_build_decomposition/P2_V1_V2_BUILD_SEQUENCING_DECISION_V1_0.md`
+
+Commit:
+
+`7d0aeff122fbf84d5f96805cebf0a0ff8d82c531`
+
+Controlling sequence:
+
+1. Phase 2 frozen;
+2. B01 may start only after explicit implementation authorization;
+3. V1 contractor/supplier evidence begins no later than B01 and may run in parallel;
+4. V1 PASS precedes V2 finalization;
+5. V2 uses V1 findings and must meet the frozen comprehension gate;
+6. B02+ remain locked until both V1 and V2 PASS;
+7. V1/V2 FAIL may revise or kill product hypotheses regardless of B01 sunk work.
+
+---
+
+# 7. Build program
+
+18 major blocks:
 
 - B01–B15 deterministic foundation/A0–A3/release;
 - B16–B17 P07, V4 gated;
 - B18 AI, V6 gated.
 
-Traceability:
+Frozen traceability posture:
 
 - MR rows to blocks: 92/92;
 - MR rows to invariant/non-state disposition: 92/92;
 - invariant families to owners: 102/102;
-- physical-proof requirements with proof owner: 19/19;
+- physical-proof requirements with owner: 19/19;
 - external-validation rows with gate owner: 5/5;
-- architecture gaps: 0 claimed.
+- architecture gaps: `0 claimed`;
+- executable implementation proof: pending by block.
 
 ---
 
-# 7. B01-P01 v1.0
+# 8. B01-P01 v1.0
 
-B01 remains business-empty and now builds/proves:
+Release record:
+
+`04_phases/phase_2_build_decomposition/build_prompts/B01_P01_RELEASE_RECORD_V1_0.md`
+
+Commit:
+
+`d765d0bb006d51aee23562c291668ed57dc42231`
+
+B01 is business-empty and builds/proves:
 
 - monorepo/toolchain/four deployable shells;
 - SQL-first migrations and explicit isolation helper;
 - test-only write-skew/effective-period/guard/deadlock fixtures;
-- InvariantRegister/FrozenCoverage/WriteOwnership/Concurrency/Compatibility validators;
+- invariant/coverage/write-ownership/concurrency/compatibility validators;
 - bidirectional completeness compiler;
-- exact numeric/int8 and SQL scale contract;
+- exact numeric/int8 and SQL-scale contract;
 - database-object security catalog scan;
-- object/scanner/local infra/observability;
+- object/scanner/local infrastructure/observability;
 - CI/containers/security/SBOM/accessibility/RTL;
 - F1–F5 evidence, independent review and scoped rollback.
 
-It explicitly excludes tenant/business tables, auth, operations, evidence acceptance, procurement workflows, reports, P07 and AI.
+It excludes tenant/business tables, auth, product operations, evidence acceptance, procurement workflows, reports, P07 and AI.
 
 ---
 
-# 8. Canonical next handoff
+# 9. Next authorized action
 
-Send Claude the actual files listed in:
+No code action is implied by the Phase-2 freeze.
 
-`04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_3_ACTUAL_ARTIFACT_AUDIT_MANIFEST_V0_1.md`
+The next implementation action requires a direct project-owner instruction equivalent to:
 
-Use prompt:
+`Authorize execution of B01-P01 v1.0 in the canonical repository.`
 
-`04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_3_HOSTILE_AUDIT_PROMPT_V0_1.md`
+After authorization:
 
-Required PASS:
-
-`PASS — P2.1 physical architecture and P2.2 build program can freeze; B01-P01 v1.0 is ready for execution after explicit implementation authorization and the recorded V1/V2 sequencing decision.`
+- create/use a dedicated B01 build branch;
+- execute F1–F5 sequentially;
+- commit/test/evidence each checkpoint;
+- do not start B02;
+- begin V1 evidence work in parallel;
+- final B01 PASS requires fresh independent review and project-owner acceptance.
 
 ---
 
-# 9. Locks
+# 10. Locks
 
 Do not:
 
-- freeze P2.1/P2.2 before Claude Round 3 PASS;
-- execute B01 before final checkpoint, explicit implementation authorization and V1/V2 decision;
+- silently modify a frozen Phase-1/Phase-2 blob;
+- begin B01 without explicit implementation authorization;
+- begin B02 before B01, V1 and V2 all PASS;
 - start P07 before V4 or AI before V6;
-- allow new mutable objects/operations without register reverse mapping;
+- add mutable objects/operations without invariant reverse mapping;
 - add a service/broker/cache/search system as authority/prerequisite;
-- reinterpret Phase 1 semantics;
-- represent architecture/build evidence as field/pilot/commercial proof.
+- reinterpret architecture/build evidence as user, pilot, market or commercial proof;
+- use `git clean -fd` or broad Docker/system prune.
