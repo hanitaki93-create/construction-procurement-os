@@ -42,9 +42,7 @@ export interface ParticipantBarrier {
   readonly wait: () => Promise<void>;
 }
 
-export function createParticipantBarrier(
-  participantCount: number,
-): ParticipantBarrier {
+export function createParticipantBarrier(participantCount: number): ParticipantBarrier {
   if (!Number.isSafeInteger(participantCount) || participantCount < 1) {
     throw new Error('participantCount must be a positive safe integer');
   }
@@ -64,10 +62,7 @@ export function createParticipantBarrier(
   };
 }
 
-export function canonicalTestSchemaName(
-  prefix: string,
-  uniqueToken: string,
-): string {
+export function canonicalTestSchemaName(prefix: string, uniqueToken: string): string {
   const normalizedPrefix = prefix
     .trim()
     .toLowerCase()
