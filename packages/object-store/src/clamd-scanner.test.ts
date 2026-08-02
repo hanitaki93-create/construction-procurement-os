@@ -1,12 +1,15 @@
-import { createServer, type Server } from 'node:net';
+import { createServer, type Server, type Socket } from 'node:net';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createClamdScanner } from './clamd-scanner.js';
 
 const servers: Server[] = [];
+const sockets = new Set<Socket>();
 
 afterEach(async () => {
+  for (const socket of sockets) socket.destroy();
+  sockets.clear();
   await Promise.all(
     servers.splice(0).map(
       async (server) =>
@@ -16,6 +19,14 @@ afterEach(async () => {
     ),
   );
 });
+
+function fakeScanner(handler: (socket: Socket) => void): Server {
+  return createServer((socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+    handler(socket);
+  });
+}
 
 async function listen(server: Server): Promise<number> {
   servers.push(server);
@@ -50,7 +61,7 @@ describe('clamd scanner fail-closed contract', () => {
   });
 
   it('reports timeout rather than clean when a scanner accepts but never responds', async () => {
-    const server = createServer(() => undefined);
+    const server = fakeScanner(() => undefined);
     const port = await listen(server);
 
     const result = await scanner(port, 40).scan(Buffer.from('safe-looking bytes'));
@@ -67,7 +78,7 @@ describe('clamd scanner fail-closed contract', () => {
   });
 
   it('does not treat an unexpected scanner response as clean', async () => {
-    const server = createServer((socket) => {
+    const server = fakeScanner((socket) => {
       socket.once('data', () => socket.end('stream: UNKNOWN\0'));
     });
     const port = await listen(server);
