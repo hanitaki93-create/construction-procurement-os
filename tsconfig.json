@@ -5,6 +5,7 @@
     { "path": "./packages/config" },
     { "path": "./packages/database-core" },
     { "path": "./packages/invariant-compiler" },
+    { "path": "./packages/object-store" },
     { "path": "./packages/observability" },
     { "path": "./packages/tooling-config" },
     { "path": "./packages/ui-foundation" },
