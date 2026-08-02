@@ -15,23 +15,25 @@ const divisionPlan: CalculationPlan = {
 
 describe('exact calculation plan', () => {
   it('rejects division without an intermediate scale', () => {
-    const issues = validateCalculationPlan({
-      ...divisionPlan,
-      divisionIntermediateScale: undefined,
-    });
-    expect(issues).toContain('divisionIntermediateScale must be declared from outputScale to 36');
+    const { divisionIntermediateScale: _omitted, ...withoutIntermediateScale } = divisionPlan;
+    const issues = validateCalculationPlan(withoutIntermediateScale);
+    expect(issues).toContain(
+      'divisionIntermediateScale must be declared from outputScale to 36',
+    );
   });
 
   it('preserves exact decimal arithmetic beyond IEEE-754 precision', () => {
     const plan: CalculationPlan = {
-      ...divisionPlan,
+      id: divisionPlan.id,
       operator: 'ADD',
-      outputScale: 12,
-      divisionIntermediateScale: undefined,
+      inputScale: divisionPlan.inputScale,
+      outputScale: divisionPlan.outputScale,
+      roundingMode: divisionPlan.roundingMode,
+      overflowDigits: divisionPlan.overflowDigits,
     };
-    expect(executeCalculationPlan(plan, '9007199254740993.123456789012', '0.000000000001')).toBe(
-      '9007199254740993.123456789013',
-    );
+    expect(
+      executeCalculationPlan(plan, '9007199254740993.123456789012', '0.000000000001'),
+    ).toBe('9007199254740993.123456789013');
   });
 
   it('uses declared division scale and rounding point', () => {

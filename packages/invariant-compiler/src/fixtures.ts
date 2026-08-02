@@ -62,7 +62,10 @@ export const coverageFixture: readonly CoverageEntry[] = frozenSourceFixture.map
         ? { invariantIds: [padded('INV', Math.min(index + 1, 102))] }
         : { nonStateDisposition: disposition }),
       owner: disposition === 'HYPOTHESIS_ONLY' ? 'B15' : 'B01',
-      proofGate: disposition === 'HYPOTHESIS_ONLY' ? 'V1_VALIDATION' : 'B01_MANIFEST_COMPILER_TEST',
+      proofGate:
+        disposition === 'HYPOTHESIS_ONLY'
+          ? 'V1_VALIDATION'
+          : 'B01_MANIFEST_COMPILER_TEST',
     };
   },
 );
@@ -73,7 +76,8 @@ export const concurrencyProfileFixture: readonly ConcurrencyProfile[] = invarian
     id: `CP-${String(index + 1).padStart(3, '0')}`,
     isolation: invariant.id === 'INV-008' ? 'SERIALIZABLE' : 'READ COMMITTED',
     invariantIds: [invariant.id],
-    mechanism: invariant.id === 'INV-008' ? 'SERIALIZABLE_PREDICATE' : 'GUARD_ROW_LOCK',
+    mechanism:
+      invariant.id === 'INV-008' ? 'SERIALIZABLE_PREDICATE' : 'GUARD_ROW_LOCK',
     ...(invariant.id === 'INV-008'
       ? {}
       : {
@@ -118,13 +122,36 @@ export const operationFixture: readonly OperationDefinition[] = concurrencyProfi
   }),
 );
 
+function cloneCoverageRows(rows: readonly CoverageEntry[]): CoverageEntry[] {
+  return rows.map((entry) => {
+    if (entry.invariantIds !== undefined) {
+      return {
+        sourceId: entry.sourceId,
+        invariantIds: [...entry.invariantIds],
+        owner: entry.owner,
+        proofGate: entry.proofGate,
+      };
+    }
+    if (entry.nonStateDisposition !== undefined) {
+      return {
+        sourceId: entry.sourceId,
+        nonStateDisposition: entry.nonStateDisposition,
+        owner: entry.owner,
+        proofGate: entry.proofGate,
+      };
+    }
+    return {
+      sourceId: entry.sourceId,
+      owner: entry.owner,
+      proofGate: entry.proofGate,
+    };
+  });
+}
+
 export function createValidCompilerFixture(): CompilerInput {
   return {
     frozenSources: frozenSourceFixture.map((entry) => ({ ...entry })),
-    coverage: coverageFixture.map((entry) => ({
-      ...entry,
-      invariantIds: entry.invariantIds === undefined ? undefined : [...entry.invariantIds],
-    })),
+    coverage: cloneCoverageRows(coverageFixture),
     invariants: invariantFixture.map((entry) => ({
       ...entry,
       sourceIds: [...entry.sourceIds],
