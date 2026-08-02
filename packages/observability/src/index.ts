@@ -1,5 +1,5 @@
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-export type LogFields = Readonly<Record<string, unknown>>;
+export type LogFields = Readonly<object>;
 export type LogSink = (serializedRecord: string) => void;
 
 export interface TechnicalLogger {
