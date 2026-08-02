@@ -6,8 +6,16 @@ const buildId = process.env['BUILD_ID'] || 'b01-local';
 const releaseId = process.env['RELEASE_ID'] || 'b01-unreleased';
 
 const images = [
-  { name: 'api', tag: 'cpos-b01-api:local', file: 'infra/containers/api.Dockerfile' },
-  { name: 'worker', tag: 'cpos-b01-worker:local', file: 'infra/containers/worker.Dockerfile' },
+  {
+    name: 'api',
+    tag: 'cpos-b01-api:local',
+    file: 'infra/containers/api.Dockerfile',
+  },
+  {
+    name: 'worker',
+    tag: 'cpos-b01-worker:local',
+    file: 'infra/containers/worker.Dockerfile',
+  },
   {
     name: 'web-internal',
     tag: 'cpos-b01-web-internal:local',
@@ -86,9 +94,13 @@ async function waitFor(url, expectedState) {
 }
 
 async function assertNameAvailable(name) {
-  const result = await run('docker', ['ps', '--all', '--quiet', '--filter', `name=^/${name}$`], {
-    capture: true,
-  });
+  const result = await run(
+    'docker',
+    ['ps', '--all', '--quiet', '--filter', `name=^/${name}$`],
+    {
+      capture: true,
+    },
+  );
   if (result.stdout) throw new Error(`refusing to replace existing container ${name}`);
 }
 
@@ -96,7 +108,10 @@ async function smokeImages() {
   for (const image of images) {
     const user = await inspect('{{.Config.User}}', image.tag);
     if (user !== '10001:10001') throw new Error(`${image.name} image does not run as 10001:10001`);
-    const revision = await inspect('{{index .Config.Labels "org.opencontainers.image.revision"}}', image.tag);
+    const revision = await inspect(
+      '{{index .Config.Labels "org.opencontainers.image.revision"}}',
+      image.tag,
+    );
     if (revision !== sourceCommit) throw new Error(`${image.name} revision label mismatch`);
   }
 
