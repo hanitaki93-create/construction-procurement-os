@@ -9,15 +9,14 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false && tsc -p tsconfig.test.json --pretty false"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
