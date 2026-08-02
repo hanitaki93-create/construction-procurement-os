@@ -22,6 +22,7 @@ The internal and external applications have separate entry points, Vite builds a
 - `@cpos/invariant-compiler` — B01 fixture compiler for the 92 frozen-source rows, 102 invariant families, ownership, concurrency, effective-period and compatibility manifests. B02 activates product registers.
 - `@cpos/object-store` — versioned object and malware-scanner technical contracts. It does not create evidence acceptance or quarantine semantics.
 - `@cpos/observability` — redacted structured technical logs and optional OTLP traces/metrics. It is not audit or domain truth.
+- `@cpos/testkit` — bounded test-only concurrency/timing/schema primitives. Production source imports are prohibited by the executable boundary gate.
 - `@cpos/ui-foundation` — semantic shell, focus/status, localization and RTL primitives.
 - `@cpos/tooling-config` — immutable workspace policy constants.
 
@@ -31,6 +32,7 @@ Executable checks prohibit:
 
 - browser imports of database/server object-store capabilities;
 - raw `pg`, Kysely or database client imports outside the private database/test graph;
+- production imports of `@cpos/testkit`;
 - cross-package relative imports;
 - package `/src/` imports outside the same-package private test graph;
 - external web imports of internal web code;
