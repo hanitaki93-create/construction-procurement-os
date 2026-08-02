@@ -6,4 +6,17 @@ test-results/
 .pnpm-store/
 *.min.*
 *.lock
+
+# Frozen and historical truth artifacts are immutable inputs, not formatting targets.
+00_governance/
+01_roadmaps/
+02_research/
+03_architecture/
+04_phases/
+05_build/
+06_product/
+07_quality/
+08_operations/
 09_history/
+PROJECT_STATE.md
+README.md
