@@ -5,12 +5,12 @@
 
 ## Deployables
 
-| Deployable | Purpose | Port | Business authority |
-|---|---|---:|---|
-| `apps/api` | Technical health, readiness, build metadata and OpenAPI shell | 3001 | None |
-| `apps/worker` | Empty named-lane runtime and lifecycle shell | n/a | None |
-| `apps/web-internal` | Internal technical browser shell | 3000 dev / 8080 image | None |
-| `apps/web-external` | Physically separate external technical shell | 3003 dev / 8080 image | None |
+| Deployable          | Purpose                                                       |                  Port | Business authority |
+| ------------------- | ------------------------------------------------------------- | --------------------: | ------------------ |
+| `apps/api`          | Technical health, readiness, build metadata and OpenAPI shell |                  3001 | None               |
+| `apps/worker`       | Empty named-lane runtime and lifecycle shell                  |                   n/a | None               |
+| `apps/web-internal` | Internal technical browser shell                              | 3000 dev / 8080 image | None               |
+| `apps/web-external` | Physically separate external technical shell                  | 3003 dev / 8080 image | None               |
 
 The internal and external applications have separate entry points, Vite builds and OCI images. They share only non-authoritative UI primitives.
 

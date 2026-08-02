@@ -94,13 +94,9 @@ async function waitFor(url, expectedState) {
 }
 
 async function assertNameAvailable(name) {
-  const result = await run(
-    'docker',
-    ['ps', '--all', '--quiet', '--filter', `name=^/${name}$`],
-    {
-      capture: true,
-    },
-  );
+  const result = await run('docker', ['ps', '--all', '--quiet', '--filter', `name=^/${name}$`], {
+    capture: true,
+  });
   if (result.stdout) throw new Error(`refusing to replace existing container ${name}`);
 }
 
@@ -170,7 +166,9 @@ async function smokeImages() {
     const externalIndex = await fetch('http://127.0.0.1:3103/');
     if (!internalIndex.ok || !externalIndex.ok) throw new Error('web container index failed');
     if ((await internalIndex.text()) === (await externalIndex.text())) {
-      throw new Error('internal and external web images unexpectedly contain identical index output');
+      throw new Error(
+        'internal and external web images unexpectedly contain identical index output',
+      );
     }
   } finally {
     for (const name of names) {

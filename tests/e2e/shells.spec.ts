@@ -27,14 +27,22 @@ test.describe('B01 technical browser shells', () => {
     await expectNoSeriousAccessibilityViolations(page);
   });
 
-  test('external shell stays external and contains no internal route or account surface', async ({ page }) => {
+  test('external shell stays external and contains no internal route or account surface', async ({
+    page,
+  }) => {
     await page.goto(externalUrl);
-    await expect(page.getByRole('heading', { level: 1, name: 'Secure external task' })).toBeVisible();
-    await expect(page.getByText('No supplier account, company profile, or project data')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Secure external task' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('No supplier account, company profile, or project data'),
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Internal workspace' })).toHaveCount(0);
 
     await page.goto(`${externalUrl}/internal`);
-    await expect(page.getByRole('heading', { level: 1, name: 'Secure external task' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Secure external task' }),
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Internal workspace' })).toHaveCount(0);
 
     await expectNoSeriousAccessibilityViolations(page);
@@ -46,7 +54,9 @@ test.describe('B01 technical browser shells', () => {
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByRole('heading', { level: 1, name: 'مساحة العمل الداخلية' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'مساحة العمل الداخلية' }),
+    ).toBeVisible();
     await expect(page.getByText('الواجهة التقنية جاهزة')).toBeVisible();
   });
 
