@@ -1,7 +1,11 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 
-import type { HealthComponent, LivenessResponse, ReadinessResponse } from '@cpos/contracts';
-import { technicalOpenApiDocument } from '@cpos/contracts';
+import {
+  technicalOpenApiDocument,
+  type HealthComponent,
+  type LivenessResponse,
+  type ReadinessResponse,
+} from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
 import type { TechnicalLogger } from '@cpos/observability';
 
