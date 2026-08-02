@@ -1,0 +1,13 @@
+title = "Construction Procurement OS B01 secret scan"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documented non-production local placeholders"
+regexTarget = "match"
+regexes = [
+  '''cpos-local-only''',
+  '''cpos-local-secret''',
+  '''\[REDACTED\]''',
+]
