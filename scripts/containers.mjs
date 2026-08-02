@@ -103,6 +103,10 @@ async function assertNameAvailable(name) {
   if (result.stdout) throw new Error(`refusing to replace existing container ${name}`);
 }
 
+function smokeContainerName(imageName) {
+  return ['cpos-b01', imageName, 'smoke'].join('-');
+}
+
 async function smokeImages() {
   for (const image of images) {
     const user = await inspect('{{.Config.User}}', image.tag);
@@ -116,7 +120,9 @@ async function smokeImages() {
 
   await run('docker', ['run', '--rm', 'cpos-b01-worker:local', 'node', 'dist/main.js', '--check']);
 
-  const names = ['cpos-b01-api-smoke', 'cpos-b01-internal-smoke', 'cpos-b01-external-smoke'];
+  const names = images
+    .filter((image) => image.name !== 'worker')
+    .map((image) => smokeContainerName(image.name));
   for (const name of names) await assertNameAvailable(name);
 
   try {
