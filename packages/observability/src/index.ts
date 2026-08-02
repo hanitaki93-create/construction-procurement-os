@@ -64,3 +64,9 @@ export function createTechnicalLogger(options: {
     error: (message, fields) => emit('error', message, fields),
   };
 }
+
+export {
+  startTechnicalTelemetry,
+  type TechnicalTelemetry,
+  type TechnicalTelemetryOptions,
+} from './telemetry.js';
