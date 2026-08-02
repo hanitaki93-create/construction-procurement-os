@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
 import process from 'node:process';
 
+import { healthFieldMatches } from './lib/health-contract.mjs';
+
 const sourceCommit = process.env['SOURCE_COMMIT'] || 'local';
 const buildId = process.env['BUILD_ID'] || 'b01-local';
 const releaseId = process.env['RELEASE_ID'] || 'b01-unreleased';
@@ -77,20 +79,20 @@ async function inspect(format, image) {
   return result.stdout;
 }
 
-async function waitFor(url, expectedState) {
+async function waitFor(url, field, expectedValue) {
   for (let attempt = 1; attempt <= 60; attempt += 1) {
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(1_000) });
       if (response.ok) {
         const body = await response.json();
-        if (body.state === expectedState) return body;
+        if (healthFieldMatches(body, field, expectedValue)) return body;
       }
     } catch {
       // Readiness is retried within the bounded loop.
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  throw new Error(`${url} did not reach ${expectedState}`);
+  throw new Error(`${url} did not reach ${field}=${expectedValue}`);
 }
 
 async function assertNameAvailable(name) {
@@ -151,9 +153,9 @@ async function smokeImages() {
       'cpos-b01-web-external:local',
     ]);
 
-    await waitFor('http://127.0.0.1:3101/health/live', 'alive');
-    await waitFor('http://127.0.0.1:3102/health/live', 'alive');
-    await waitFor('http://127.0.0.1:3103/health/live', 'alive');
+    await waitFor('http://127.0.0.1:3101/health/live', 'status', 'ok');
+    await waitFor('http://127.0.0.1:3102/health/live', 'state', 'alive');
+    await waitFor('http://127.0.0.1:3103/health/live', 'state', 'alive');
 
     const buildResponse = await fetch('http://127.0.0.1:3101/meta/build');
     if (!buildResponse.ok) throw new Error('API build metadata endpoint failed in container');
