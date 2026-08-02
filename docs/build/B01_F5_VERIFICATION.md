@@ -1,6 +1,16 @@
 # B01 F5 Verification Marker
 
-This marker triggers final verification after the dependency graph and source formatting were normalized and automatic branch maintenance was returned to manual dispatch only.
+This marker triggers final verification after the dependency graph, source formatting and frozen-prompt conformance surface were normalized.
+
+## Conformance remediation included in this candidate
+
+- restored the exact `playwright-core@1.61.1` peer required by the release-image deploy graph;
+- added the required private `@cpos/testkit` workspace with bounded timing, barrier and isolated-schema primitives;
+- prohibited production imports of `@cpos/testkit` through the executable architecture gate;
+- added the required root `test:integration` command;
+- made the root manifest gate require the complete B01 workspace and command surfaces;
+- made full verification prove frozen-lockfile integrity before all other checks;
+- added stable repository indexes for architecture and integration proof.
 
 Required authoritative lanes:
 
