@@ -10,6 +10,7 @@ export interface RuntimeConfig {
   readonly requestTimeoutMs: number;
   readonly trustProxy: boolean;
   readonly logLevel: LogLevel;
+  readonly otelEndpoint?: string;
   readonly build: BuildMetadata;
 }
 
@@ -68,11 +69,28 @@ function logLevel(env: NodeJS.ProcessEnv): LogLevel {
   return value;
 }
 
+function optionalHttpUrl(env: NodeJS.ProcessEnv, key: string): string | undefined {
+  const raw = env[key]?.trim();
+  if (!raw) return undefined;
+  if (raw.length > 2_048) throw new ConfigurationError(`${key} exceeds its length limit`);
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new ConfigurationError(`${key} must be a valid URL`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+    throw new ConfigurationError(`${key} must be an HTTP(S) URL without embedded credentials`);
+  }
+  return url.toString().replace(/\/$/u, '');
+}
+
 export function loadRuntimeConfig(
   serviceName: string,
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimeConfig {
   const environment = boundedText(env, 'APP_ENV', 'development', 48);
+  const otelEndpoint = optionalHttpUrl(env, 'OTEL_EXPORTER_OTLP_ENDPOINT');
   return {
     serviceName,
     host: boundedText(env, 'HOST', '127.0.0.1', 255),
@@ -81,6 +99,7 @@ export function loadRuntimeConfig(
     requestTimeoutMs: integer(env, 'REQUEST_TIMEOUT_MS', 15_000, 100, 120_000),
     trustProxy: boolean(env, 'TRUST_PROXY', false),
     logLevel: logLevel(env),
+    ...(otelEndpoint === undefined ? {} : { otelEndpoint }),
     build: {
       service: serviceName,
       buildId: boundedText(env, 'BUILD_ID', 'development'),
