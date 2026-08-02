@@ -1,7 +1,8 @@
-import { mkdir } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { spawn } from 'node:child_process';
 
 const repositoryRoot = process.cwd();
 const artifactsDirectory = path.join(repositoryRoot, 'artifacts', 'sbom');
@@ -27,20 +28,61 @@ function run(command, arguments_) {
   });
 }
 
+async function reportSecretFindings(reportPath) {
+  try {
+    const findings = JSON.parse(await readFile(reportPath, 'utf8'));
+    if (!Array.isArray(findings)) return;
+    for (const finding of findings) {
+      if (typeof finding !== 'object' || finding === null) continue;
+      process.stderr.write(
+        `${JSON.stringify({
+          marker: 'CPOS_SECRET_SCAN_FINDING',
+          ruleId: finding.RuleID,
+          file: finding.File,
+          startLine: finding.StartLine,
+          endLine: finding.EndLine,
+        })}\n`,
+      );
+    }
+  } catch (error) {
+    process.stderr.write(
+      `${JSON.stringify({
+        marker: 'CPOS_SECRET_SCAN_REPORT_ERROR',
+        error: error instanceof Error ? error.message : String(error),
+      })}\n`,
+    );
+  }
+}
+
 async function scanSecrets() {
-  await run('docker', [
-    'run',
-    '--rm',
-    '--volume',
-    `${repositoryRoot}:/repo:ro`,
-    'zricethezav/gitleaks:v8.30.1',
-    'detect',
-    '--source=/repo',
-    '--no-git',
-    '--redact',
-    '--config=/repo/.gitleaks.toml',
-    '--exit-code=1',
-  ]);
+  const diagnosticsDirectory = await mkdtemp(path.join(tmpdir(), 'cpos-gitleaks-'));
+  const reportPath = path.join(diagnosticsDirectory, 'gitleaks.json');
+
+  try {
+    await run('docker', [
+      'run',
+      '--rm',
+      '--volume',
+      `${repositoryRoot}:/repo:ro`,
+      '--volume',
+      `${diagnosticsDirectory}:/reports`,
+      'zricethezav/gitleaks:v8.30.1',
+      'detect',
+      '--source=/repo',
+      '--no-git',
+      '--redact',
+      '--config=/repo/.gitleaks.toml',
+      '--report-format=json',
+      '--report-path=/reports/gitleaks.json',
+      '--exit-code=1',
+    ]);
+  } catch (error) {
+    await reportSecretFindings(reportPath);
+    throw error;
+  } finally {
+    await rm(diagnosticsDirectory, { recursive: true, force: true });
+  }
+
   process.stdout.write('CPOS_SECRET_SCAN_PASS\n');
 }
 
