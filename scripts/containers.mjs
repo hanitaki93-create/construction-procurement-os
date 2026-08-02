@@ -7,6 +7,18 @@ const sourceCommit = process.env['SOURCE_COMMIT'] || 'local';
 const buildId = process.env['BUILD_ID'] || 'b01-local';
 const releaseId = process.env['RELEASE_ID'] || 'b01-unreleased';
 const smokeScopeLabel = ['cpos.scope', 'b01-smoke'].join('=');
+const forbiddenRuntimeTooling = [
+  '/usr/local/lib/node_modules/npm',
+  '/usr/local/lib/node_modules/corepack',
+  '/opt/yarn-v1.22.22',
+  '/usr/local/bin/npm',
+  '/usr/local/bin/npx',
+  '/usr/local/bin/corepack',
+  '/usr/local/bin/pnpm',
+  '/usr/local/bin/pnpx',
+  '/usr/local/bin/yarn',
+  '/usr/local/bin/yarnpkg',
+];
 
 const images = [
   {
@@ -80,6 +92,16 @@ async function inspect(format, image) {
   return result.stdout;
 }
 
+async function assertRuntimeToolingAbsent(image) {
+  const assertion = [
+    "const { existsSync } = require('node:fs');",
+    `const forbidden = ${JSON.stringify(forbiddenRuntimeTooling)};`,
+    'const found = forbidden.filter((entry) => existsSync(entry));',
+    "if (found.length > 0) { console.error(found.join('\\n')); process.exit(1); }",
+  ].join(' ');
+  await run('docker', ['run', '--rm', '--entrypoint', 'node', image, '-e', assertion]);
+}
+
 async function waitFor(url, field, expectedValue) {
   for (let attempt = 1; attempt <= 60; attempt += 1) {
     try {
@@ -116,6 +138,7 @@ async function smokeImages() {
       image.tag,
     );
     if (revision !== sourceCommit) throw new Error(`${image.name} revision label mismatch`);
+    await assertRuntimeToolingAbsent(image.tag);
   }
 
   await run('docker', ['run', '--rm', 'cpos-b01-worker:local', 'node', 'dist/main.js', '--check']);
