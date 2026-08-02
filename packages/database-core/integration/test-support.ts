@@ -4,12 +4,15 @@ import type { Pool } from 'pg';
 
 import { createPrivatePool } from '../src/internal/pool.js';
 
-const databaseUrl = process.env['DATABASE_URL'];
-if (!databaseUrl) throw new Error('DATABASE_URL is required for PostgreSQL integration tests');
+export function requiredDatabaseUrl(): string {
+  const value = process.env['DATABASE_URL'];
+  if (!value) throw new Error('DATABASE_URL is required for PostgreSQL integration tests');
+  return value;
+}
 
 export function createIntegrationPool(applicationName: string): Pool {
   return createPrivatePool({
-    connectionString: databaseUrl,
+    connectionString: requiredDatabaseUrl(),
     maximumConnections: 12,
     idleTimeoutMs: 1_000,
     connectionTimeoutMs: 5_000,
@@ -33,8 +36,9 @@ export interface AsyncBarrier {
 }
 
 export function createBarrier(participants: number): AsyncBarrier {
-  if (!Number.isSafeInteger(participants) || participants < 1)
+  if (!Number.isSafeInteger(participants) || participants < 1) {
     throw new Error('participants must be positive');
+  }
   let arrived = 0;
   let release: (() => void) | undefined;
   const promise = new Promise<void>((resolve) => {

@@ -2,11 +2,11 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { createDatabaseRuntime } from '../src/public.js';
 import { withPrivateTransaction } from '../src/internal/transaction.js';
-import { createIntegrationPool } from './test-support.js';
+import { createIntegrationPool, requiredDatabaseUrl } from './test-support.js';
 
 const pool = createIntegrationPool('cpos-b01-database-integration');
 const runtime = createDatabaseRuntime({
-  connectionString: process.env['DATABASE_URL'] as string,
+  connectionString: requiredDatabaseUrl(),
   maximumConnections: 4,
   idleTimeoutMs: 1_000,
   connectionTimeoutMs: 5_000,
@@ -22,7 +22,9 @@ afterAll(async () => {
 describe('database runtime foundation', () => {
   it('connects to PostgreSQL 18 and reports health without exposing a client', async () => {
     const health = await runtime.health();
-    expect(health.state).toBe('ok');
+    if (health.state !== 'ok') {
+      throw new Error(`expected healthy database: ${health.detail}`);
+    }
     expect(health.serverVersion).toMatch(/^18\./u);
     expect(Object.keys(runtime).sort()).toEqual([
       'close',
