@@ -25,6 +25,7 @@
     "infra:up": "node scripts/local-infra.mjs up",
     "infra:wait": "node scripts/local-infra.mjs wait",
     "lint": "eslint .",
+    "lockfile:check": "pnpm install --frozen-lockfile --lockfile-only",
     "manifests:check": "node scripts/check-root-manifest.mjs && pnpm --filter @cpos/invariant-compiler check",
     "object:integration": "pnpm --filter @cpos/object-store test:integration",
     "sbom": "node scripts/supply-chain.mjs sbom",
