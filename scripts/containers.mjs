@@ -6,6 +6,7 @@ import { healthFieldMatches } from './lib/health-contract.mjs';
 const sourceCommit = process.env['SOURCE_COMMIT'] || 'local';
 const buildId = process.env['BUILD_ID'] || 'b01-local';
 const releaseId = process.env['RELEASE_ID'] || 'b01-unreleased';
+const smokeScopeLabel = ['cpos.scope', 'b01-smoke'].join('=');
 
 const images = [
   {
@@ -125,7 +126,7 @@ async function smokeImages() {
       '--name',
       names[0],
       '--label',
-      'cpos.scope=b01-smoke',
+      smokeScopeLabel,
       '--publish',
       '127.0.0.1:3101:3001',
       'cpos-b01-api:local',
@@ -136,7 +137,7 @@ async function smokeImages() {
       '--name',
       names[1],
       '--label',
-      'cpos.scope=b01-smoke',
+      smokeScopeLabel,
       '--publish',
       '127.0.0.1:3102:8080',
       'cpos-b01-web-internal:local',
@@ -147,7 +148,7 @@ async function smokeImages() {
       '--name',
       names[2],
       '--label',
-      'cpos.scope=b01-smoke',
+      smokeScopeLabel,
       '--publish',
       '127.0.0.1:3103:8080',
       'cpos-b01-web-external:local',
