@@ -97,9 +97,11 @@ async function generateSbom() {
     'scan',
     'dir:/src',
     '--exclude',
-    '/src/.git',
+    './.git',
     '--exclude',
-    '/src/node_modules',
+    '**/node_modules',
+    '--exclude',
+    './artifacts',
     '--output',
     'cyclonedx-json=/src/artifacts/sbom/source.cdx.json',
   ]);
