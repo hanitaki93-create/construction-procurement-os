@@ -45,11 +45,7 @@ function normalizeDecimal(value: Decimal, scale: number, mode: DeclaredRoundingM
   return value.toDecimalPlaces(scale, mode).toFixed(scale);
 }
 
-export function executeCalculationPlan(
-  plan: CalculationPlan,
-  left: string,
-  right: string,
-): string {
+export function executeCalculationPlan(plan: CalculationPlan, left: string, right: string): string {
   const issues = validateCalculationPlan(plan);
   if (issues.length > 0) throw new Error(`invalid calculation plan: ${issues.join('; ')}`);
 
@@ -70,7 +66,8 @@ export function executeCalculationPlan(
     case 'DIVIDE': {
       if (rightValue.isZero()) throw new Error('division by zero');
       const intermediateScale = plan.divisionIntermediateScale;
-      if (intermediateScale === undefined) throw new Error('division intermediate scale is missing');
+      if (intermediateScale === undefined)
+        throw new Error('division intermediate scale is missing');
       result = leftValue
         .dividedBy(rightValue)
         .toDecimalPlaces(intermediateScale, roundingModes[plan.roundingMode]);
@@ -78,12 +75,9 @@ export function executeCalculationPlan(
     }
   }
 
-  const normalized = normalizeDecimal(
-    result,
-    plan.outputScale,
-    roundingModes[plan.roundingMode],
-  );
+  const normalized = normalizeDecimal(result, plan.outputScale, roundingModes[plan.roundingMode]);
   const digits = normalized.replace(/[-.]/gu, '').replace(/^0+/u, '').length || 1;
-  if (digits > plan.overflowDigits) throw new Error('calculation result exceeds declared precision');
+  if (digits > plan.overflowDigits)
+    throw new Error('calculation result exceeds declared precision');
   return normalized;
 }

@@ -17,9 +17,7 @@ describe('exact calculation plan', () => {
   it('rejects division without an intermediate scale', () => {
     const { divisionIntermediateScale: _omitted, ...withoutIntermediateScale } = divisionPlan;
     const issues = validateCalculationPlan(withoutIntermediateScale);
-    expect(issues).toContain(
-      'divisionIntermediateScale must be declared from outputScale to 36',
-    );
+    expect(issues).toContain('divisionIntermediateScale must be declared from outputScale to 36');
   });
 
   it('preserves exact decimal arithmetic beyond IEEE-754 precision', () => {
@@ -31,9 +29,9 @@ describe('exact calculation plan', () => {
       roundingMode: divisionPlan.roundingMode,
       overflowDigits: divisionPlan.overflowDigits,
     };
-    expect(
-      executeCalculationPlan(plan, '9007199254740993.123456789012', '0.000000000001'),
-    ).toBe('9007199254740993.123456789013');
+    expect(executeCalculationPlan(plan, '9007199254740993.123456789012', '0.000000000001')).toBe(
+      '9007199254740993.123456789013',
+    );
   });
 
   it('uses declared division scale and rounding point', () => {

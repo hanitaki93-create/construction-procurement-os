@@ -62,10 +62,7 @@ export const coverageFixture: readonly CoverageEntry[] = frozenSourceFixture.map
         ? { invariantIds: [padded('INV', Math.min(index + 1, 102))] }
         : { nonStateDisposition: disposition }),
       owner: disposition === 'HYPOTHESIS_ONLY' ? 'B15' : 'B01',
-      proofGate:
-        disposition === 'HYPOTHESIS_ONLY'
-          ? 'V1_VALIDATION'
-          : 'B01_MANIFEST_COMPILER_TEST',
+      proofGate: disposition === 'HYPOTHESIS_ONLY' ? 'V1_VALIDATION' : 'B01_MANIFEST_COMPILER_TEST',
     };
   },
 );
@@ -76,8 +73,7 @@ export const concurrencyProfileFixture: readonly ConcurrencyProfile[] = invarian
     id: `CP-${String(index + 1).padStart(3, '0')}`,
     isolation: invariant.id === 'INV-008' ? 'SERIALIZABLE' : 'READ COMMITTED',
     invariantIds: [invariant.id],
-    mechanism:
-      invariant.id === 'INV-008' ? 'SERIALIZABLE_PREDICATE' : 'GUARD_ROW_LOCK',
+    mechanism: invariant.id === 'INV-008' ? 'SERIALIZABLE_PREDICATE' : 'GUARD_ROW_LOCK',
     ...(invariant.id === 'INV-008'
       ? {}
       : {
