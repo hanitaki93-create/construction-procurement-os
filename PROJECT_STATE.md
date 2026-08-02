@@ -9,164 +9,153 @@
 
 - Project: **Construction Procurement OS**
 - Phase 1: **PASS / CLOSED / FROZEN**
-- Active phase: **Phase 2 — Build Decomposition**
-- P2.1 physical architecture: **CLAUDE ROUND 1 FAIL ON BL-P21-06 ONLY / REMEDIATED / INTERNAL RECHECK PASS / CLAUDE ROUND 2 PENDING**
-- P2.2 build decomposition: **REMEDIATED V0.2 / INTERNAL RECHECK PASS / CLAUDE ROUND 2 PENDING**
-- P2.3 first build prompt: **B01-P01 V0.2 INTERNAL PASS / EXECUTION LOCKED**
+- Active phase: **Phase 2 — Physical Architecture & Build Program**
+- Claude Phase 2 Round 1: **FAIL BL-P21-06 / REMEDIATED**
+- Claude Phase 2 Round 2: **FAIL BL-P21-07 ONLY / REMEDIATED**
+- P2.1 physical architecture: **STANDALONE V1.0 FREEZE CANDIDATE / INTERNAL PASS / CLAUDE ROUND 3 PENDING**
+- P2.2 build program: **STANDALONE V1.0 FREEZE CANDIDATE / INTERNAL PASS / CLAUDE ROUND 3 PENDING**
+- Invariant register: **102 FAMILIES / 92-ROW SOURCE COVERAGE / INTERNAL PASS**
+- First build prompt: **B01-P01 V1.0 STANDALONE CANDIDATE / INTERNAL PASS / EXECUTION LOCKED**
 - Product/frontend/AI code: **NOT STARTED / LOCKED**
-- P07 implementation: **LOCKED pending V4**
-- AI implementation/activation: **LOCKED pending V6**
+- P07: **LOCKED pending V4**
+- AI: **LOCKED pending V6**
 - External/build/pilot/commercial validation: **PENDING**
 
 Current status:
 
-`Claude Round 1 passed the selected topology, cross-store evidence, RLS/worker isolation, external-effect recovery, module write ownership, release compatibility, A0–A3 independence and B01 scope. It found BL-P21-06: missing concurrency control for cross-row conservation invariants. The architecture now has a closed ConcurrencyControlProtocol, exact invariant assignments, isolation/guard/constraint/lock-order/retry declarations, W-100–W-111 closure, an updated 18-block graph and B01-P01 v0.2 with real PostgreSQL write-skew/isolation proof. Internal recheck PASS. Claude Round 2 pending.`
+`Claude Round 2 confirmed BL-P21-06 and W-100–W-111 closed, then found BL-P21-07: the concurrency mechanisms were complete but the invariant input set lacked a completeness obligation. Phase 2 now has a product-authored InvariantRegisterVersion with 102 invariant families, a 92/92 Frozen-Clause Coverage Matrix, bidirectional source/register/object/operation compilation, EFFECTIVE_PERIOD_NON_OVERLAP, guard materialization/global lock order, exact numeric/int8 and SQL scale rules, block-local invariant evidence and an incremental no-unregistered-invariant gate. Standalone freeze candidates and B01 prompt are ready for final Claude Round 3.`
 
 ---
 
-# 2. Controlling Phase 1 package
+# 2. Controlling Phase 1
 
 `04_phases/phase_1/P1.11_golden_thread_validation_red_team_master_specification/CONSTRUCTION_PROCUREMENT_OS_PHASE1_MASTER_SPECIFICATION_V1_0_FROZEN.md`
 
-Phase 1 remains controlling. No Phase 1 reopen occurred.
+No Phase 1 reopen occurred.
 
 ---
 
-# 3. Controlling Phase 2 candidates
+# 3. Final standalone Phase 2 freeze candidates
 
 Physical architecture:
 
-`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_CANDIDATE_V0_3.md`
+`04_phases/phase_2_build_decomposition/P2_1_PHYSICAL_ARCHITECTURE_V1_0_CANDIDATE.md`
 
-Build graph:
+Invariant register:
 
-`04_phases/phase_2_build_decomposition/P2_2_BUILD_BLOCK_DEPENDENCY_GRAPH_V0_2.md`
+`04_phases/phase_2_build_decomposition/P2_1_INVARIANT_REGISTER_V0_1.md`
 
-Block completion evidence:
+Frozen source coverage:
 
-`04_phases/phase_2_build_decomposition/P2_2_BLOCK_COMPLETION_EVIDENCE_MANIFEST_TEMPLATE_V0_2.md`
+`04_phases/phase_2_build_decomposition/P2_1_FROZEN_CLAUSE_INVARIANT_COVERAGE_MATRIX_V0_1.md`
+
+Build program:
+
+`04_phases/phase_2_build_decomposition/P2_2_BUILD_PROGRAM_V1_0_CANDIDATE.md`
+
+Completion evidence:
+
+`04_phases/phase_2_build_decomposition/P2_2_BLOCK_COMPLETION_EVIDENCE_MANIFEST_TEMPLATE_V0_3.md`
 
 First build prompt:
 
-`04_phases/phase_2_build_decomposition/build_prompts/B01_P01_ENGINEERING_FOUNDATION_RUNTIME_SKELETON_V0_2.md`
+`04_phases/phase_2_build_decomposition/build_prompts/B01_P01_ENGINEERING_FOUNDATION_RUNTIME_SKELETON_V1_0_CANDIDATE.md`
+
+Internal recheck:
+
+`04_phases/phase_2_build_decomposition/audits/P2_INTERNAL_POST_CLAUDE_ROUND_2_RECHECK_V0_1.md`
 
 ---
 
-# 4. Selected physical baseline
+# 4. BL-P21-07 closure
 
-- Node.js 24 LTS / TypeScript strict / pnpm workspace;
-- Fastify 5 API/worker;
-- React 19.2 + Vite 8.1 separate internal/external apps;
-- PostgreSQL 18 authoritative relational state plus append-only occurrences/events/corrections;
-- PostgreSQL RLS, outbox/jobs and initial FTS/trigram search;
-- explicit SQL and SQL-first forward migrations;
-- S3-compatible versioned object storage;
-- OpenTelemetry/OTLP;
-- real PostgreSQL/object tests, property tests and Playwright;
-- OCI containers/provider-neutral runtime.
+Completeness is enforced in three directions:
 
-No mandatory microservices, broker, Redis, OpenSearch, Kubernetes, warehouse, supplier account/network, named connector, P07 or AI.
+1. every frozen source row/clause maps to invariant(s) or an explicit non-state disposition;
+2. every invariant maps to owner, object families, enforcement and hostile proof;
+3. every mutable object/state-changing operation reverse-references every participating invariant.
+
+Compiler/freeze/operation activation fails on any missing direction.
+
+Every block completion manifest states that no frozen or newly encountered load-bearing invariant exists without a register entry. New candidates block PASS until reconciled.
 
 ---
 
-# 5. ConcurrencyControlProtocol
+# 5. W-112–W-119 closure
 
-Every state-changing operation declares `ConcurrencyProfileVersion` with exact isolation, invariant IDs, mechanism, guard/constraint, lock order, retry class and tests.
-
-Permitted mechanisms:
-
-- CC-1 single-row expected version;
-- CC-2 stable guard-row lock for rooted aggregate conservation;
-- CC-3 unique/partial-unique/exclusion constraint;
-- CC-4 SERIALIZABLE predicate transaction where no natural guard/constraint exists;
-- CC-5 advisory lock for technical serialization only.
-
-Assigned invariants:
-
-- allocations — AuthorizedRequirementBasis guard;
-- minimum/residual drawdown — lineage guard plus unique contribution;
-- one value once — conservation-lineage guard plus contribution identity;
-- exclusive active scope — exclusion/unique constraint or serializable fallback.
-
-Registered commands explicitly choose isolation before the first statement. Missing invariant mechanism blocks activation/CI.
+- guard rows exist before lock through eager or insert-on-conflict materialization;
+- all guard acquisition uses one global tuple/order;
+- numeric and int8 remain exact strings/checked bigint, never JS number;
+- SQL division/intermediate scale is declared and equivalent to the reference executor;
+- B01 concurrency fixtures use isolated test-only schema, not product migrations;
+- independent review occurs outside authoring session and can fail the block;
+- B01 has F1–F5 checkpoints but only final PASS unlocks B02;
+- final Claude package supplies actual standalone canonical documents, not wrapper summaries.
 
 ---
 
-# 6. W-100–W-111 closure
+# 6. Build program
 
-- database context-mutating/security-definer objects prohibited and catalog-scanned;
-- tenant projections/search/report/export/control tables use FORCE RLS;
-- `ReleaseCompatibilityManifestVersion` named/enforced;
-- numeric OIDs remain strings with precision round-trip tests;
-- exact-decimal reference calculation and registered SQL equivalence rule;
-- three reproducible report source-cut modes;
-- B06 owns response schema before issue, B08 only normalizes/compares;
-- every block supplies local security/NFR evidence;
-- Round-2 packet includes PA gates and actual graph/maps/traceability/prompt;
-- independent build reviewer role named;
-- B12 owns Arabic search relevance decision.
+18 major blocks remain:
 
----
+- B01–B15 deterministic foundation/A0–A3/release;
+- B16–B17 P07, V4 gated;
+- B18 AI, V6 gated.
 
-# 7. Build program
+Traceability:
 
-The final candidate remains **18 major blocks**.
-
-A0–A3 completes by B15 without P07, connectors, account/network, warehouse, chat or AI.
-
-P07 remains B16–B17 and V4-gated. AI remains B18 and V6-gated.
-
-MR-001–MR-092 remain mapped 92/92; physical proof 19/19 and external validation 5/5 have owners/gates; architecture gaps remain 0.
+- MR rows to blocks: 92/92;
+- MR rows to invariant/non-state disposition: 92/92;
+- invariant families to owners: 102/102;
+- physical-proof requirements with proof owner: 19/19;
+- external-validation rows with gate owner: 5/5;
+- architecture gaps: 0 claimed.
 
 ---
 
-# 8. B01-P01 v0.2
+# 7. B01-P01 v1.0
 
-B01 remains an engineering foundation with no business tables/workflows.
+B01 remains business-empty and now builds/proves:
 
-It now additionally requires:
+- monorepo/toolchain/four deployable shells;
+- SQL-first migrations and explicit isolation helper;
+- test-only write-skew/effective-period/guard/deadlock fixtures;
+- InvariantRegister/FrozenCoverage/WriteOwnership/Concurrency/Compatibility validators;
+- bidirectional completeness compiler;
+- exact numeric/int8 and SQL scale contract;
+- database-object security catalog scan;
+- object/scanner/local infra/observability;
+- CI/containers/security/SBOM/accessibility/RTL;
+- F1–F5 evidence, independent review and scoped rollback.
 
-- explicit isolation helper;
-- write-skew negative control;
-- guard-row and serializable protected fixtures;
-- lock-order/deadlock fixture;
-- concurrency/write-ownership manifest validators;
-- no-raw-pool public-surface test;
-- exact numeric parser/round-trip test;
-- unsafe database-object catalog scan;
-- release compatibility manifest scaffold;
-- block-local security/NFR evidence;
-- independent reviewer.
-
-Execution is locked until:
-
-1. Claude Round 2 PASS;
-2. P2.1/P2.2 freeze/final checkpoint;
-3. explicit implementation authorization;
-4. recorded V1/V2 sequencing decision.
+It explicitly excludes tenant/business tables, auth, operations, evidence acceptance, procurement workflows, reports, P07 and AI.
 
 ---
 
-# 9. Canonical next handoff
+# 8. Canonical next handoff
 
-Send Claude:
+Send Claude the actual files listed in:
 
-1. `04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_2_SELF_CONTAINED_AUDIT_PACKET_V0_1.md`
-2. `04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_2_HOSTILE_AUDIT_PROMPT_V0_1.md`
+`04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_3_ACTUAL_ARTIFACT_AUDIT_MANIFEST_V0_1.md`
+
+Use prompt:
+
+`04_phases/phase_2_build_decomposition/audits/P2_CLAUDE_ROUND_3_HOSTILE_AUDIT_PROMPT_V0_1.md`
 
 Required PASS:
 
-`PASS — P2.1 physical architecture and P2.2 build decomposition can freeze; B01-P01 v0.2 is ready for execution after explicit implementation authorization and the recorded V1/V2 sequencing decision.`
+`PASS — P2.1 physical architecture and P2.2 build program can freeze; B01-P01 v1.0 is ready for execution after explicit implementation authorization and the recorded V1/V2 sequencing decision.`
 
 ---
 
-# 10. Locks
+# 9. Locks
 
 Do not:
 
-- freeze P2.1/P2.2 before Claude Round 2 PASS;
-- execute B01 before explicit authorization/V1-V2 decision;
+- freeze P2.1/P2.2 before Claude Round 3 PASS;
+- execute B01 before final checkpoint, explicit implementation authorization and V1/V2 decision;
 - start P07 before V4 or AI before V6;
-- add a service/broker/cache/search system as new authority;
+- allow new mutable objects/operations without register reverse mapping;
+- add a service/broker/cache/search system as authority/prerequisite;
 - reinterpret Phase 1 semantics;
-- treat documentation as physical/external/pilot/commercial proof.
+- represent architecture/build evidence as field/pilot/commercial proof.
