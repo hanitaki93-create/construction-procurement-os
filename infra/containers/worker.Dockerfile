@@ -29,7 +29,18 @@ ENV NODE_ENV=production \
     BUILD_ID=${BUILD_ID} \
     RELEASE_ID=${RELEASE_ID} \
     SOURCE_COMMIT=${SOURCE_COMMIT}
-RUN groupadd --gid 10001 cpos && useradd --uid 10001 --gid cpos --no-create-home --shell /usr/sbin/nologin cpos
+RUN rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/lib/node_modules/corepack \
+           /opt/yarn-v1.22.22 \
+    && rm -f /usr/local/bin/npm \
+             /usr/local/bin/npx \
+             /usr/local/bin/corepack \
+             /usr/local/bin/pnpm \
+             /usr/local/bin/pnpx \
+             /usr/local/bin/yarn \
+             /usr/local/bin/yarnpkg \
+    && groupadd --gid 10001 cpos \
+    && useradd --uid 10001 --gid cpos --no-create-home --shell /usr/sbin/nologin cpos
 WORKDIR /app
 COPY --from=build --chown=10001:10001 /out/worker/ ./
 USER 10001:10001
