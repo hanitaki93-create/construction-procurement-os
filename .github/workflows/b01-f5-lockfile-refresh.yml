@@ -1,0 +1,58 @@
+name: B01 F5 Lockfile Refresh
+
+on:
+  push:
+    branches:
+      - build/b01-engineering-foundation
+    paths:
+      - '.github/b01-f5-lockfile-refresh-trigger'
+      - '.github/workflows/b01-f5-lockfile-refresh.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: b01-f5-lockfile-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Regenerate exact pnpm lockfile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b01-engineering-foundation
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Generate exact lockfile only
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --lockfile-only --no-frozen-lockfile
+          pnpm install --frozen-lockfile
+
+      - name: Commit exact lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo B01_F5_LOCKFILE_ALREADY_CURRENT
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'B01 F5: regenerate exact Playwright lockfile'
+          git push origin HEAD:build/b01-engineering-foundation
