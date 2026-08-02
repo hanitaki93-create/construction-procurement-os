@@ -3,7 +3,7 @@ ARG NODE_IMAGE=node:24.18.0-bookworm-slim
 FROM ${NODE_IMAGE} AS build
 WORKDIR /workspace
 RUN corepack enable && corepack prepare pnpm@10.34.0 --activate
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base.json ./
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
