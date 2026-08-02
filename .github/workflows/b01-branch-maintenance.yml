@@ -7,6 +7,8 @@ on:
       - build/b01-engineering-foundation
     paths:
       - .github/workflows/b01-branch-maintenance.yml
+      - package.json
+      - playwright.config.ts
       - infra/containers/static-server.mjs
       - scripts/containers.mjs
       - tests/e2e/**
