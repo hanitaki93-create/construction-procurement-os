@@ -1,0 +1,32 @@
+{
+  "name": "construction-procurement-os",
+  "version": "0.0.0-b01",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "engines": {
+    "node": "24.18.0",
+    "pnpm": "10.34.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.tools.json --noEmit",
+    "test": "pnpm -r --if-present test",
+    "architecture:check": "node scripts/check-boundaries.mjs",
+    "manifests:check": "node scripts/check-root-manifest.mjs",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm architecture:check && pnpm manifests:check && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "24.13.3",
+    "eslint": "9.39.5",
+    "globals": "17.7.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0",
+    "vitest": "4.1.10"
+  }
+}
