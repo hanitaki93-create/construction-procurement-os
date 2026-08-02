@@ -1,7 +1,8 @@
 # B01 F2 Scope — Runtime and Browser Technical Shells
 
 **Date:** 2026-08-02  
-**Status:** IMPLEMENTED CANDIDATE / CLEAN-ROOM VERIFICATION PENDING
+**Status:** IMPLEMENTED CANDIDATE / CLEAN-ROOM VERIFICATION ACTIVE  
+**Verification trigger:** exact lockfile refreshed after explicit Node type-boundary correction
 
 ## Candidate inventory
 
