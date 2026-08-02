@@ -22,7 +22,18 @@ LABEL org.opencontainers.image.title="cpos-web-internal" \
       org.opencontainers.image.revision="${SOURCE_COMMIT}" \
       cpos.build.id="${BUILD_ID}"
 ENV NODE_ENV=production PORT=8080
-RUN groupadd --gid 10001 cpos && useradd --uid 10001 --gid cpos --no-create-home --shell /usr/sbin/nologin cpos
+RUN rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/lib/node_modules/corepack \
+           /opt/yarn-v1.22.22 \
+    && rm -f /usr/local/bin/npm \
+             /usr/local/bin/npx \
+             /usr/local/bin/corepack \
+             /usr/local/bin/pnpm \
+             /usr/local/bin/pnpx \
+             /usr/local/bin/yarn \
+             /usr/local/bin/yarnpkg \
+    && groupadd --gid 10001 cpos \
+    && useradd --uid 10001 --gid cpos --no-create-home --shell /usr/sbin/nologin cpos
 COPY --chown=10001:10001 infra/containers/static-server.mjs /app/static-server.mjs
 COPY --from=build --chown=10001:10001 /workspace/apps/web-internal/dist/ /srv/site/
 WORKDIR /app
