@@ -6,12 +6,22 @@ on:
     branches:
       - build/b01-engineering-foundation
     paths:
-      - .github/workflows/b01-branch-maintenance.yml
-      - package.json
-      - playwright.config.ts
-      - infra/containers/static-server.mjs
-      - scripts/containers.mjs
-      - tests/e2e/**
+      - '.dockerignore'
+      - '.env.example'
+      - '.gitleaks.toml'
+      - '.github/workflows/b01-*.yml'
+      - 'README.md'
+      - 'apps/**'
+      - 'docs/**'
+      - 'infra/**'
+      - 'migrations/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'playwright.config.ts'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'tsconfig.json'
 
 permissions:
   contents: write
@@ -52,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add .dockerignore .env.example .github apps docs infra migrations package.json packages playwright.config.ts pnpm-lock.yaml pnpm-workspace.yaml scripts tests tsconfig.json
+          git add .dockerignore .env.example .gitleaks.toml .github README.md apps docs infra migrations package.json packages playwright.config.ts pnpm-lock.yaml pnpm-workspace.yaml scripts tests tsconfig.json
           if git diff --cached --quiet; then
             echo "B01_BRANCH_MAINTENANCE_NO_CHANGE"
             exit 0
