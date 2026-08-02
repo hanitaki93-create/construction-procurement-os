@@ -1,7 +1,20 @@
 name: B01 Branch Maintenance
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - build/b01-engineering-foundation
+    paths:
+      - '.github/workflows/b01-*.yml'
+      - '.env.example'
+      - 'infra/**'
+      - 'migrations/**'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.json'
+      - 'apps/**'
+      - 'packages/**'
+      - 'scripts/**'
 
 permissions:
   contents: write
@@ -42,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add .env.example .github apps infra migrations package.json packages pnpm-lock.yaml pnpm-workspace.yaml scripts tsconfig.json
+          git add .env.example .github apps docs/build docs/runbooks infra migrations package.json packages pnpm-lock.yaml pnpm-workspace.yaml scripts tsconfig.json
           if git diff --cached --quiet; then
             echo "B01_BRANCH_MAINTENANCE_NO_CHANGE"
             exit 0
