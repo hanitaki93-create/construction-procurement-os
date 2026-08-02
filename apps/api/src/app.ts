@@ -37,7 +37,6 @@ export function buildApi({
   const app = Fastify({
     bodyLimit: config.bodyLimitBytes,
     connectionTimeout: config.requestTimeoutMs,
-    disableRequestLogging: true,
     logger: false,
     requestTimeout: config.requestTimeoutMs,
     trustProxy: config.trustProxy,
