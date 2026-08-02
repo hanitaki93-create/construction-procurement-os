@@ -8,8 +8,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.test.ts"],
-  "references": [
-    { "path": "../../packages/config" },
-    { "path": "../../packages/observability" }
-  ]
+  "references": [{ "path": "../../packages/config" }, { "path": "../../packages/observability" }]
 }
