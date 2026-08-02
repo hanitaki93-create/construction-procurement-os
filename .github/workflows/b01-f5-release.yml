@@ -15,6 +15,7 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'scripts/containers.mjs'
+      - 'scripts/summarize-playwright-report.mjs'
       - 'scripts/supply-chain.mjs'
       - 'tests/e2e/**'
   workflow_dispatch:
@@ -56,7 +57,26 @@ jobs:
 
       - name: Run browser isolation accessibility RTL and mobile proof
         shell: bash
-        run: pnpm test:e2e
+        run: |
+          set +e
+          mkdir -p artifacts/playwright
+          pnpm test:e2e
+          test_status=$?
+          set -e
+          node scripts/summarize-playwright-report.mjs artifacts/playwright/results.json
+          exit "$test_status"
+
+      - name: Preserve bounded browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: b01-browser-diagnostics
+          path: |
+            artifacts/playwright/results.json
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
 
   release:
     name: OCI secret dependency SBOM and vulnerability proof
