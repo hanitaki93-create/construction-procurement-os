@@ -24,6 +24,22 @@ test('allows raw database libraries inside database-core', () => {
   assert.deepEqual(violations('packages/database-core/src/private.ts', 'pg'), []);
 });
 
+test('allows same-package private source imports only from the private test graph', () => {
+  assert.deepEqual(
+    violations(
+      'packages/database-core/integration/concurrency.integration.test.ts',
+      '../src/internal/transaction.js',
+    ),
+    [],
+  );
+  const productionResult = violations(
+    'packages/database-core/src/public.ts',
+    '../src/internal/transaction.js',
+  );
+  assert.equal(productionResult.length, 1);
+  assert.match(productionResult[0].message, /public exports/u);
+});
+
 test('rejects browser imports of database capabilities', () => {
   const result = violations('apps/web-internal/src/main.tsx', '@cpos/database-core');
   assert.equal(result.length, 1);
@@ -36,7 +52,7 @@ test('rejects external web imports of internal web code', () => {
   assert.match(result[0].message, /external web cannot import internal/u);
 });
 
-test('rejects source-internal imports', () => {
+test('rejects source-internal package imports', () => {
   const result = violations('apps/api/src/main.ts', '@cpos/config/src/private.js');
   assert.equal(result.length, 1);
   assert.match(result[0].message, /public exports/u);

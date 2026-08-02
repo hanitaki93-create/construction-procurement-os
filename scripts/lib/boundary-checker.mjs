@@ -24,7 +24,7 @@ async function walk(directory) {
     if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
     const absolute = path.join(directory, entry.name);
 
-    if (entry.isDirectory()) files.push(...(await walk(absolute)));
+    if (entry.isDirectory()) files.push(...(await walk(absolute));
     else if (sourceExtensions.has(path.extname(entry.name))) files.push(absolute);
   }
 
@@ -50,16 +50,36 @@ function classify(repositoryRoot, file) {
       relative.startsWith('packages/ui-foundation/'),
     isDatabaseCore: relative.startsWith('packages/database-core/'),
     isExternalWeb: relative.startsWith('apps/web-external/'),
+    isPrivateTestGraph:
+      relative.includes('/integration/') ||
+      relative.includes('/tests/') ||
+      /\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(relative),
     isTestkit: relative.startsWith('packages/testkit/'),
   };
 }
 
+function relativeImportDisposition(repositoryRoot, file, specifier) {
+  if (!specifier.startsWith('.')) {
+    return { escapesPackage: false, staysInsidePackage: false };
+  }
+  const ownerRoot = packageRootFor(repositoryRoot, file);
+  if (!ownerRoot) return { escapesPackage: false, staysInsidePackage: false };
+  const resolved = path.resolve(path.dirname(file), specifier);
+  const relativeToOwner = path.relative(ownerRoot, resolved);
+  const escapesPackage = relativeToOwner.startsWith('..') || path.isAbsolute(relativeToOwner);
+  return { escapesPackage, staysInsidePackage: !escapesPackage };
+}
+
 export function inspectSpecifier({ repositoryRoot, file, specifier }) {
   const kind = classify(repositoryRoot, file);
+  const relativeDisposition = relativeImportDisposition(repositoryRoot, file, specifier);
   const violations = [];
   const report = (message) => violations.push({ file: kind.relative, specifier, message });
+  const sourceInternalImport = specifier.includes('/src/') || specifier.endsWith('/src');
+  const allowedPrivateTestImport =
+    kind.isPrivateTestGraph && specifier.startsWith('.') && relativeDisposition.staysInsidePackage;
 
-  if (specifier.includes('/src/') || specifier.endsWith('/src')) {
+  if (sourceInternalImport && !allowedPrivateTestImport) {
     report('packages must consume declared public exports, never source internals');
   }
 
@@ -67,15 +87,8 @@ export function inspectSpecifier({ repositoryRoot, file, specifier }) {
     report('repository-root source imports are prohibited');
   }
 
-  if (specifier.startsWith('.')) {
-    const ownerRoot = packageRootFor(repositoryRoot, file);
-    if (ownerRoot) {
-      const resolved = path.resolve(path.dirname(file), specifier);
-      const relativeToOwner = path.relative(ownerRoot, resolved);
-      if (relativeToOwner.startsWith('..') || path.isAbsolute(relativeToOwner)) {
-        report('cross-package relative imports are prohibited');
-      }
-    }
+  if (relativeDisposition.escapesPackage) {
+    report('cross-package relative imports are prohibited');
   }
 
   if (
