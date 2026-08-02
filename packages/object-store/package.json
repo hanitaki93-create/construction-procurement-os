@@ -1,0 +1,29 @@
+{
+  "name": "@cpos/object-store",
+  "version": "0.0.0-b01",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run --exclude integration/**/*.integration.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.test.json --pretty false"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
