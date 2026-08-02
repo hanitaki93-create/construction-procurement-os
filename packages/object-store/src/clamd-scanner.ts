@@ -1,4 +1,4 @@
-import { connect, type Socket } from 'node:net';
+import { connect } from 'node:net';
 
 import type { MalwareScanner, ScanResult, ScannerHealth } from './types.js';
 
@@ -61,16 +61,16 @@ async function exchange(
   frames: readonly Buffer[],
 ): Promise<ExchangeResult> {
   return await new Promise<ExchangeResult>((resolve) => {
-    let socket: Socket | undefined;
     let settled = false;
     let connected = false;
     const response: Buffer[] = [];
+    const socket = connect({ host: options.host, port: options.port });
 
     const finish = (result: ExchangeResult): void => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      socket?.destroy();
+      socket.destroy();
       resolve(result);
     };
 
@@ -78,12 +78,11 @@ async function exchange(
       finish({ state: 'TIMEOUT', detail: 'clamd did not respond before the configured timeout' });
     }, options.timeoutMs);
 
-    socket = connect({ host: options.host, port: options.port });
     socket.setNoDelay(true);
 
     socket.once('connect', () => {
       connected = true;
-      for (const frame of frames) socket?.write(frame);
+      for (const frame of frames) socket.write(frame);
     });
 
     socket.on('data', (chunk: Buffer) => {
