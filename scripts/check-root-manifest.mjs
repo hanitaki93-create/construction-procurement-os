@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
 const packageJsonUrl = new URL('package.json', root);
@@ -23,6 +23,14 @@ function checkDependencyBlock(blockName) {
       typeof version === 'string' && exactVersionPattern.test(version),
       `${blockName}.${name} must use an exact version; received ${String(version)}`,
     );
+  }
+}
+
+async function requireWorkspaceManifest(relativePath) {
+  try {
+    await access(new URL(`${relativePath}/package.json`, root));
+  } catch {
+    errors.push(`missing required B01 workspace ${relativePath}`);
   }
 }
 
@@ -57,14 +65,43 @@ for (const requiredScript of [
   'lint',
   'typecheck',
   'test',
+  'test:integration',
+  'test:e2e',
   'architecture:check',
   'manifests:check',
+  'infra:up',
+  'infra:down',
+  'db:migrate',
+  'containers:build',
+  'containers:smoke',
+  'security:secrets',
+  'security:dependencies',
+  'security:containers',
+  'sbom',
   'verify',
 ]) {
   assert(
     typeof packageJson.scripts?.[requiredScript] === 'string',
     `missing script ${requiredScript}`,
   );
+}
+
+for (const workspace of [
+  'apps/api',
+  'apps/worker',
+  'apps/web-internal',
+  'apps/web-external',
+  'packages/config',
+  'packages/contracts',
+  'packages/database-core',
+  'packages/invariant-compiler',
+  'packages/object-store',
+  'packages/observability',
+  'packages/testkit',
+  'packages/ui-foundation',
+  'packages/tooling-config',
+]) {
+  await requireWorkspaceManifest(workspace);
 }
 
 if (errors.length > 0) {
