@@ -8,12 +8,26 @@ describe('loadRuntimeConfig', () => {
     expect(config.port).toBe(3001);
     expect(config.host).toBe('127.0.0.1');
     expect(config.trustProxy).toBe(false);
+    expect(config.otelEndpoint).toBeUndefined();
     expect(config.build.service).toBe('api');
   });
 
-  it('rejects malformed ports and booleans', () => {
+  it('accepts a credential-free HTTP OTLP endpoint', () => {
+    const config = loadRuntimeConfig('api', {
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/',
+    });
+    expect(config.otelEndpoint).toBe('http://127.0.0.1:4318');
+  });
+
+  it('rejects malformed ports, booleans and telemetry endpoints', () => {
     expect(() => loadRuntimeConfig('api', { PORT: '0' })).toThrow(ConfigurationError);
     expect(() => loadRuntimeConfig('api', { TRUST_PROXY: 'yes' })).toThrow(ConfigurationError);
+    expect(() =>
+      loadRuntimeConfig('api', { OTEL_EXPORTER_OTLP_ENDPOINT: 'file:///tmp/collector' }),
+    ).toThrow(ConfigurationError);
+    expect(() =>
+      loadRuntimeConfig('api', { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://user:pass@localhost:4318' }),
+    ).toThrow(ConfigurationError);
   });
 
   it('rejects control characters in build metadata', () => {
