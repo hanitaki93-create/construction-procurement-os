@@ -6,6 +6,7 @@ test-results/
 .pnpm-store/
 *.min.*
 *.lock
+pnpm-lock.yaml
 
 # Frozen and historical truth artifacts are immutable inputs, not formatting targets.
 00_governance/
