@@ -1,12 +1,7 @@
 name: B01 F5 Lockfile Refresh
 
 on:
-  push:
-    branches:
-      - build/b01-engineering-foundation
-    paths:
-      - '.github/b01-f5-lockfile-refresh-trigger'
-      - '.github/workflows/b01-f5-lockfile-refresh.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
