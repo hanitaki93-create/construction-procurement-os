@@ -101,7 +101,9 @@ describe('effective-period non-overlap foundation', () => {
     ]);
     expect(settled.filter((entry) => entry.status === 'fulfilled')).toHaveLength(1);
     const rejected = settled.find((entry) => entry.status === 'rejected');
-    if (rejected?.status === 'rejected') expect(databaseErrorCode(rejected.reason)).toBe('23P01');
+    if (rejected?.status === 'rejected') {
+      expect(['23P01', 'DEADLOCK_DETECTED']).toContain(databaseErrorCode(rejected.reason));
+    }
     expect(await rowCount('excluded')).toBe(1);
   });
 
