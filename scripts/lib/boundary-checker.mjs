@@ -111,6 +111,14 @@ export function inspectSpecifier({ repositoryRoot, file, specifier }) {
   }
 
   if (
+    !kind.isPrivateTestGraph &&
+    !kind.isTestkit &&
+    (specifier === '@cpos/testkit' || specifier.startsWith('@cpos/testkit/'))
+  ) {
+    report('testkit imports are private to test and integration graphs');
+  }
+
+  if (
     kind.isExternalWeb &&
     (specifier.startsWith('@cpos/web-internal') ||
       specifier.includes('apps/web-internal') ||
