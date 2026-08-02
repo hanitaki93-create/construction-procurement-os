@@ -9,6 +9,7 @@ on:
       - .github/workflows/b01-branch-maintenance.yml
       - infra/containers/static-server.mjs
       - scripts/containers.mjs
+      - tests/e2e/**
 
 permissions:
   contents: write
