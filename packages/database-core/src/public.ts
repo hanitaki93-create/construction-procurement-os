@@ -14,12 +14,17 @@ interface EmptyTechnicalDatabase {}
 
 export interface DatabaseRuntimeOptions extends PrivatePoolOptions {}
 
-export interface DatabaseHealth {
-  readonly state: 'ok' | 'unavailable';
-  readonly serverVersion?: string;
-  readonly checkedAt: string;
-  readonly detail?: string;
-}
+export type DatabaseHealth =
+  | Readonly<{
+      state: 'ok';
+      serverVersion: string;
+      checkedAt: string;
+    }>
+  | Readonly<{
+      state: 'unavailable';
+      checkedAt: string;
+      detail: string;
+    }>;
 
 export interface DatabaseRuntime {
   health(): Promise<DatabaseHealth>;
@@ -51,11 +56,9 @@ export function createDatabaseRuntime(options: DatabaseRuntimeOptions): Database
         const result = await sql<{ server_version: string }>`
           SELECT current_setting('server_version') AS server_version
         `.execute(database);
-        return {
-          state: 'ok',
-          serverVersion: result.rows[0]?.server_version,
-          checkedAt,
-        };
+        const serverVersion = result.rows[0]?.server_version;
+        if (serverVersion === undefined) throw new Error('PostgreSQL did not return server_version');
+        return { state: 'ok', serverVersion, checkedAt };
       } catch (error: unknown) {
         return { state: 'unavailable', checkedAt, detail: normalizeError(error) };
       }
