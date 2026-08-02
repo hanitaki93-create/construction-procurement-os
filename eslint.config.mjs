@@ -33,7 +33,8 @@ export default tseslint.config(
         'error',
         {
           selector: "CallExpression[callee.object.name='Math'][callee.property.name='random']",
-          message: 'Math.random() is not permitted for identifiers, tokens, or authority-bearing values.',
+          message:
+            'Math.random() is not permitted for identifiers, tokens, or authority-bearing values.',
         },
       ],
       '@typescript-eslint/consistent-type-imports': [

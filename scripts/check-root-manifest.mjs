@@ -61,7 +61,10 @@ for (const requiredScript of [
   'manifests:check',
   'verify',
 ]) {
-  assert(typeof packageJson.scripts?.[requiredScript] === 'string', `missing script ${requiredScript}`);
+  assert(
+    typeof packageJson.scripts?.[requiredScript] === 'string',
+    `missing script ${requiredScript}`,
+  );
 }
 
 if (errors.length > 0) {

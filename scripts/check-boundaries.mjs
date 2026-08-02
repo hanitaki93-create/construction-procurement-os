@@ -9,7 +9,8 @@ const scanRoots = ['apps', 'packages']
   .filter(async () => true);
 const sourceExtensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
 const ignoredDirectories = new Set(['node_modules', 'dist', 'coverage', '.vite']);
-const importPattern = /(?:import|export)\s+(?:[^'"`]*?\s+from\s+)?['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/gu;
+const importPattern =
+  /(?:import|export)\s+(?:[^'"`]*?\s+from\s+)?['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/gu;
 
 const errors = [];
 
@@ -65,7 +66,11 @@ function inspectSpecifier(file, specifier) {
   const kind = classify(file);
 
   if (specifier.includes('/src/') || specifier.endsWith('/src')) {
-    addError(file, specifier, 'packages must consume declared public exports, never source internals');
+    addError(
+      file,
+      specifier,
+      'packages must consume declared public exports, never source internals',
+    );
   }
 
   if (specifier.startsWith('packages/') || specifier.startsWith('apps/')) {
@@ -91,7 +96,11 @@ function inspectSpecifier(file, specifier) {
       specifier.startsWith('@cpos/database-core') ||
       specifier.startsWith('@cpos/object-store/server'))
   ) {
-    addError(file, specifier, 'browser code cannot import database or server object-store capabilities');
+    addError(
+      file,
+      specifier,
+      'browser code cannot import database or server object-store capabilities',
+    );
   }
 
   if (

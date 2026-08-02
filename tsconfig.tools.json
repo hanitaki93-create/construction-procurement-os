@@ -7,10 +7,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": [
-    "eslint.config.mjs",
-    "prettier.config.mjs",
-    "scripts/**/*.mjs",
-    "vitest.config.ts"
-  ]
+  "include": ["eslint.config.mjs", "prettier.config.mjs", "scripts/**/*.mjs", "vitest.config.ts"]
 }
