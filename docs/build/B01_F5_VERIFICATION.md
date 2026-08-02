@@ -1,6 +1,6 @@
 # B01 F5 Verification Marker
 
-This marker triggers final verification on the normalized F5 dependency graph and formatted source.
+This marker triggers final verification after the dependency graph and source formatting were normalized and automatic branch maintenance was returned to manual dispatch only.
 
 Required authoritative lanes:
 
