@@ -24,7 +24,7 @@ async function walk(directory) {
     if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
     const absolute = path.join(directory, entry.name);
 
-    if (entry.isDirectory()) files.push(...(await walk(absolute));
+    if (entry.isDirectory()) files.push(...(await walk(absolute)));
     else if (sourceExtensions.has(path.extname(entry.name))) files.push(absolute);
   }
 
