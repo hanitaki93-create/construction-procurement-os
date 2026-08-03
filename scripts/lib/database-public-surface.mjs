@@ -167,13 +167,17 @@ export async function inspectDatabasePublicSurface({ repositoryRoot, publicSourc
     errors.push('database-core type export must resolve to dist/public.d.ts');
   }
 
-  const configPath = path.join(repositoryRoot, 'tsconfig.json');
+  const configPath = path.join(repositoryRoot, 'packages/database-core/tsconfig.json');
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error !== undefined) {
     errors.push(ts.flattenDiagnosticMessageText(configFile.error.messageText, '\n'));
     return errors;
   }
-  const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, repositoryRoot);
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    path.dirname(configPath),
+  );
   const publicPath = path.resolve(repositoryRoot, 'packages/database-core/src/public.ts');
   const program = createProgramWithPublicOverride(parsedConfig, publicPath, publicSourceOverride);
   const sourceFile = program.getSourceFile(publicPath);
