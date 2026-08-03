@@ -1,34 +1,40 @@
-# B01 Independent Audit Upload Checklist
+# B01 Independent Re-audit Upload Checklist
 
-**Version:** 1.0  
-**Audit target:** `1344a64454154bc624197b2a885bad9f8da9dafc`
+**Version:** 1.1  
+**Audit target:** `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`
 
-## Preferred review method
+## Required upload
 
-Give the auditor read access to:
+Provide the auditor one ZIP containing:
 
-- the complete private repository;
-- PR #1;
-- branch `build/b01-engineering-foundation`;
-- the exact implementation commit above;
-- GitHub Actions run and job evidence cited in the frozen manifest.
+- `00_READ_ME_FIRST.txt`;
+- `IMPLEMENTATION_SHA.txt` matching the exact target above;
+- `SHA256SUMS.txt`;
+- `01_IMPLEMENTATION_SNAPSHOT/`;
+- `02_AUDIT_MATERIALS/`.
 
-Then provide the complete contents of `02_HOSTILE_AUDIT_PROMPT.md` as the audit instruction.
+## Mandatory hidden-file contents
 
-## Archive fallback
+The implementation snapshot must contain and preserve:
 
-When repository access is impossible, provide one unmodified full-repository archive generated from the exact implementation commit.
+- `.github/workflows/`;
+- `.node-version`;
+- `.gitignore`;
+- `.dockerignore`;
+- `.env.example`;
+- `.npmrc`, `.nvmrc`, `.prettierignore` and `.gitleaks.toml` where committed.
 
-The archive must include:
+The exporter must use hidden-file inclusion when creating the downloadable artifact. A correct `git archive` followed by an artifact uploader that excludes hidden files is not acceptable.
+
+## Other mandatory contents
 
 - all source and test files;
-- dotfiles;
-- `.github/workflows/`;
 - manifests and `pnpm-lock.yaml`;
 - Dockerfiles and Compose files;
 - migrations, fixtures and scripts;
 - all B01 build and architecture documents;
-- the freeze package and hostile-audit package.
+- the freeze package and hostile-audit package;
+- the first-audit findings, remediation record and targeted re-audit prompt.
 
 ## Do not provide
 
@@ -43,9 +49,10 @@ The archive must include:
 
 Before reviewing, the auditor must state:
 
-- repository/archive identity;
+- archive identity;
 - exact commit reviewed;
-- whether full source, tests and workflows were available;
+- whether full source, tests, workflows and dotfiles were available;
+- the result of a hidden-entry check;
 - any evidence that could not be accessed.
 
-A review against a different commit is not a verdict on this B01 candidate.
+A review against another commit or an archive missing hidden files is not a verdict on this remediated B01 candidate.
