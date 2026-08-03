@@ -44,7 +44,10 @@ function declarationKind(declaration, publicPath) {
   if (ts.isTypeAliasDeclaration(declaration) && declaration.getSourceFile().fileName === publicPath) {
     return 'type-alias';
   }
-  if (ts.isExportSpecifier(declaration) && declaration.isTypeOnly) {
+  if (
+    ts.isExportSpecifier(declaration) &&
+    (declaration.isTypeOnly || declaration.parent.parent.isTypeOnly)
+  ) {
     return 'type-reexport';
   }
   return ts.SyntaxKind[declaration.kind] ?? 'unknown';
@@ -78,7 +81,13 @@ function inspectTypeGraph(checker, rootType, exportName) {
       for (const member of type.types) visit(member, `${trail} union/intersection`, depth + 1);
     }
 
-    const typeArguments = checker.getTypeArguments?.(type) ?? type.aliasTypeArguments ?? [];
+    const typeArguments = [...(type.aliasTypeArguments ?? [])];
+    if (
+      (type.flags & ts.TypeFlags.Object) !== 0 &&
+      (type.objectFlags & ts.ObjectFlags.Reference) !== 0
+    ) {
+      typeArguments.push(...checker.getTypeArguments(type));
+    }
     for (const argument of typeArguments) visit(argument, `${trail} type argument`, depth + 1);
 
     for (const property of checker.getPropertiesOfType(type)) {
