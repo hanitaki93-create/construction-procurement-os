@@ -88,27 +88,27 @@ jobs:
           cp docs/build/B01_COMPLETION_EVIDENCE_V1_0_CANDIDATE.md "$ROOT/02_AUDIT_MATERIALS/"
           cp docs/build/B01_VERSION_MANIFEST.md "$ROOT/02_AUDIT_MATERIALS/"
           cp docs/build/B01_F5_VERIFICATION.md "$ROOT/02_AUDIT_MATERIALS/"
-          cat > "$ROOT/00_READ_ME_FIRST.txt" <<'EOF'
-B01 INDEPENDENT HOSTILE AUDIT SHARE PACKAGE
-
-Audit target implementation commit:
-1344a64454154bc624197b2a885bad9f8da9dafc
-
-Package contents:
-01_IMPLEMENTATION_SNAPSHOT - complete unmodified repository tree at the audit target commit.
-02_AUDIT_MATERIALS - freeze candidate, hostile audit prompt, response template and supporting evidence.
-
-Start with:
-02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/00_READ_FIRST.md
-
-Then use:
-02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/02_HOSTILE_AUDIT_PROMPT.md
-
-Return the verdict using:
-02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/03_AUDIT_RESPONSE_TEMPLATE.md
-
-Do not treat builder summaries or previous PASS statements as proof. Inspect the implementation snapshot directly.
-EOF
+          printf '%s\n' \
+            'B01 INDEPENDENT HOSTILE AUDIT SHARE PACKAGE' \
+            '' \
+            'Audit target implementation commit:' \
+            "$IMPLEMENTATION_SHA" \
+            '' \
+            'Package contents:' \
+            '01_IMPLEMENTATION_SNAPSHOT - complete unmodified repository tree at the audit target commit.' \
+            '02_AUDIT_MATERIALS - freeze candidate, hostile audit prompt, response template and supporting evidence.' \
+            '' \
+            'Start with:' \
+            '02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/00_READ_FIRST.md' \
+            '' \
+            'Then use:' \
+            '02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/02_HOSTILE_AUDIT_PROMPT.md' \
+            '' \
+            'Return the verdict using:' \
+            '02_AUDIT_MATERIALS/B01_HOSTILE_AUDIT_PACKAGE/03_AUDIT_RESPONSE_TEMPLATE.md' \
+            '' \
+            'Do not treat builder summaries or previous PASS statements as proof. Inspect the implementation snapshot directly.' \
+            > "$ROOT/00_READ_ME_FIRST.txt"
           printf '%s\n' "$IMPLEMENTATION_SHA" > "$ROOT/IMPLEMENTATION_SHA.txt"
           find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/SHA256SUMS.txt"
 
