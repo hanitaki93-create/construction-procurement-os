@@ -2,6 +2,11 @@ name: B01 Branch Maintenance
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - build/b01-engineering-foundation
+    paths:
+      - .github/b01-final-format-trigger
 
 permissions:
   contents: write
@@ -49,5 +54,5 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "B01 F5: refresh lockfile and formatting"
+          git commit -m "B01 evidence: normalize independent PASS records"
           git push origin HEAD:build/b01-engineering-foundation
