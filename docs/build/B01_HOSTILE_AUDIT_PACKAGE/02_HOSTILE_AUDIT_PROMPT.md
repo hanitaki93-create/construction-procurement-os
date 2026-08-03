@@ -1,8 +1,10 @@
 # B01 Independent Hostile Conformance Audit Prompt
 
-Audit repository `hanitaki93-create/construction-procurement-os`, PR #1, branch `build/b01-engineering-foundation`, against exact implementation commit:
+Audit repository `hanitaki93-create/construction-procurement-os`, PR #1, branch `build/b01-engineering-foundation`, against exact remediated implementation commit:
 
-`1344a64454154bc624197b2a885bad9f8da9dafc`
+`3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`
+
+For the immediate second review, use `07_TARGETED_REAUDIT_PROMPT.md`. This full prompt is retained when a complete de novo audit is required.
 
 Treat B01 as incorrect until the implementation and reproducible evidence prove otherwise. Prior PASS labels, builder summaries, completion documents and CI conclusions are claims to test, not authority.
 
