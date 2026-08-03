@@ -1,14 +1,14 @@
 # B01 Freeze Candidate Package
 
-**Version:** 1.0  
-**Status:** Freeze candidate; independent audit and project-owner acceptance pending  
+**Version:** 1.1  
+**Status:** Independent audit PASS / project-owner acceptance pending  
 **Block:** B01 — Engineering Foundation & Runtime Skeleton  
-**Implementation evidence commit:** `1344a64454154bc624197b2a885bad9f8da9dafc`  
+**Remediated implementation evidence commit:** `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`  
 **Draft PR:** #1
 
 ## Purpose
 
-This package identifies the implementation that completed the builder verification gates and defines the evidence to be reviewed independently. It does not declare canonical B01 PASS, merge the draft PR, or unlock B02.
+This package identifies the independently verified B01 implementation candidate and its evidence chain. It does not itself record project-owner acceptance, merge the draft PR, or unlock B02.
 
 ## Reading order
 
@@ -17,9 +17,13 @@ This package identifies the implementation that completed the builder verificati
 3. `03_B01_IMPLEMENTATION_BOUNDARIES.md`
 4. `04_B01_BUILD_REPRODUCIBILITY.md`
 5. `05_B01_KNOWN_LIMITATIONS.md`
-6. `../B01_COMPLETION_EVIDENCE_V1_0_CANDIDATE.md`
-7. `../B01_VERSION_MANIFEST.md`
-8. `../B01_F5_VERIFICATION.md`
+6. `06_B01_OWNER_ACCEPTANCE_RECORD.md`
+7. `../B01_HOSTILE_AUDIT_PACKAGE/05_FIRST_AUDIT_FINDINGS.md`
+8. `../B01_HOSTILE_AUDIT_PACKAGE/06_AUDIT_REMEDIATION_01.md`
+9. `../B01_HOSTILE_AUDIT_PACKAGE/08_TARGETED_REAUDIT_RESULT_PASS.md`
+10. `../B01_COMPLETION_EVIDENCE_V1_1_INDEPENDENT_PASS.md`
+11. `../B01_VERSION_MANIFEST.md`
+12. `../B01_F5_VERIFICATION.md`
 
 ## Governance
 
@@ -27,7 +31,9 @@ The freeze preserves what was proven at the cited implementation commit; it does
 
 ## Current lock state
 
+- Independent targeted re-audit: PASS.
+- BF-01 and BF-02: CLOSED.
+- Project-owner acceptance: PENDING.
 - PR #1 remains draft.
-- `main` remains unchanged.
+- `main` remains at `1a74a63ae18d25f0d94c88d895dba03cc70d89ba`.
 - B02 remains locked.
-- Independent audit remains pending.
