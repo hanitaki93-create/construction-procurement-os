@@ -1,34 +1,47 @@
 # B01 Hostile Audit Package
 
-**Version:** 1.0  
-**Status:** Ready for first independent audit  
+**Version:** 1.1  
+**Status:** Ready for targeted independent re-audit  
 **Repository:** `hanitaki93-create/construction-procurement-os`  
 **Branch:** `build/b01-engineering-foundation`  
 **Draft PR:** #1  
-**Implementation target:** `1344a64454154bc624197b2a885bad9f8da9dafc`
+**Remediated implementation target:** `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`
 
-## Auditor objective
+## Current audit objective
 
-Determine whether B01 conforms to the frozen B01 build requirements and architecture without relying on builder confidence, prior summaries or previous PASS labels.
+Determine whether the two blockers from the first independent audit are closed and whether the previously unassessable OCI, supply-chain, reproducibility, rollback and CI-evidence areas pass against the complete replacement archive.
+
+The first audit remains part of the evidence record. It is not overwritten by the remediation.
 
 ## Required access
 
-Preferred: read access to the complete private repository and PR #1, with the implementation target pinned to the exact commit above.
+Use the complete replacement ZIP. It must contain:
 
-Fallback: an unmodified full-repository archive created from the exact implementation target. Do not audit a cherry-picked file set.
+- `01_IMPLEMENTATION_SNAPSHOT/` created from the exact target above;
+- all repository dotfiles and `.github/workflows/`;
+- `02_AUDIT_MATERIALS/` containing this package and the freeze evidence;
+- `IMPLEMENTATION_SHA.txt`;
+- `SHA256SUMS.txt`.
 
-## Required package files
+## Required review order
 
-1. `01_UPLOAD_CHECKLIST.md`
-2. `02_HOSTILE_AUDIT_PROMPT.md`
-3. `03_AUDIT_RESPONSE_TEMPLATE.md`
-4. `04_REOPEN_AND_CHANGE_POLICY.md`
-5. `../B01_FREEZE_PACKAGE/`
-6. `../B01_COMPLETION_EVIDENCE_V1_0_CANDIDATE.md`
-7. `../B01_VERSION_MANIFEST.md`
-8. `../B01_F5_VERIFICATION.md`
-9. the complete repository at the implementation target.
+1. `05_FIRST_AUDIT_FINDINGS.md`
+2. `06_AUDIT_REMEDIATION_01.md`
+3. `07_TARGETED_REAUDIT_PROMPT.md`
+4. `03_AUDIT_RESPONSE_TEMPLATE.md`
+5. the complete implementation snapshot and supporting freeze evidence.
+
+## Supporting package files
+
+- `01_UPLOAD_CHECKLIST.md`
+- `02_HOSTILE_AUDIT_PROMPT.md` — full hostile audit prompt retained for reference;
+- `03_AUDIT_RESPONSE_TEMPLATE.md`;
+- `04_REOPEN_AND_CHANGE_POLICY.md`;
+- `../B01_FREEZE_PACKAGE/`;
+- `../B01_COMPLETION_EVIDENCE_V1_0_CANDIDATE.md`;
+- `../B01_VERSION_MANIFEST.md`;
+- `../B01_F5_VERIFICATION.md`.
 
 ## Decision boundary
 
-The independent auditor does not merge the PR or unlock B02. The auditor returns a structured verdict. The project owner separately evaluates the verdict and records acceptance or remediation.
+The independent auditor does not merge the PR or unlock B02. The auditor explicitly dispositions BF-01 and BF-02 and returns one structured verdict. The project owner separately evaluates that verdict and records acceptance or further remediation.
