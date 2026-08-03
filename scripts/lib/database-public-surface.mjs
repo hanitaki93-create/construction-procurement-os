@@ -35,13 +35,22 @@ function normalizeFileName(fileName) {
 }
 
 function declarationKind(declaration, publicPath) {
-  if (ts.isFunctionDeclaration(declaration) && declaration.getSourceFile().fileName === publicPath) {
+  if (
+    ts.isFunctionDeclaration(declaration) &&
+    declaration.getSourceFile().fileName === publicPath
+  ) {
     return 'function';
   }
-  if (ts.isInterfaceDeclaration(declaration) && declaration.getSourceFile().fileName === publicPath) {
+  if (
+    ts.isInterfaceDeclaration(declaration) &&
+    declaration.getSourceFile().fileName === publicPath
+  ) {
     return 'interface';
   }
-  if (ts.isTypeAliasDeclaration(declaration) && declaration.getSourceFile().fileName === publicPath) {
+  if (
+    ts.isTypeAliasDeclaration(declaration) &&
+    declaration.getSourceFile().fileName === publicPath
+  ) {
     return 'type-alias';
   }
   if (
@@ -142,7 +151,13 @@ function createProgramWithPublicOverride(parsedConfig, publicPath, publicSourceO
     path.resolve(fileName) === publicPath ? publicSourceOverride : originalReadFile(fileName);
   host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) => {
     if (path.resolve(fileName) === publicPath) {
-      return ts.createSourceFile(fileName, publicSourceOverride, languageVersion, true, ts.ScriptKind.TS);
+      return ts.createSourceFile(
+        fileName,
+        publicSourceOverride,
+        languageVersion,
+        true,
+        ts.ScriptKind.TS,
+      );
     }
     return originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
   };
