@@ -26,18 +26,18 @@
 
 ## Section verdicts
 
-| Section | Verdict | Evidence summary |
-| --- | --- | --- |
-| Requirement completeness | PASS / MINOR / FAIL | |
-| Architecture and boundaries | PASS / MINOR / FAIL | |
-| Database and exactness | PASS / MINOR / FAIL | |
-| Runtime and configuration | PASS / MINOR / FAIL | |
-| Browser separation/accessibility | PASS / MINOR / FAIL | |
-| Object/scanner/telemetry | PASS / MINOR / FAIL | |
-| OCI and supply chain | PASS / MINOR / FAIL | |
-| Reproducibility and rollback | PASS / MINOR / FAIL | |
-| Scope isolation | PASS / MINOR / FAIL | |
-| CI evidence quality | PASS / MINOR / FAIL | |
+| Section                          | Verdict             | Evidence summary |
+| -------------------------------- | ------------------- | ---------------- |
+| Requirement completeness         | PASS / MINOR / FAIL |                  |
+| Architecture and boundaries      | PASS / MINOR / FAIL |                  |
+| Database and exactness           | PASS / MINOR / FAIL |                  |
+| Runtime and configuration        | PASS / MINOR / FAIL |                  |
+| Browser separation/accessibility | PASS / MINOR / FAIL |                  |
+| Object/scanner/telemetry         | PASS / MINOR / FAIL |                  |
+| OCI and supply chain             | PASS / MINOR / FAIL |                  |
+| Reproducibility and rollback     | PASS / MINOR / FAIL |                  |
+| Scope isolation                  | PASS / MINOR / FAIL |                  |
+| CI evidence quality              | PASS / MINOR / FAIL |                  |
 
 ## Blocking findings
 

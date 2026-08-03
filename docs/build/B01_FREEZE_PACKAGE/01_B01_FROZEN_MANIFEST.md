@@ -18,14 +18,14 @@
 
 ## Authoritative remediation workflow evidence
 
-| Lane | Run | Job | Result |
-| --- | ---: | ---: | --- |
-| Complete Node 24 workspace verification | `30803479916` | `91653347445` | PASS |
-| PostgreSQL 18.4 hostile regression | `30803479389` | `91653323808` | PASS |
-| Object, scanner and OTLP regression | `30803479929` | `91653336380` | PASS |
-| Browser matrix | `30803479965` | `91653357204` | PASS |
-| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS |
-| Scoped rollback proof | `30803479965` | `91653357224` | PASS |
+| Lane                                        |           Run |           Job | Result |
+| ------------------------------------------- | ------------: | ------------: | ------ |
+| Complete Node 24 workspace verification     | `30803479916` | `91653347445` | PASS   |
+| PostgreSQL 18.4 hostile regression          | `30803479389` | `91653323808` | PASS   |
+| Object, scanner and OTLP regression         | `30803479929` | `91653336380` | PASS   |
+| Browser matrix                              | `30803479965` | `91653357204` | PASS   |
+| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS   |
+| Scoped rollback proof                       | `30803479965` | `91653357224` | PASS   |
 
 ## Exact platform identity
 

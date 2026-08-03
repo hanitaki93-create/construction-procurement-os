@@ -62,14 +62,14 @@ The replacement exporter:
 
 All authoritative workflows passed on exact implementation target `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`.
 
-| Lane | Run | Job | Result |
-| --- | ---: | ---: | --- |
-| Complete Node 24 workspace verification | `30803479916` | `91653347445` | PASS |
-| PostgreSQL 18.4 hostile regression | `30803479389` | `91653323808` | PASS |
-| Object, scanner and OTLP regression | `30803479929` | `91653336380` | PASS |
-| Browser matrix | `30803479965` | `91653357204` | PASS |
-| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS |
-| Scoped rollback proof | `30803479965` | `91653357224` | PASS |
+| Lane                                        |           Run |           Job | Result |
+| ------------------------------------------- | ------------: | ------------: | ------ |
+| Complete Node 24 workspace verification     | `30803479916` | `91653347445` | PASS   |
+| PostgreSQL 18.4 hostile regression          | `30803479389` | `91653323808` | PASS   |
+| Object, scanner and OTLP regression         | `30803479929` | `91653336380` | PASS   |
+| Browser matrix                              | `30803479965` | `91653357204` | PASS   |
+| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS   |
+| Scoped rollback proof                       | `30803479965` | `91653357224` | PASS   |
 
 ## Re-audit decision boundary
 
