@@ -108,9 +108,7 @@ function inspectTypeGraph(checker, rootType, exportName, repositoryRoot) {
     }
     for (const argument of typeArguments) visit(argument, `${trail} type argument`, depth + 1);
 
-    const traversable = symbols.some((symbol) =>
-      symbolIsRepositoryOwned(symbol, repositoryRoot),
-    );
+    const traversable = symbols.some((symbol) => symbolIsRepositoryOwned(symbol, repositoryRoot));
     if (!traversable) return;
 
     for (const property of checker.getPropertiesOfType(type)) {
