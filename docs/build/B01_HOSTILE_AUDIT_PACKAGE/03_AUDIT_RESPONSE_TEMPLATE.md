@@ -7,22 +7,37 @@
 - Repository or archive identity:
 - Exact commit reviewed:
 - Full source/tests/workflows available: YES / NO
+- Required dotfiles and `.github/workflows/` available: YES / NO
 - Evidence unavailable:
+
+## First-audit blocker dispositions
+
+### BF-01 — Database public-surface enforcement
+
+- Disposition: CLOSED / OPEN
+- Mutation or reproduction evidence:
+- Exact reason the guard passed or rejected each mutation:
+
+### BF-02 — Complete archive evidence
+
+- Disposition: CLOSED / OPEN
+- Hidden-entry check and result:
+- Missing required paths, if any:
 
 ## Section verdicts
 
-| Section                          | Verdict             | Evidence summary |
-| -------------------------------- | ------------------- | ---------------- |
-| Requirement completeness         | PASS / MINOR / FAIL |                  |
-| Architecture and boundaries      | PASS / MINOR / FAIL |                  |
-| Database and exactness           | PASS / MINOR / FAIL |                  |
-| Runtime and configuration        | PASS / MINOR / FAIL |                  |
-| Browser separation/accessibility | PASS / MINOR / FAIL |                  |
-| Object/scanner/telemetry         | PASS / MINOR / FAIL |                  |
-| OCI and supply chain             | PASS / MINOR / FAIL |                  |
-| Reproducibility and rollback     | PASS / MINOR / FAIL |                  |
-| Scope isolation                  | PASS / MINOR / FAIL |                  |
-| CI evidence quality              | PASS / MINOR / FAIL |                  |
+| Section | Verdict | Evidence summary |
+| --- | --- | --- |
+| Requirement completeness | PASS / MINOR / FAIL | |
+| Architecture and boundaries | PASS / MINOR / FAIL | |
+| Database and exactness | PASS / MINOR / FAIL | |
+| Runtime and configuration | PASS / MINOR / FAIL | |
+| Browser separation/accessibility | PASS / MINOR / FAIL | |
+| Object/scanner/telemetry | PASS / MINOR / FAIL | |
+| OCI and supply chain | PASS / MINOR / FAIL | |
+| Reproducibility and rollback | PASS / MINOR / FAIL | |
+| Scope isolation | PASS / MINOR / FAIL | |
+| CI evidence quality | PASS / MINOR / FAIL | |
 
 ## Blocking findings
 
