@@ -1,6 +1,11 @@
 name: B01 Audit Export
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/b01-audit-export-trigger
   push:
     branches:
       - build/b01-engineering-foundation
