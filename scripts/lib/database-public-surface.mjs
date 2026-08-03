@@ -70,7 +70,15 @@ function declarationIsForbidden(symbol) {
   });
 }
 
-function inspectTypeGraph(checker, rootType, exportName) {
+function symbolIsRepositoryOwned(symbol, repositoryRoot) {
+  const normalizedRoot = `${normalizeFileName(path.resolve(repositoryRoot))}/`;
+  return (symbol.declarations ?? []).some((declaration) => {
+    const fileName = normalizeFileName(path.resolve(declaration.getSourceFile().fileName));
+    return fileName.startsWith(normalizedRoot) && !fileName.includes('/node_modules/');
+  });
+}
+
+function inspectTypeGraph(checker, rootType, exportName, repositoryRoot) {
   const errors = [];
   const visited = new Set();
 
@@ -78,7 +86,8 @@ function inspectTypeGraph(checker, rootType, exportName) {
     if (depth > 30 || visited.has(type.id)) return;
     visited.add(type.id);
 
-    for (const symbol of [type.aliasSymbol, type.getSymbol?.()].filter(Boolean)) {
+    const symbols = [type.aliasSymbol, type.getSymbol?.()].filter(Boolean);
+    for (const symbol of symbols) {
       if (declarationIsForbidden(symbol)) {
         errors.push(
           `approved export ${exportName} exposes forbidden type ${symbol.getName()} through ${trail}`,
@@ -98,6 +107,11 @@ function inspectTypeGraph(checker, rootType, exportName) {
       typeArguments.push(...checker.getTypeArguments(type));
     }
     for (const argument of typeArguments) visit(argument, `${trail} type argument`, depth + 1);
+
+    const traversable = symbols.some((symbol) =>
+      symbolIsRepositoryOwned(symbol, repositoryRoot),
+    );
+    if (!traversable) return;
 
     for (const property of checker.getPropertiesOfType(type)) {
       const declaration = property.valueDeclaration ?? property.declarations?.[0];
@@ -249,7 +263,7 @@ export async function inspectDatabasePublicSurface({ repositoryRoot, publicSourc
       targetSymbol.flags & ts.SymbolFlags.Type
         ? checker.getDeclaredTypeOfSymbol(targetSymbol)
         : checker.getTypeOfSymbolAtLocation(targetSymbol, targetDeclaration);
-    errors.push(...inspectTypeGraph(checker, targetType, exportName));
+    errors.push(...inspectTypeGraph(checker, targetType, exportName, repositoryRoot));
   }
 
   return [...new Set(errors)];
