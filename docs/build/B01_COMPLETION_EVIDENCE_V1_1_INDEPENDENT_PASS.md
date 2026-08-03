@@ -49,14 +49,14 @@ Full record: `B01_HOSTILE_AUDIT_PACKAGE/08_TARGETED_REAUDIT_RESULT_PASS.md`.
 
 All implementation lanes passed on exact remediation target `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`:
 
-| Lane | Run | Job | Result |
-| --- | ---: | ---: | --- |
-| Complete Node 24 workspace verification | `30803479916` | `91653347445` | PASS |
-| PostgreSQL 18.4 hostile regression | `30803479389` | `91653323808` | PASS |
-| Object/scanner/OTLP regression | `30803479929` | `91653336380` | PASS |
-| Browser matrix | `30803479965` | `91653357204` | PASS |
-| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS |
-| Scoped rollback proof | `30803479965` | `91653357224` | PASS |
+| Lane                                        |           Run |           Job | Result |
+| ------------------------------------------- | ------------: | ------------: | ------ |
+| Complete Node 24 workspace verification     | `30803479916` | `91653347445` | PASS   |
+| PostgreSQL 18.4 hostile regression          | `30803479389` | `91653323808` | PASS   |
+| Object/scanner/OTLP regression              | `30803479929` | `91653336380` | PASS   |
+| Browser matrix                              | `30803479965` | `91653357204` | PASS   |
+| OCI, security, SBOM and vulnerability proof | `30803479965` | `91653357153` | PASS   |
+| Scoped rollback proof                       | `30803479965` | `91653357224` | PASS   |
 
 The final evidence/export cleanup head also passed all four workflows after the temporary exporter was removed:
 
@@ -67,11 +67,11 @@ The final evidence/export cleanup head also passed all four workflows after the 
 
 ## Acceptance gates
 
-| Gate | Status |
-| --- | --- |
-| 1–19 — implementation, verification, security, rollback and scope gates | PASS |
-| 20 — independent review closes blockers with no unresolved architecture question/invariant candidate | PASS |
-| 21 — project-owner acceptance recorded | PENDING |
+| Gate                                                                                                 | Status  |
+| ---------------------------------------------------------------------------------------------------- | ------- |
+| 1–19 — implementation, verification, security, rollback and scope gates                              | PASS    |
+| 20 — independent review closes blockers with no unresolved architecture question/invariant candidate | PASS    |
+| 21 — project-owner acceptance recorded                                                               | PENDING |
 
 **Canonical B01 result:** OWNER ACCEPTANCE PENDING.
 

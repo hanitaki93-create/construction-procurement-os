@@ -16,12 +16,12 @@ The reviewer explicitly closed both blockers from the first audit.
 
 The original database public-surface denylist was replaced by a TypeScript-program allowlist and transitive type-surface inspection. The reviewer executed four hostile probes from a clean passing baseline:
 
-| Probe | Hostile modification | Independent result |
-| --- | --- | --- |
-| A | Re-export `createPrivatePool` under its existing name | Rejected; unapproved export named precisely |
-| B | Add harmless-looking `getConnection(): unknown` export | Rejected; export-set widening detected |
-| C | Add `acquireHandle(): import('pg').Pool` | Rejected; unapproved export and raw type exposure detected |
-| D | Add `rawPool(): import('pg').Pool` inside approved `DatabaseRuntime` | Rejected; transitive type graph identified `Pool` and emitted the traversal path |
+| Probe | Hostile modification                                                 | Independent result                                                               |
+| ----- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| A     | Re-export `createPrivatePool` under its existing name                | Rejected; unapproved export named precisely                                      |
+| B     | Add harmless-looking `getConnection(): unknown` export               | Rejected; export-set widening detected                                           |
+| C     | Add `acquireHandle(): import('pg').Pool`                             | Rejected; unapproved export and raw type exposure detected                       |
+| D     | Add `rawPool(): import('pg').Pool` inside approved `DatabaseRuntime` | Rejected; transitive type graph identified `Pool` and emitted the traversal path |
 
 The reviewer concluded that a raw pool cannot reach the public surface through renaming, direct export, inline return typing or smuggling inside an approved exported type.
 
@@ -45,18 +45,18 @@ The reviewer confirmed `ROOT_MANIFEST_CHECK_PASS` and inspected all six workflow
 
 ## Section verdicts
 
-| Section | Verdict | Independent evidence summary |
-| --- | --- | --- |
-| Requirement completeness | PASS | All checkers executed; 18/18 pure-Node tests passed |
-| Architecture and boundaries | PASS | BF-01 closed through four independent evasion probes, including transitive smuggling |
-| Database and exactness | PASS | Migration checksum, locking, isolation read-back and exact numeric parsing preserved |
-| Runtime and configuration | PASS | Health/liveness contracts and startup validation passed |
-| Browser separation/accessibility | PASS | Real Chromium, Firefox, WebKit and mobile matrix with axe and RTL proof |
-| Object/scanner/telemetry | PASS | Clean, timeout, unavailable and unexpected responses remain distinct |
-| OCI and supply chain | PASS | Pinned workflows, non-root images, secret/dependency gates, dual SBOM classes and vulnerability proof assessed |
-| Reproducibility and rollback | PASS | Root manifest passed; repository reversal and scoped teardown proof assessed |
-| Scope isolation | PASS | Only technical `release_metadata` table; no product authority established |
-| CI evidence quality | PASS | Negative controls fail for intended reasons; no swallowed verification failures found |
+| Section                          | Verdict | Independent evidence summary                                                                                   |
+| -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| Requirement completeness         | PASS    | All checkers executed; 18/18 pure-Node tests passed                                                            |
+| Architecture and boundaries      | PASS    | BF-01 closed through four independent evasion probes, including transitive smuggling                           |
+| Database and exactness           | PASS    | Migration checksum, locking, isolation read-back and exact numeric parsing preserved                           |
+| Runtime and configuration        | PASS    | Health/liveness contracts and startup validation passed                                                        |
+| Browser separation/accessibility | PASS    | Real Chromium, Firefox, WebKit and mobile matrix with axe and RTL proof                                        |
+| Object/scanner/telemetry         | PASS    | Clean, timeout, unavailable and unexpected responses remain distinct                                           |
+| OCI and supply chain             | PASS    | Pinned workflows, non-root images, secret/dependency gates, dual SBOM classes and vulnerability proof assessed |
+| Reproducibility and rollback     | PASS    | Root manifest passed; repository reversal and scoped teardown proof assessed                                   |
+| Scope isolation                  | PASS    | Only technical `release_metadata` table; no product authority established                                      |
+| CI evidence quality              | PASS    | Negative controls fail for intended reasons; no swallowed verification failures found                          |
 
 ## Blocking findings
 
