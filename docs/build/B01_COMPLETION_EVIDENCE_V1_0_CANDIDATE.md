@@ -71,20 +71,20 @@ Until both occur:
 
 All four authoritative workflows passed on the same exact remediated implementation head `3f4d89eea1d44b94d458cfb5f4e9dcc2c9b9f6e8`.
 
-| Lane | Run | Job | Result |
-| --- | ---: | ---: | --- |
-| Complete Node 24 workspace verification | `30803479916` | `91653347445` | PASS |
-| PostgreSQL 18.4 hostile regression | `30803479389` | `91653323808` | PASS |
-| Object/scanner/telemetry regression | `30803479929` | `91653336380` | PASS |
-| F5 browser, OCI, security, SBOM and rollback | `30803479965` | multiple | PASS |
+| Lane                                         |           Run |           Job | Result |
+| -------------------------------------------- | ------------: | ------------: | ------ |
+| Complete Node 24 workspace verification      | `30803479916` | `91653347445` | PASS   |
+| PostgreSQL 18.4 hostile regression           | `30803479389` | `91653323808` | PASS   |
+| Object/scanner/telemetry regression          | `30803479929` | `91653336380` | PASS   |
+| F5 browser, OCI, security, SBOM and rollback | `30803479965` |      multiple | PASS   |
 
 F5 job results:
 
-| F5 job | Job ID | Result |
-| --- | ---: | --- |
-| Chromium, Firefox, WebKit and mobile | `91653357204` | PASS |
-| OCI, secret, dependency, SBOM and vulnerability proof | `91653357153` | PASS |
-| Scoped teardown and repository rollback proof | `91653357224` | PASS |
+| F5 job                                                |        Job ID | Result |
+| ----------------------------------------------------- | ------------: | ------ |
+| Chromium, Firefox, WebKit and mobile                  | `91653357204` | PASS   |
+| OCI, secret, dependency, SBOM and vulnerability proof | `91653357153` | PASS   |
+| Scoped teardown and repository rollback proof         | `91653357224` | PASS   |
 
 ---
 
@@ -120,29 +120,29 @@ Formal records:
 
 ## 5. Acceptance-gate table
 
-| # | Frozen acceptance gate | Remediated evidence disposition |
-| ---: | --- | --- |
-| 1 | Clean checkout installs and runs | PASS — exact Node/pnpm, frozen lockfile and clean GitHub runners. |
-| 2 | Exact versions and lockfile committed | PASS — root/workspace manifest gate and lockfile check. |
-| 3 | All four deployables build and start | PASS — workspace builds, process smoke and four OCI smoke tests. |
-| 4 | Health, build metadata and OpenAPI work | PASS — API unit/process/container smoke. |
-| 5 | Browser builds physically separate | PASS — separate source roots, Vite builds, OCI images and cross-surface browser assertions. |
-| 6 | Migrations work and detect checksum/concurrency errors | PASS — PostgreSQL 18.4 migration hostile suite. |
-| 7 | Object/scanner real contract tests pass | PASS — versioned object and real ClamAV integration. |
-| 8 | Dependency/raw-pool negative fixtures pass | PASS — executable boundary and exact typed public-surface gates, including hostile renamed-export fixtures. |
-| 9 | Invariant/coverage/ownership/concurrency/compatibility fixtures pass | PASS — invariant compiler suite. |
-| 10 | Exact 92-row fixture detects a missing row | PASS — frozen-source fixture negative control. |
-| 11 | Effective-period negative control reproduces overlap and protections prevent it | PASS — unprotected, exclusion and SERIALIZABLE cases. |
-| 12 | Guard materialization/global order fixtures pass | PASS — missing-guard, lazy materialization and deadlock-order cases. |
-| 13 | Numeric/int8 exact boundary and SQL scale/equivalence fixtures pass | PASS — string parsers and 120-digit Decimal context. |
-| 14 | Catalog scan passes | PASS — CPOS-owned security/context mutation scan. |
-| 15 | All unit/integration/e2e/container/security/SBOM gates pass | PASS on exact remediated implementation head. |
-| 16 | No business/auth/evidence-acceptance/P07/AI implementation exists | BUILDER PASS CLAIM — first auditor also reported scope isolation PASS; targeted re-audit may challenge new changes. |
-| 17 | No secret or sensitive test data | PASS — Gitleaks and fixture review; harmless EICAR only. |
-| 18 | F1–F5 evidence complete | PASS as remediation-evidence candidate. |
-| 19 | Rollback executed successfully | PASS — reverse patch and scoped Docker teardown preserved unrelated resources. |
-| 20 | Independent review reports no unresolved architecture question/invariant candidate and closes blockers | PENDING targeted re-audit. |
-| 21 | Project-owner acceptance recorded | PENDING. |
+|   # | Frozen acceptance gate                                                                                 | Remediated evidence disposition                                                                                     |
+| --: | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+|   1 | Clean checkout installs and runs                                                                       | PASS — exact Node/pnpm, frozen lockfile and clean GitHub runners.                                                   |
+|   2 | Exact versions and lockfile committed                                                                  | PASS — root/workspace manifest gate and lockfile check.                                                             |
+|   3 | All four deployables build and start                                                                   | PASS — workspace builds, process smoke and four OCI smoke tests.                                                    |
+|   4 | Health, build metadata and OpenAPI work                                                                | PASS — API unit/process/container smoke.                                                                            |
+|   5 | Browser builds physically separate                                                                     | PASS — separate source roots, Vite builds, OCI images and cross-surface browser assertions.                         |
+|   6 | Migrations work and detect checksum/concurrency errors                                                 | PASS — PostgreSQL 18.4 migration hostile suite.                                                                     |
+|   7 | Object/scanner real contract tests pass                                                                | PASS — versioned object and real ClamAV integration.                                                                |
+|   8 | Dependency/raw-pool negative fixtures pass                                                             | PASS — executable boundary and exact typed public-surface gates, including hostile renamed-export fixtures.         |
+|   9 | Invariant/coverage/ownership/concurrency/compatibility fixtures pass                                   | PASS — invariant compiler suite.                                                                                    |
+|  10 | Exact 92-row fixture detects a missing row                                                             | PASS — frozen-source fixture negative control.                                                                      |
+|  11 | Effective-period negative control reproduces overlap and protections prevent it                        | PASS — unprotected, exclusion and SERIALIZABLE cases.                                                               |
+|  12 | Guard materialization/global order fixtures pass                                                       | PASS — missing-guard, lazy materialization and deadlock-order cases.                                                |
+|  13 | Numeric/int8 exact boundary and SQL scale/equivalence fixtures pass                                    | PASS — string parsers and 120-digit Decimal context.                                                                |
+|  14 | Catalog scan passes                                                                                    | PASS — CPOS-owned security/context mutation scan.                                                                   |
+|  15 | All unit/integration/e2e/container/security/SBOM gates pass                                            | PASS on exact remediated implementation head.                                                                       |
+|  16 | No business/auth/evidence-acceptance/P07/AI implementation exists                                      | BUILDER PASS CLAIM — first auditor also reported scope isolation PASS; targeted re-audit may challenge new changes. |
+|  17 | No secret or sensitive test data                                                                       | PASS — Gitleaks and fixture review; harmless EICAR only.                                                            |
+|  18 | F1–F5 evidence complete                                                                                | PASS as remediation-evidence candidate.                                                                             |
+|  19 | Rollback executed successfully                                                                         | PASS — reverse patch and scoped Docker teardown preserved unrelated resources.                                      |
+|  20 | Independent review reports no unresolved architecture question/invariant candidate and closes blockers | PENDING targeted re-audit.                                                                                          |
+|  21 | Project-owner acceptance recorded                                                                      | PENDING.                                                                                                            |
 
 **Canonical B01 result:** NOT YET FINAL PASS because gates 20 and 21 remain open.
 
