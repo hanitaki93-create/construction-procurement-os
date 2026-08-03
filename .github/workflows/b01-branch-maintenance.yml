@@ -2,11 +2,6 @@ name: B01 Branch Maintenance
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - build/b01-engineering-foundation
-    paths:
-      - .github/b01-final-format-trigger
 
 permissions:
   contents: write
