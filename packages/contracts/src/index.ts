@@ -1,6 +1,7 @@
 export * from './bootstrap.js';
 export * from './operation.js';
 export * from './platform.js';
+export * from './usage.js';
 
 export type HealthState = 'ok' | 'degraded' | 'unavailable';
 
