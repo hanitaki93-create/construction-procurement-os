@@ -13,6 +13,7 @@ export type SubscriptionLifecycleState =
   | 'EXPIRED';
 
 export type EntitlementDefinitionKind = 'CAPABILITY' | 'METERED_LIMIT';
+export type MeteredUsageEffect = 'CONSUME' | 'CREDIT';
 
 export interface EffectivePeriod {
   readonly effectiveFrom: string;
@@ -80,6 +81,7 @@ export interface MeteredUsageOccurrence {
   readonly tenantSubscriptionId: string;
   readonly usageMeasureDefinitionVersionId: string;
   readonly usageMeasureKey: string;
+  readonly effect: MeteredUsageEffect;
   readonly quantity: string;
   readonly occurredAt: string;
   readonly recordedAt: string;
