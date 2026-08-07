@@ -1,4 +1,5 @@
 export * from './bootstrap.js';
+export * from './operation.js';
 export * from './platform.js';
 
 export type HealthState = 'ok' | 'degraded' | 'unavailable';
@@ -56,7 +57,7 @@ export const technicalOpenApiDocument = {
       get: {
         operationId: 'technicalBuildMetadata',
         summary: 'Non-sensitive build metadata',
-        responses: { '200': { description: 'Build compatibility metadata' } },
+        responses: { '200': { description: 'Non-sensitive build metadata' } },
       },
     },
     '/openapi.json': {
