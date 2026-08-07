@@ -1,3 +1,5 @@
+export * from './platform.js';
+
 export type HealthState = 'ok' | 'degraded' | 'unavailable';
 
 export interface HealthComponent {
