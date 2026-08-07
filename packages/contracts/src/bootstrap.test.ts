@@ -100,11 +100,7 @@ describe('tenant bootstrap contracts', () => {
 
   it('requires established bootstrap to bind both tenant and initial owner membership', () => {
     expect(() => assertEstablishedBootstrap(establishedIntent)).not.toThrow();
-    expect(() =>
-      assertEstablishedBootstrap({
-        ...establishedIntent,
-        ownerMembershipId: undefined,
-      }),
-    ).toThrow(/ownerMembershipId/);
+    const { ownerMembershipId: _omitted, ...missingOwnerMembership } = establishedIntent;
+    expect(() => assertEstablishedBootstrap(missingOwnerMembership)).toThrow(/ownerMembershipId/);
   });
 });
