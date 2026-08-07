@@ -138,7 +138,7 @@ export function evaluateEntitlementPrecondition(
   };
 }
 
-export function entitlementPreconditionCanNeverGrantBusinessAuthority(
+export function entitlementPreconditionAllowsCapabilityAvailability(
   result: EntitlementPreconditionResult,
 ): boolean {
   return result.state === 'NOT_REQUIRED' || result.state === 'SATISFIED';
