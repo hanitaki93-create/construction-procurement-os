@@ -168,8 +168,7 @@ SET search_path = pg_catalog, platform
 AS $$
 BEGIN
   INSERT INTO platform.tenant_entitlement_authority_guard (tenant_id)
-  VALUES (NEW.tenant_id)
-  ON CONFLICT (tenant_id) DO NOTHING;
+  VALUES (NEW.tenant_id);
   RETURN NEW;
 END
 $$;
