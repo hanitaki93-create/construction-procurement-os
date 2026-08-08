@@ -96,7 +96,6 @@ export function createDatabaseRuntime(options: DatabaseRuntimeOptions): Database
   };
 }
 
-export type { BootstrapExecutionContext } from './bootstrap-context.js';
 export type {
   DatabaseExecutionContext,
   DatabaseExecutionTransactionOptions,
