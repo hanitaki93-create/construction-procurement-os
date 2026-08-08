@@ -1,7 +1,6 @@
 packages:
   - apps/*
   - packages/*
-  - '!packages/platform-kernel'
 
 minimumReleaseAge: 1440
 
