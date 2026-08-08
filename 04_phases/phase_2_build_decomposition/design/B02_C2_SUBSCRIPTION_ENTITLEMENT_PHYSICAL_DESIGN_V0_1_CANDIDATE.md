@@ -1,364 +1,358 @@
-# B02-C2 — Subscription / Entitlement Physical Design v0.1 Candidate
+# B02-C2 — Subscription / Entitlement Physical Design v0.2 CANDIDATE
 
 **Date:** 2026-08-08  
-**Status:** CANDIDATE / IMPLEMENTATION LOCKED UNTIL B02-C1 PRODUCTION BOOTSTRAP PROOF PASS  
-**Authority:** CHG-SSS-001 v1.0 + INV-SSS-001/002/003/004/013/017  
-**Scope:** physical composition only; no procurement-domain semantic change
+**Status:** IMPLEMENTED CANDIDATE / HOSTILE AUDIT REQUIRED  
+**Branch:** `build/b02-platform-saas-provisional`  
+**Controlling change:** `CHG-SSS-001 v1.0 FROZEN`
 
 ---
 
-# 1. Problem to solve now
+## 1. Purpose
 
-CHG-SSS-001 requires plan/package flexibility without letting marketed tier names enter procurement truth.
+C2 implements the product-commercial control plane required for self-service SaaS without creating procurement authority, accounting truth or a generic billing/entitlement platform.
 
-A physical model in which `TenantSubscription` points directly to exactly one monolithic `ProductOfferingVersion` is initially simple but creates expensive retrofit pressure when the product later needs:
+The physical design supports:
 
-- a base plan plus AI add-on;
-- a base plan plus one integration add-on;
-- a legacy/grandfathered plan plus new capabilities;
-- an Enterprise contract with selected modules;
-- temporary extra project/user/processing allowance;
-- a feature moving between marketed plans without changing domain meaning.
+- self-service subscriptions;
+- manually evidenced Enterprise subscriptions;
+- base product plus independent add-ons;
+- grandfathered offering versions;
+- upgrade/downgrade through effective-dated product components;
+- future AI/integration add-ons without procurement-schema changes;
+- deterministic command-time entitlement revalidation;
+- historical reconstruction of what entitlement state was known at a prior recorded time.
 
-The smallest durable design is therefore:
+It deliberately does **not** implement:
 
-`TenantSubscription (commercial agreement/container)`
-`→ one or more effective TenantSubscriptionItem grants`
-`→ each item references an immutable ProductOfferingVersion`
-`→ offering version contributes product-entitlement grants`
-`→ tenant entitlement is derived across currently effective items`
-
-This is not a generic entitlement platform. It is a bounded CPOS product-access control plane.
+- payment processing;
+- tax/revenue accounting;
+- procurement role/DOA/approval authority;
+- billing-provider callback interpretation;
+- metered-usage persistence (C3);
+- API/UI subscription operations;
+- generic customer-authored product policies.
 
 ---
 
-# 2. Authoritative objects
+## 2. Authority split
 
-## 2.1 `EntitlementDefinitionVersion`
+### Product-global product catalog
 
-Product-authored, platform-global configuration.
+Product-authored shared definitions:
 
-Minimum fields:
+- `UsageMeasureDefinitionVersion`;
+- `EntitlementDefinitionVersion`;
+- `ProductOfferingVersion`;
+- exact entitlement grants contributed by an offering version.
 
-- `entitlement_definition_version_id`;
-- stable `entitlement_key`;
-- `kind = CAPABILITY | METERED_LIMIT`;
-- `aggregation = ANY | ADDITIVE_LIMIT` according to kind;
-- effective period;
-- recorded time/version;
-- optional usage-measure reference for metered limits.
+Tenant runtime receives read-only access to this catalog.
 
-Rules:
+### Tenant-commercial authority
 
-- procurement/domain tables never reference marketed plan names;
-- entitlement key meaning is product-authored/versioned;
-- tenant cannot author definitions;
-- definition change never rewrites an old offering version.
+Tenant-scoped facts:
 
-## 2.2 `ProductOfferingVersion`
+- `TenantSubscription`;
+- append-only `SubscriptionLifecycleOccurrence`;
+- stable `TenantSubscriptionItem` identity;
+- append-only/superseding `TenantSubscriptionItemVersion`;
+- `TenantEntitlementAuthorityGuard`.
 
-Immutable version of one purchasable/product-authored component.
+All tenant-scoped C2 tables use FORCE RLS.
 
-Examples are commercial configuration only:
+### Business authority remains separate
 
-- base/core plan component;
-- professional plan component;
-- AI allowance add-on;
-- integration add-on;
-- Enterprise feature component.
+No C2 table grants or modifies:
 
-Minimum fields:
+- membership;
+- role;
+- delegation;
+- DOA;
+- approval authority;
+- project access;
+- AwardDecision authority;
+- Commitment authority.
 
-- `product_offering_version_id`;
-- stable `offering_key`;
-- version;
-- lifecycle/availability state;
-- effective period;
+A subscription answers only whether a product capability is commercially available to the tenant.
+
+---
+
+## 3. Why subscription is composable
+
+C2 rejects the physical model:
+
+`TenantSubscription -> exactly one plan row`
+
+because that would force future packaging changes into structural migrations.
+
+Instead:
+
+`TenantSubscription`
+`-> TenantSubscriptionItem`
+`-> TenantSubscriptionItemVersion`
+`-> ProductOfferingVersion`
+`-> exact entitlement grants`
+
+Example:
+
+`subscription agreement`
+`-> BASE -> Core v3`
+`-> AI_ADDON -> Quote Extraction Pack v2`
+`-> INTEGRATION_ADDON -> Primavera Connector v1`
+
+The exact marketed names and prices remain commercial variables rather than procurement semantics.
+
+---
+
+## 4. Stable subscription item + append-only versions
+
+A key implementation correction was made before C2 audit.
+
+The first C2 candidate allowed an effective period to be updated directly on `TenantSubscriptionItem`.
+
+That was rejected because changing an old period in place would preserve current safety but destroy the exact commercial authority state previously recorded.
+
+The implemented model is therefore:
+
+### `TenantSubscriptionItem`
+
+Stable logical component identity:
+
+- tenant;
+- subscription;
+- item slot;
+- recorded identity.
+
+### `TenantSubscriptionItemVersion`
+
+Exact recorded commercial version:
+
+- item-version ID;
+- stable item ID;
+- tenant;
+- item slot;
+- version number;
+- exact `ProductOfferingVersion`;
+- half-open effective period;
 - recorded time;
-- commercial metadata needed by product UI but not procurement truth.
+- optional superseded time.
 
-No customer-specific source-code behavior is stored here.
+Runtime has no permission to rewrite:
 
-## 2.3 `ProductOfferingEntitlementGrant`
-
-Immutable child rows defining what one offering version grants.
-
-For `CAPABILITY`:
-
-- entitlement definition version;
-- grant = enabled.
-
-For `METERED_LIMIT`:
-
-- entitlement definition version;
-- `limit_mode = FINITE | UNBOUNDED`;
-- finite `limit_quantity` as canonical non-negative exact decimal string when FINITE.
-
-No negative/deny grants exist in v1.
-
-Downgrade/removal happens by ending/replacing a subscription item, never by layering contradictory deny rows over an older grant.
-
-## 2.4 `TenantSubscription`
-
-Tenant-scoped commercial-access agreement/container.
-
-It does NOT itself define procurement authority.
-
-Minimum fields:
-
-- `tenant_subscription_id`;
-- `tenant_id`;
-- commercial channel/source class such as self-service or governed manual Enterprise activation;
-- lifecycle occurrence lineage;
-- external billing/agreement reference where available;
-- recorded time/version.
-
-Multiple historical subscription agreements may exist.
-
-The exact active entitlement position is derived from active subscription items, not a mutable `current_plan` column.
-
-## 2.5 `TenantSubscriptionItem`
-
-Effective-dated tenant grant source referencing one exact `ProductOfferingVersion`.
-
-Minimum fields:
-
-- `tenant_subscription_item_id`;
-- `tenant_subscription_id`;
-- `tenant_id`;
-- `item_slot_key`;
-- `product_offering_version_id`;
+- offering version;
 - effective period;
-- recorded time/version;
-- optional product quantity where a future bounded offering needs multiplicity.
+- version number;
+- slot;
+- tenant.
 
-`item_slot_key` is product-owned, not customer-authored.
+It may only mark a current version superseded through the governed physical path.
 
-Examples may later include `BASE`, `AI_ADDON`, `INTEGRATION_ADDON`, but exact marketed names are not frozen here.
+A database trigger prevents a version from being superseded twice.
 
-Non-overlap:
-
-`tenant + item_slot_key + effective_period`
-
-must obey CC-3 exclusion/non-overlap.
-
-This permits a base component and independent add-on components to coexist while preventing contradictory simultaneous replacements inside the same product-owned slot.
+Historical content remains stored after supersession.
 
 ---
 
-# 3. Deterministic entitlement resolution
+## 5. Current-authority non-overlap
 
-For one tenant at one exact `valid_at`:
+Current unsuperseded item versions use a PostgreSQL GiST exclusion constraint over:
 
-1. select effective `TenantSubscriptionItem` rows;
-2. validate their owning subscription lifecycle permits product access at `valid_at`;
-3. load exact referenced immutable offering versions;
-4. load exact entitlement-definition versions and grants;
-5. aggregate only by the product-owned rule on the entitlement definition;
-6. bind exact source subscription/item/offering/definition versions and the tenant entitlement guard version;
-7. emit a derived `ResolvedEntitlementSnapshot`.
+- `tenant_id` equality;
+- `item_slot_key` equality;
+- `effective_period` overlap.
 
-The snapshot is a projection/cache, never editable authority.
+Therefore two current versions cannot claim the same product slot for overlapping effective periods.
 
-## 3.1 Capability aggregation
+Superseded historical versions are preserved outside the current-authority exclusion population so corrected knowledge can coexist with the exact prior recorded version.
 
-For `CAPABILITY`:
+This distinction permits both:
 
-`enabled = any currently effective item grants the capability`.
-
-Absence means not entitled.
-
-There is no customer-authored override and no negative deny grant in v1.
-
-## 3.2 Metered-limit aggregation
-
-For `METERED_LIMIT`:
-
-- if any effective grant is `UNBOUNDED`, resolved allowance is `UNBOUNDED`;
-- otherwise resolved configured allowance is the exact-decimal sum of all effective finite grants.
-
-Commercial consumed/remaining/overage remains C3 append-only usage derivation and is not stored on the offering/subscription item.
-
-This design supports a base allowance plus a separately purchased allowance add-on without rewriting the base offering.
+- deterministic current entitlement;
+- historical reconstruction of what CPOS knew earlier.
 
 ---
 
-# 4. Entitlement authority guard
+## 6. Recorded-time reconstruction
 
-Create one eager `TenantEntitlementAuthorityGuard` per tenant.
+The TypeScript resolver distinguishes:
 
-Any operation that can materially change the tenant's product-entitlement position must lock/update the guard in the same transaction, including:
+- `validAt` — the business/effective time being evaluated;
+- `resolvedAt` / `knownAt` — the recorded-time cut of information known to CPOS.
 
-- subscription activation/suspension/resumption/cancellation where access consequence changes;
-- subscription-item start/end/replacement;
-- governed manual Enterprise activation;
-- product-controlled tenant grant correction.
+An item version participates only when:
 
-Any consequential business command requiring current entitlement:
+- it was recorded by the knowledge cut;
+- it had not yet been superseded by that knowledge cut;
+- its effective period contains the evaluated valid time.
 
-1. locks/reads the same guard under CP-SSS-02;
-2. resolves current entitlement from authoritative subscription/item/lifecycle facts;
-3. rejects stale preview/snapshot;
-4. binds exact guard/version + entitlement source versions at command acceptance.
+Subscription lifecycle derivation likewise considers both effective time and recorded time.
 
-Commercial entitlement still cannot create role, DOA, approval, AwardDecision or Commitment authority.
+This allows reconstruction of:
+
+1. what CPOS believed on an earlier date using the information then known; and
+2. the corrected later reconstruction of that same effective date after a governed correction.
 
 ---
 
-# 5. Lifecycle
+## 7. Product offering availability versus grandfathering
 
-`SubscriptionLifecycleOccurrence` remains append-only.
+`ProductOfferingVersion.availability_period` governs **new assignment**.
 
-Candidate occurrence classes stay bounded to product-access lifecycle, e.g.:
+A new subscription-item version must bind an offering version that is available at that item's effective start.
+
+Once validly assigned, later retirement/end-of-sale of that offering version does not silently remove the customer's entitlement.
+
+This supports grandfathered plans/add-ons without copying entitlement semantics into tenant rows.
+
+Open audit question:
+
+> Is the current product-global offering publication/retirement representation sufficient for C2, or must product-catalog administration itself gain a separately append-only publication/supersession operation before C2 can PASS?
+
+No tenant runtime can modify the product catalog in the current implementation.
+
+---
+
+## 8. Lifecycle
+
+`SubscriptionLifecycleOccurrence` is append-only and currently permits:
 
 - ACTIVATED;
 - SUSPENDED;
 - RESUMED;
 - CANCELLED;
-- EXPIRED;
-- governed CORRECTION where necessary.
+- EXPIRED.
 
-Current subscription state is derived.
+Current lifecycle state is derived, not stored as a mutable authoritative column.
 
-Provider callbacks are admitted as external observations and cannot directly create lifecycle occurrences or entitlement.
+Runtime has INSERT/SELECT only; UPDATE/DELETE is not granted.
 
----
+Recorded-time-aware derivation is implemented in contracts.
 
-# 6. Legacy and Enterprise compatibility
+Open audit question:
 
-## Legacy / grandfathered offering
+> Must legal transition and sequence-continuity enforcement be physically completed inside C2, or is the current append-only storage plus later registered subscription operation owner an acceptable C2 boundary?
 
-Old customer remains bound to old immutable offering version/item until a governed replacement operation changes the effective item.
-
-A new pricing page does not migrate existing domain or entitlement history.
-
-## Manual Enterprise contract
-
-A governed CPOS operation may create/update the subscription agreement/items from verified commercial evidence without a card processor.
-
-The operation:
-
-- records actor;
-- reason;
-- commercial evidence reference;
-- exact effective period;
-- offering/item versions;
-- tenant entitlement guard change.
-
-It does not require building an invoicing/accounting system.
-
-## Add-ons
-
-New AI/integration/processing capabilities can be introduced as offering components occupying bounded product-owned slots.
-
-No procurement schema changes are required.
+The current hostile suite verifies history cannot be rewritten, but does not yet claim every invalid lifecycle transition is impossible at the persistence layer.
 
 ---
 
-# 7. Invariants / physical profiles
+## 9. Entitlement authority guard
 
-This design concretizes existing frozen invariants rather than adding a new product semantic.
+Each tenant has one stable `TenantEntitlementAuthorityGuard`.
 
-### INV-SSS-001
+Its purpose is CC-2 style revalidation for consequential operations:
 
-Apply effective-period non-overlap to `TenantSubscriptionItem` per tenant + product-owned slot.
+1. preview resolves entitlement and binds guard version N;
+2. a subscription/entitlement mutation locks and verifies N;
+3. successful mutation increments guard to N+1;
+4. a later command using preview N observes current N+1 and must fail/re-preview before business effect.
 
-The subscription agreement container itself may have lifecycle history, but entitlement collision is prevented at the item authority grain.
+Database hardening:
 
-### INV-SSS-002
+- guard update is restricted to the `guard_version` column;
+- trigger requires exactly +1;
+- `updated_at` is set by the database;
+- tenant RLS applies;
+- every new tenant receives its guard automatically in the same tenant-creation transaction.
 
-Entitlement remains product capability access only; authority intersection remains separate.
+The guard is not role, DOA or procurement authority.
 
-### INV-SSS-003 / 004
+Open audit question:
 
-`TenantEntitlementAuthorityGuard` is the stable CC-2 command/change guard; stale snapshot cannot authorize.
+> Which later block must persist the exact entitlement evaluation/guard binding on a durably accepted asynchronous or business command so ordinary post-acceptance downgrade cannot mutate the already-accepted logical command?
 
-### INV-SSS-013
-
-Billing-provider observation has no direct write grant to subscription/item/guard state.
-
-### INV-SSS-017
-
-Marketed names/prices are metadata on offering versions and never appear as procurement fact meaning.
-
----
-
-# 8. Explicit refusals
-
-C2 v1 does not implement:
-
-- generic feature-flag service;
-- customer-authored entitlements;
-- arbitrary deny/precedence rule language;
-- generic billing engine;
-- tax/invoice/revenue accounting;
-- provider-specific subscription state as CPOS truth;
-- arbitrary entitlement formulas;
-- procurement-domain authorization through plan purchase.
-
-The only aggregation grammar is:
-
-- `CAPABILITY -> ANY`;
-- `METERED_LIMIT -> ADDITIVE_LIMIT with explicit UNBOUNDED mode`.
-
-Anything else requires a controlled product-level change rather than a tenant formula.
+The frozen semantic rule exists; C2 does not introduce a generic command ledger merely to solve this downstream binding.
 
 ---
 
-# 9. Migration decomposition if C1 passes
+## 10. Manual Enterprise subscriptions
 
-Recommended physical split:
+`MANUAL_ENTERPRISE` creation requires `commercial_evidence_ref` at the database level.
 
-### `000003_b02_c2_product_entitlement_registry.sql`
+This permits invoiced/offline commercial arrangements without pretending a card processor is authoritative for entitlement.
 
-Platform-global product-authored:
-
-- EntitlementDefinitionVersion;
-- UsageMeasureDefinitionVersion as needed for C2/C3 boundary;
-- ProductOfferingVersion;
-- ProductOfferingEntitlementGrant.
-
-No tenant-specific content.
-
-### `000004_b02_c2_tenant_subscription.sql`
-
-Tenant-scoped:
-
-- TenantSubscription;
-- TenantSubscriptionItem;
-- SubscriptionLifecycleOccurrence;
-- TenantEntitlementAuthorityGuard;
-- FORCE RLS;
-- CC-3 item-slot non-overlap;
-- minimum runtime/bootstrap/manual-enterprise grants.
-
-C3 usage ledger may remain a later migration if doing so keeps C2 independently gateable.
+Self-service and Enterprise therefore share the same product entitlement model.
 
 ---
 
-# 10. Required hostile proof before C2 PASS
+## 11. Metered limits
 
-At minimum:
+Product grants support:
 
-1. overlapping replacement in same tenant/item slot — exactly one legal authority set;
-2. base + independent add-on coexist without overlap conflict;
-3. legacy offering remains stable after new offering version published;
-4. feature moves between marketed offerings without procurement-row migration;
-5. downgrade between preview and command invalidates command entitlement evaluation;
-6. downgrade after accepted command does not retroactively mutate that accepted logical command;
-7. stale entitlement snapshot cannot authorize;
-8. one tenant's offering/items cannot influence another tenant;
-9. billing callback duplicate/reorder cannot directly change entitlement;
-10. manual Enterprise activation uses governed operation/evidence and same entitlement guard;
-11. finite limits aggregate exactly;
-12. one UNBOUNDED grant resolves to unbounded without sentinel arithmetic;
-13. no entitlement state creates role/DOA/award/commitment authority;
-14. historical entitlement reconstruction at old `valid_at` returns old item/offering versions exactly.
+- finite decimal-string limits;
+- explicit `UNBOUNDED` mode.
+
+No sentinel such as `-1`, `999999999` or `Infinity` is used.
+
+Multiple active offering components may contribute to the same additive metered entitlement.
+
+The resolver delegates exact decimal addition to an injected exact-arithmetic interface. Test fixtures may use integer-safe arithmetic where only integral quantities are exercised; this is not a declaration that BigInt is the production decimal engine.
+
+Metered usage occurrences themselves remain C3.
 
 ---
 
-# 11. Gate
+## 12. Current PostgreSQL hostile coverage
 
-`C2 IMPLEMENTATION = LOCKED UNTIL C1 PRODUCTION BOOTSTRAP PROOF PASS`
+The C2 production suite attacks:
 
-This candidate should be reconciled against the final C1 evidence before migrations are created.
+- base plus add-on coexistence;
+- same-slot effective overlap;
+- append-only/superseding item-version history;
+- duplicate supersession;
+- stale guard rejection;
+- guard arbitrary-jump rejection;
+- manual Enterprise subscription without evidence;
+- cross-tenant subscription write;
+- new assignment of no-longer-available offering;
+- grandfathered existing offering binding;
+- attempted OWNER-role grant by subscription runtime;
+- attempted product-catalog rewrite by subscription runtime;
+- attempted lifecycle rewrite by subscription runtime.
+
+The suite uses:
+
+- PostgreSQL 18.4;
+- actual migration tables;
+- actual non-superuser/NOBYPASSRLS database role;
+- actual FORCE RLS policies;
+- the restricted persistence-adapter path.
+
+---
+
+## 13. C2 acceptance boundary for hostile audit
+
+The hostile reviewer must distinguish:
+
+### Proven now
+
+- physical subscription/entitlement authority separation;
+- composable packaging substrate;
+- exact version binding;
+- current same-slot non-overlap;
+- historical item-version preservation;
+- recorded/effective-time resolver grammar;
+- grandfathering behavior;
+- manual Enterprise evidence floor;
+- tenant isolation;
+- stable revalidation guard;
+- subscription runtime cannot grant procurement role/authority;
+- subscription runtime cannot rewrite catalog/lifecycle history.
+
+### Not claimed complete yet
+
+- external billing-provider adapter/reconciliation;
+- usage-occurrence persistence;
+- subscription HTTP/UI operations;
+- generalized product-catalog administration;
+- every lifecycle transition rule;
+- downstream durable accepted-command binding;
+- production commercial pricing configuration;
+- production release/security certification.
+
+The audit should classify each open item as:
+
+- `C2 BLOCKER`;
+- `C2 WATCH / later-block owner`;
+- or `NOT A C2 RESPONSIBILITY`.
+
+It must not force premature generic infrastructure where an already-defined later block owns the concern.
