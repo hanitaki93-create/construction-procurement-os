@@ -89,14 +89,16 @@ describe('opaque persistence adapter', () => {
     const token = definePersistenceAdapter<Handle>({
       moduleKey: 'platform',
       databaseRole: 'cpos_platform_runtime',
+      executionScope: 'TENANT',
       buildHandle: (executor) => ({
         readTenant: (tenantId) =>
           executor.all(sql`SELECT tenant_id FROM platform.tenant WHERE tenant_id = ${tenantId}`),
       }),
     });
 
-    expect(Object.keys(token).sort()).toEqual(['databaseRole', 'moduleKey']);
+    expect(Object.keys(token).sort()).toEqual(['databaseRole', 'executionScope', 'moduleKey']);
     const definition = resolvePersistenceAdapter<Handle>(token);
+    expect(definition.executionScope).toBe('TENANT');
     const executor = createTransactionSqlExecutor(fakeTransaction());
     const handle = definition.buildHandle(executor);
 
@@ -113,6 +115,7 @@ describe('opaque persistence adapter', () => {
       definePersistenceAdapter({
         moduleKey: 'platform;drop',
         databaseRole: 'cpos_platform_runtime',
+        executionScope: 'TENANT',
         buildHandle: () => ({}),
       }),
     ).toThrow(/moduleKey/u);
@@ -121,6 +124,7 @@ describe('opaque persistence adapter', () => {
       definePersistenceAdapter({
         moduleKey: 'platform',
         databaseRole: 'cpos_platform_runtime;set role postgres',
+        executionScope: 'TENANT',
         buildHandle: () => ({}),
       }),
     ).toThrow(/databaseRole/u);
