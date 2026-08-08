@@ -46,7 +46,6 @@ const forbiddenSqlTokens = new Set([
   'copy',
   'create',
   'discard',
-  'do',
   'drop',
   'grant',
   'reset',
