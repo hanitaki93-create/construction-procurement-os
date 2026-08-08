@@ -169,12 +169,8 @@ describe('B02 fail-closed execution context and FORCE RLS', () => {
       (handle) => handle.list(),
     );
 
-    expect(tenantA).toEqual([
-      { tenant_id: 'tenant-a', item_id: 'a-1', payload: 'A secret' },
-    ]);
-    expect(tenantB).toEqual([
-      { tenant_id: 'tenant-b', item_id: 'b-1', payload: 'B secret' },
-    ]);
+    expect(tenantA).toEqual([{ tenant_id: 'tenant-a', item_id: 'a-1', payload: 'A secret' }]);
+    expect(tenantB).toEqual([{ tenant_id: 'tenant-b', item_id: 'b-1', payload: 'B secret' }]);
   });
 
   it('prevents a tenant-A transaction from inserting tenant-B data', async () => {
