@@ -28,6 +28,38 @@ test('allows raw database libraries inside testkit', () => {
   assert.deepEqual(violations('packages/testkit/src/database.ts', 'pg'), []);
 });
 
+test('rejects restricted database persistence capability from application code', () => {
+  const result = violations('apps/api/src/main.ts', '@cpos/database-core/persistence');
+  assert.equal(result.length, 1);
+  assert.match(result[0].message, /private to module src\/persistence/u);
+});
+
+test('rejects restricted database persistence capability from ordinary domain source', () => {
+  const result = violations(
+    'packages/platform-kernel/src/service.ts',
+    '@cpos/database-core/persistence',
+  );
+  assert.equal(result.length, 1);
+  assert.match(result[0].message, /private to module src\/persistence/u);
+});
+
+test('allows restricted database persistence capability only from module persistence source', () => {
+  assert.deepEqual(
+    violations(
+      'packages/platform-kernel/src/persistence/platform-repository.ts',
+      '@cpos/database-core/persistence',
+    ),
+    [],
+  );
+});
+
+test('allows restricted database persistence capability in a private test graph', () => {
+  assert.deepEqual(
+    violations('packages/platform-kernel/src/service.test.ts', '@cpos/database-core/persistence'),
+    [],
+  );
+});
+
 test('rejects testkit imports from production code', () => {
   const result = violations('apps/api/src/main.ts', '@cpos/testkit');
   assert.equal(result.length, 1);
