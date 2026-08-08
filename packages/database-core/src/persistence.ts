@@ -16,8 +16,8 @@ export interface SqlStatement {
 }
 
 export interface SqlExecutor {
-  all<Row extends Record<string, unknown>>(statement: SqlStatement): Promise<readonly Row[]>;
-  oneOrNone<Row extends Record<string, unknown>>(statement: SqlStatement): Promise<Row | undefined>;
+  all<Row>(statement: SqlStatement): Promise<readonly Row[]>;
+  oneOrNone<Row>(statement: SqlStatement): Promise<Row | undefined>;
   execute(statement: SqlStatement): Promise<Readonly<{ rowCount: number }>>;
 }
 
@@ -64,9 +64,8 @@ function wrapExecutor(executor: InternalSqlExecutor): SqlExecutor {
   };
 
   return Object.freeze({
-    all: <Row extends Record<string, unknown>>(statement: SqlStatement) =>
-      executor.all<Row>(asInternalStatement(statement)),
-    oneOrNone: <Row extends Record<string, unknown>>(statement: SqlStatement) =>
+    all: <Row>(statement: SqlStatement) => executor.all<Row>(asInternalStatement(statement)),
+    oneOrNone: <Row>(statement: SqlStatement) =>
       executor.oneOrNone<Row>(asInternalStatement(statement)),
     execute: (statement: SqlStatement) => executor.execute(asInternalStatement(statement)),
   });
