@@ -32,6 +32,7 @@ describe('database runtime foundation', () => {
       'migrate',
       'migrationStatus',
       'scanCatalog',
+      'withBootstrapContext',
       'withExecutionContext',
     ]);
     expect('query' in runtime).toBe(false);
