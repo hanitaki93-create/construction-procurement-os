@@ -1,10 +1,12 @@
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import type { Pool } from 'pg';
 
+import type { BootstrapExecutionContext } from './bootstrap-context.js';
 import type {
   DatabaseExecutionContext,
   DatabaseExecutionTransactionOptions,
 } from './execution-context.js';
+import { withBootstrapContextTransaction } from './internal/bootstrap-context.js';
 import { withExecutionContextTransaction } from './internal/execution-context.js';
 import { scanDatabaseCatalog, type CatalogFinding } from './internal/catalog-scan.js';
 import {
@@ -44,6 +46,12 @@ export interface DatabaseRuntime {
     readonly schema?: string;
   }): Promise<MigrationResult>;
   scanCatalog(): Promise<readonly CatalogFinding[]>;
+  withBootstrapContext<Handle, Result>(
+    context: BootstrapExecutionContext,
+    transactionOptions: DatabaseExecutionTransactionOptions,
+    adapter: PersistenceAdapterToken<Handle>,
+    callback: (handle: Handle) => Promise<Result>,
+  ): Promise<Result>;
   withExecutionContext<Handle, Result>(
     context: DatabaseExecutionContext,
     transactionOptions: DatabaseExecutionTransactionOptions,
@@ -80,12 +88,15 @@ export function createDatabaseRuntime(options: DatabaseRuntimeOptions): Database
     migrationStatus: (migrationOptions) => migrationStatus(pool, migrationOptions),
     migrate: (migrationOptions) => runMigrations(pool, migrationOptions),
     scanCatalog: () => scanDatabaseCatalog(pool),
+    withBootstrapContext: (context, transactionOptions, adapter, callback) =>
+      withBootstrapContextTransaction(pool, context, transactionOptions, adapter, callback),
     withExecutionContext: (context, transactionOptions, adapter, callback) =>
       withExecutionContextTransaction(pool, context, transactionOptions, adapter, callback),
     close: async () => database.destroy(),
   };
 }
 
+export type { BootstrapExecutionContext } from './bootstrap-context.js';
 export type {
   DatabaseExecutionContext,
   DatabaseExecutionTransactionOptions,
