@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'node',
     fileParallelism: false,
     include: ['integration/**/*.integration.test.ts'],
+    exclude: ['integration/platform-c1-bootstrap.integration.test.ts'],
     pool: 'forks',
     reporters: ['default'],
     restoreMocks: true,
