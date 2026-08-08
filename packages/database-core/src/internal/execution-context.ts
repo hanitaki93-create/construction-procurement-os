@@ -24,6 +24,11 @@ const contextSettings = [
   ['cpos.service_identity', 'serviceIdentity'],
 ] as const;
 
+const clearedBootstrapSettings = [
+  'cpos.authentication_identity_id',
+  'cpos.proposed_tenant_id',
+] as const;
+
 type ContextSettingKey = (typeof contextSettings)[number][1];
 
 function contextValue(context: DatabaseExecutionContext, key: ContextSettingKey): string {
@@ -63,6 +68,9 @@ export async function withExecutionContextTransaction<Handle, Result>(
   }
 
   return withPrivateTransaction(pool, transactionOptions, async (transaction) => {
+    for (const setting of clearedBootstrapSettings) {
+      await transaction.query(`SET LOCAL ${setting} TO ''`);
+    }
     for (const [setting, key] of contextSettings) {
       await transaction.query(
         `SET LOCAL ${setting} TO ${quoteLiteral(contextValue(context, key))}`,
@@ -76,6 +84,8 @@ export async function withExecutionContextTransaction<Handle, Result>(
       represented_principal_id: string;
       project_id: string;
       authority_context_id: string;
+      authentication_identity_id: string;
+      proposed_tenant_id: string;
       operation_key: string;
       invocation_id: string;
       service_identity: string;
@@ -87,6 +97,8 @@ export async function withExecutionContextTransaction<Handle, Result>(
         current_setting('cpos.represented_principal_id', true) AS represented_principal_id,
         current_setting('cpos.project_id', true) AS project_id,
         current_setting('cpos.authority_context_id', true) AS authority_context_id,
+        current_setting('cpos.authentication_identity_id', true) AS authentication_identity_id,
+        current_setting('cpos.proposed_tenant_id', true) AS proposed_tenant_id,
         current_setting('cpos.operation_key', true) AS operation_key,
         current_setting('cpos.invocation_id', true) AS invocation_id,
         current_setting('cpos.service_identity', true) AS service_identity,
@@ -102,6 +114,8 @@ export async function withExecutionContextTransaction<Handle, Result>(
       represented_principal_id: context.representedPrincipalId ?? '',
       project_id: context.projectId ?? '',
       authority_context_id: context.authorityContextId ?? '',
+      authentication_identity_id: '',
+      proposed_tenant_id: '',
       operation_key: context.operationKey,
       invocation_id: context.invocationId,
       service_identity: context.serviceIdentity,
