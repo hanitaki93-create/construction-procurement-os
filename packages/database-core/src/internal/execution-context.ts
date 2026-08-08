@@ -53,9 +53,13 @@ export async function withExecutionContextTransaction<Handle, Result>(
   const adapter = resolvePersistenceAdapter<Handle>(adapterToken);
   if (
     adapter.moduleKey !== adapterToken.moduleKey ||
-    adapter.databaseRole !== adapterToken.databaseRole
+    adapter.databaseRole !== adapterToken.databaseRole ||
+    adapter.executionScope !== adapterToken.executionScope
   ) {
     throw new Error('persistence adapter token metadata mismatch');
+  }
+  if (adapter.executionScope !== 'TENANT') {
+    throw new Error('tenant execution context requires a TENANT persistence adapter');
   }
 
   return withPrivateTransaction(pool, transactionOptions, async (transaction) => {
