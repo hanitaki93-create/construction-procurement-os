@@ -1,5 +1,6 @@
 import {
   registerPersistenceAdapter,
+  type InternalPersistenceExecutionScope,
   type InternalSqlExecutor,
   type InternalSqlStatement,
 } from './internal/persistence-registry.js';
@@ -7,6 +8,7 @@ import {
 const statementBrand: unique symbol = Symbol('cpos.persistence.sql-statement');
 const adapterHandleBrand: unique symbol = Symbol('cpos.persistence.adapter-handle');
 
+export type PersistenceExecutionScope = InternalPersistenceExecutionScope;
 export type SqlBindable = null | string | number | bigint | boolean | Date | Uint8Array;
 
 export interface SqlStatement {
@@ -24,6 +26,7 @@ export interface SqlExecutor {
 export interface PersistenceAdapterToken<Handle> {
   readonly moduleKey: string;
   readonly databaseRole: string;
+  readonly executionScope: PersistenceExecutionScope;
   readonly [adapterHandleBrand]?: (handle: Handle) => Handle;
 }
 
@@ -74,6 +77,7 @@ function wrapExecutor(executor: InternalSqlExecutor): SqlExecutor {
 export function definePersistenceAdapter<Handle>(options: {
   readonly moduleKey: string;
   readonly databaseRole: string;
+  readonly executionScope: PersistenceExecutionScope;
   readonly buildHandle: (executor: SqlExecutor) => Handle;
 }): PersistenceAdapterToken<Handle> {
   requireModuleKey(options.moduleKey);
@@ -82,11 +86,13 @@ export function definePersistenceAdapter<Handle>(options: {
   const token = Object.freeze({
     moduleKey: options.moduleKey,
     databaseRole: options.databaseRole,
+    executionScope: options.executionScope,
   }) as PersistenceAdapterToken<Handle>;
 
   registerPersistenceAdapter(token, {
     moduleKey: options.moduleKey,
     databaseRole: options.databaseRole,
+    executionScope: options.executionScope,
     buildHandle: (executor) => options.buildHandle(wrapExecutor(executor)),
   });
 
