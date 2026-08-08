@@ -31,14 +31,23 @@ export interface TenantSubscription {
   readonly recordedAt: string;
 }
 
-export interface TenantSubscriptionItem extends EffectivePeriod {
+export interface TenantSubscriptionItem {
   readonly id: string;
   readonly tenantSubscriptionId: string;
   readonly tenantId: string;
   readonly itemSlotKey: string;
+  readonly recordedAt: string;
+}
+
+export interface TenantSubscriptionItemVersion extends EffectivePeriod {
+  readonly id: string;
+  readonly tenantSubscriptionItemId: string;
+  readonly tenantId: string;
+  readonly itemSlotKey: string;
+  readonly version: number;
   readonly productOfferingVersionId: string;
   readonly recordedAt: string;
-  readonly version: number;
+  readonly supersededAt?: string | null;
 }
 
 export interface SubscriptionLifecycleOccurrence {
@@ -121,6 +130,7 @@ export interface MeteredUsageOccurrence {
 export interface EntitlementSourceBinding {
   readonly tenantSubscriptionId: string;
   readonly tenantSubscriptionItemId: string;
+  readonly tenantSubscriptionItemVersionId: string;
   readonly productOfferingVersionId: string;
   readonly entitlementDefinitionVersionId: string;
 }
@@ -155,6 +165,7 @@ export interface ResolvedEntitlementSnapshot {
   readonly entitlementAuthorityGuardVersion: number;
   readonly subscriptionIds: readonly string[];
   readonly subscriptionItemIds: readonly string[];
+  readonly subscriptionItemVersionIds: readonly string[];
   readonly productOfferingVersionIds: readonly string[];
   readonly entitlements: Readonly<Record<string, ResolvedEntitlement>>;
 }
@@ -199,18 +210,28 @@ export function isOfferingAvailableAt(offering: ProductOfferingVersion, at: stri
   );
 }
 
-export function assertNoSubscriptionItemOverlap(items: readonly TenantSubscriptionItem[]): void {
-  const grouped = new Map<string, TenantSubscriptionItem[]>();
-  for (const item of items) {
-    assertEffectivePeriod(item);
-    const key = `${item.tenantId}\u0000${item.itemSlotKey}`;
+function isVersionKnownAt(version: TenantSubscriptionItemVersion, knownAt: string): boolean {
+  const target = parseInstant(knownAt, 'knownAt');
+  const recorded = parseInstant(version.recordedAt, 'recordedAt');
+  if (recorded > target) return false;
+  if (version.supersededAt === undefined || version.supersededAt === null) return true;
+  return parseInstant(version.supersededAt, 'supersededAt') > target;
+}
+
+export function assertNoSubscriptionItemVersionOverlap(
+  versions: readonly TenantSubscriptionItemVersion[],
+): void {
+  const grouped = new Map<string, TenantSubscriptionItemVersion[]>();
+  for (const version of versions) {
+    assertEffectivePeriod(version);
+    const key = `${version.tenantId}\u0000${version.itemSlotKey}`;
     const existing = grouped.get(key) ?? [];
-    existing.push(item);
+    existing.push(version);
     grouped.set(key, existing);
   }
 
-  for (const slotItems of grouped.values()) {
-    const ordered = [...slotItems].sort(
+  for (const slotVersions of grouped.values()) {
+    const ordered = [...slotVersions].sort(
       (left, right) =>
         parseInstant(left.effectiveFrom, 'effectiveFrom') -
         parseInstant(right.effectiveFrom, 'effectiveFrom'),
@@ -228,20 +249,26 @@ export function assertNoSubscriptionItemOverlap(items: readonly TenantSubscripti
       const currentFrom = parseInstant(current.effectiveFrom, 'effectiveFrom');
       if (currentFrom < previousUntil) {
         throw new Error(
-          `overlapping TenantSubscriptionItem periods for tenant ${current.tenantId} slot ${current.itemSlotKey}`,
+          `overlapping current TenantSubscriptionItemVersion periods for tenant ${current.tenantId} slot ${current.itemSlotKey}`,
         );
       }
     }
   }
 }
 
-export function selectEffectiveSubscriptionItems(
-  items: readonly TenantSubscriptionItem[],
-  tenantId: string,
-  at: string,
-): readonly TenantSubscriptionItem[] {
-  const selected = items.filter((item) => item.tenantId === tenantId && isEffectiveAt(item, at));
-  assertNoSubscriptionItemOverlap(selected);
+export function selectSubscriptionItemVersions(input: {
+  readonly versions: readonly TenantSubscriptionItemVersion[];
+  readonly tenantId: string;
+  readonly validAt: string;
+  readonly knownAt: string;
+}): readonly TenantSubscriptionItemVersion[] {
+  const selected = input.versions.filter(
+    (version) =>
+      version.tenantId === input.tenantId &&
+      isVersionKnownAt(version, input.knownAt) &&
+      isEffectiveAt(version, input.validAt),
+  );
+  assertNoSubscriptionItemVersionOverlap(selected);
   return selected;
 }
 
@@ -265,13 +292,16 @@ export function deriveSubscriptionLifecycleState(
   occurrences: readonly SubscriptionLifecycleOccurrence[],
   tenantSubscriptionId: string,
   at: string,
+  knownAt = at,
 ): SubscriptionLifecycleState {
   const target = parseInstant(at, 'at');
+  const knowledgeTarget = parseInstant(knownAt, 'knownAt');
   const applicable = occurrences
     .filter(
       (occurrence) =>
         occurrence.tenantSubscriptionId === tenantSubscriptionId &&
-        parseInstant(occurrence.effectiveAt, 'effectiveAt') <= target,
+        parseInstant(occurrence.effectiveAt, 'effectiveAt') <= target &&
+        parseInstant(occurrence.recordedAt, 'recordedAt') <= knowledgeTarget,
     )
     .sort((left, right) => {
       const effectiveDifference =
@@ -323,9 +353,10 @@ export function validateProductOfferingVersion(offering: ProductOfferingVersion)
   }
 }
 
-export function validateSubscriptionItemAssignment(input: {
+export function validateSubscriptionItemVersionAssignment(input: {
   readonly subscription: TenantSubscription;
   readonly item: TenantSubscriptionItem;
+  readonly itemVersion: TenantSubscriptionItemVersion;
   readonly offering: ProductOfferingVersion;
 }): void {
   if (input.subscription.tenantId !== input.item.tenantId) {
@@ -334,15 +365,23 @@ export function validateSubscriptionItemAssignment(input: {
   if (input.subscription.id !== input.item.tenantSubscriptionId) {
     throw new Error('subscription item does not belong to supplied subscription');
   }
-  if (input.item.productOfferingVersionId !== input.offering.id) {
-    throw new Error('subscription item does not bind supplied offering version');
+  if (input.item.id !== input.itemVersion.tenantSubscriptionItemId) {
+    throw new Error('subscription item version does not belong to supplied item');
   }
-  if (!Number.isSafeInteger(input.item.version) || input.item.version <= 0) {
-    throw new Error('TenantSubscriptionItem.version must be a positive safe integer');
+  if (input.item.tenantId !== input.itemVersion.tenantId) {
+    throw new Error('subscription item version tenant does not match item tenant');
   }
-  if (!input.item.itemSlotKey.trim()) throw new Error('TenantSubscriptionItem.itemSlotKey is required');
-  if (!isOfferingAvailableAt(input.offering, input.item.effectiveFrom)) {
-    throw new Error('offering version is not available at subscription item start');
+  if (input.item.itemSlotKey !== input.itemVersion.itemSlotKey) {
+    throw new Error('subscription item version slot does not match item slot');
+  }
+  if (input.itemVersion.productOfferingVersionId !== input.offering.id) {
+    throw new Error('subscription item version does not bind supplied offering version');
+  }
+  if (!Number.isSafeInteger(input.itemVersion.version) || input.itemVersion.version <= 0) {
+    throw new Error('TenantSubscriptionItemVersion.version must be a positive safe integer');
+  }
+  if (!isOfferingAvailableAt(input.offering, input.itemVersion.effectiveFrom)) {
+    throw new Error('offering version is not available at subscription item version start');
   }
   validateProductOfferingVersion(input.offering);
 }
@@ -354,12 +393,14 @@ function sortedUnique(values: readonly string[]): readonly string[] {
 function sourceBinding(input: {
   readonly subscription: TenantSubscription;
   readonly item: TenantSubscriptionItem;
+  readonly itemVersion: TenantSubscriptionItemVersion;
   readonly offering: ProductOfferingVersion;
   readonly entitlement: ProductOfferingEntitlement;
 }): EntitlementSourceBinding {
   return {
     tenantSubscriptionId: input.subscription.id,
     tenantSubscriptionItemId: input.item.id,
+    tenantSubscriptionItemVersionId: input.itemVersion.id,
     productOfferingVersionId: input.offering.id,
     entitlementDefinitionVersionId: input.entitlement.definitionVersionId,
   };
@@ -369,6 +410,7 @@ export function resolveEntitlementSnapshot(input: {
   readonly tenantId: string;
   readonly subscriptions: readonly TenantSubscription[];
   readonly subscriptionItems: readonly TenantSubscriptionItem[];
+  readonly subscriptionItemVersions: readonly TenantSubscriptionItemVersion[];
   readonly offerings: readonly ProductOfferingVersion[];
   readonly lifecycleOccurrences: readonly SubscriptionLifecycleOccurrence[];
   readonly entitlementAuthorityGuardVersion: number;
@@ -388,35 +430,51 @@ export function resolveEntitlementSnapshot(input: {
       .filter((subscription) => subscription.tenantId === input.tenantId)
       .map((subscription) => [subscription.id, subscription] as const),
   );
-  const offerings = new Map(input.offerings.map((offering) => [offering.id, offering] as const));
-  const effectiveItems = selectEffectiveSubscriptionItems(
-    input.subscriptionItems,
-    input.tenantId,
-    input.validAt,
+  const items = new Map(
+    input.subscriptionItems
+      .filter((item) => item.tenantId === input.tenantId)
+      .map((item) => [item.id, item] as const),
   );
+  const offerings = new Map(input.offerings.map((offering) => [offering.id, offering] as const));
+  const effectiveVersions = selectSubscriptionItemVersions({
+    versions: input.subscriptionItemVersions,
+    tenantId: input.tenantId,
+    validAt: input.validAt,
+    knownAt: input.resolvedAt,
+  });
 
   const activeSources: Array<{
     subscription: TenantSubscription;
     item: TenantSubscriptionItem;
+    itemVersion: TenantSubscriptionItemVersion;
     offering: ProductOfferingVersion;
   }> = [];
 
-  for (const item of effectiveItems) {
+  for (const itemVersion of effectiveVersions) {
+    const item = items.get(itemVersion.tenantSubscriptionItemId);
+    if (item === undefined) {
+      throw new Error(`missing subscription item ${itemVersion.tenantSubscriptionItemId}`);
+    }
     const subscription = subscriptions.get(item.tenantSubscriptionId);
-    if (subscription === undefined) throw new Error(`missing subscription ${item.tenantSubscriptionId}`);
+    if (subscription === undefined) {
+      throw new Error(`missing subscription ${item.tenantSubscriptionId}`);
+    }
     if (
       deriveSubscriptionLifecycleState(
         input.lifecycleOccurrences,
         subscription.id,
         input.validAt,
+        input.resolvedAt,
       ) !== 'ACTIVE'
     ) {
       continue;
     }
-    const offering = offerings.get(item.productOfferingVersionId);
-    if (offering === undefined) throw new Error(`missing offering ${item.productOfferingVersionId}`);
+    const offering = offerings.get(itemVersion.productOfferingVersionId);
+    if (offering === undefined) {
+      throw new Error(`missing offering ${itemVersion.productOfferingVersionId}`);
+    }
     validateProductOfferingVersion(offering);
-    activeSources.push({ subscription, item, offering });
+    activeSources.push({ subscription, item, itemVersion, offering });
   }
 
   const entitlements: Record<string, ResolvedEntitlement> = {};
@@ -493,6 +551,7 @@ export function resolveEntitlementSnapshot(input: {
     entitlementAuthorityGuardVersion: input.entitlementAuthorityGuardVersion,
     subscriptionIds: sortedUnique(activeSources.map((source) => source.subscription.id)),
     subscriptionItemIds: sortedUnique(activeSources.map((source) => source.item.id)),
+    subscriptionItemVersionIds: sortedUnique(activeSources.map((source) => source.itemVersion.id)),
     productOfferingVersionIds: sortedUnique(activeSources.map((source) => source.offering.id)),
     entitlements,
   };
