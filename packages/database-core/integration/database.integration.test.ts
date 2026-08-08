@@ -20,7 +20,7 @@ afterAll(async () => {
 });
 
 describe('database runtime foundation', () => {
-  it('connects to PostgreSQL 18 and reports health without exposing a client', async () => {
+  it('connects to PostgreSQL 18 and exposes only approved bounded capabilities', async () => {
     const health = await runtime.health();
     if (health.state !== 'ok') {
       throw new Error(`expected healthy database: ${health.detail}`);
@@ -32,7 +32,9 @@ describe('database runtime foundation', () => {
       'migrate',
       'migrationStatus',
       'scanCatalog',
+      'withExecutionContext',
     ]);
+    expect('query' in runtime).toBe(false);
   });
 
   it.each(['READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE'] as const)(
