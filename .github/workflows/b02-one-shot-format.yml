@@ -1,0 +1,74 @@
+name: B02 One-Shot Format
+
+on:
+  push:
+    branches:
+      - build/b02-platform-saas-provisional
+    paths:
+      - '.github/workflows/b02-one-shot-format.yml'
+      - 'packages/contracts/src/**'
+      - 'packages/database-core/src/**'
+      - 'scripts/lib/boundary-checker.mjs'
+      - 'scripts/lib/boundary-checker.test.mjs'
+      - 'scripts/lib/database-public-surface.mjs'
+      - 'scripts/lib/database-public-surface.test.mjs'
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b02-platform-saas-provisional
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+
+      - name: Install exact dependency graph
+        run: pnpm install --frozen-lockfile
+
+      - name: Format only B02 code and architecture guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm exec prettier \
+            packages/contracts/src \
+            packages/database-core/src \
+            scripts/lib/boundary-checker.mjs \
+            scripts/lib/boundary-checker.test.mjs \
+            scripts/lib/database-public-surface.mjs \
+            scripts/lib/database-public-surface.test.mjs \
+            --write
+
+      - name: Commit formatting if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No formatting changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/contracts/src packages/database-core/src scripts/lib/boundary-checker.mjs scripts/lib/boundary-checker.test.mjs scripts/lib/database-public-surface.mjs scripts/lib/database-public-surface.test.mjs
+          git commit -m 'Apply repository Prettier formatting to B02 provisional code'
+          git push origin HEAD:build/b02-platform-saas-provisional
