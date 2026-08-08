@@ -52,7 +52,6 @@ const forbiddenSqlTokens = new Set([
   'reset',
   'revoke',
   'security',
-  'set',
   'set_config',
 ]);
 
