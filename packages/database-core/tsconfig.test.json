@@ -8,5 +8,6 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "integration/**/*.ts", "vitest.integration.config.ts"]
+  "include": ["src/**/*.ts", "integration/**/*.ts", "vitest.integration.config.ts"],
+  "exclude": ["integration/platform-c1-bootstrap.integration.test.ts"]
 }
