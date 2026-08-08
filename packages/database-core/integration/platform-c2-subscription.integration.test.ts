@@ -5,7 +5,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createDatabaseRuntime } from '../src/public.js';
 import { definePersistenceAdapter, sql } from '../src/persistence.js';
 import { runMigrations } from '../src/internal/migrations.js';
-import { createIntegrationPool, dropSchema, requiredDatabaseUrl, uniqueSchema } from './test-support.js';
+import {
+  createIntegrationPool,
+  dropSchema,
+  requiredDatabaseUrl,
+  uniqueSchema,
+} from './test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b02-platform-c2-setup');
 const runtime = createDatabaseRuntime({
@@ -203,7 +208,8 @@ const subscriptionAdapter = definePersistenceAdapter<SubscriptionHandle>({
         SET superseded_at = clock_timestamp()
         WHERE tenant_subscription_item_version_id = ${id}
       `);
-      if (result.rowCount !== 1) throw new Error('item-version supersession did not update one row');
+      if (result.rowCount !== 1)
+        throw new Error('item-version supersession did not update one row');
     },
     readItemVersions: () =>
       executor.all<ItemVersionRow>(sql`
@@ -299,7 +305,9 @@ async function mutate<T>(
   return withHandle(tenantId, logicalIdentity, async (handle) => {
     const current = await handle.lockGuard();
     if (current !== expectedGuard) {
-      throw new Error(`stale entitlement authority guard: expected ${expectedGuard}, current ${current}`);
+      throw new Error(
+        `stale entitlement authority guard: expected ${expectedGuard}, current ${current}`,
+      );
     }
     const result = await callback(handle);
     const guardVersion = await handle.bumpGuard(expectedGuard);
@@ -349,7 +357,9 @@ beforeAll(async () => {
     buildId: 'platform-c2-integration',
   });
   await setupPool.query('TRUNCATE TABLE platform.bootstrap_intent, platform.tenant CASCADE');
-  await setupPool.query('TRUNCATE TABLE platform.product_offering_entitlement_grant, platform.product_offering_version, platform.entitlement_definition_version, platform.usage_measure_definition_version CASCADE');
+  await setupPool.query(
+    'TRUNCATE TABLE platform.product_offering_entitlement_grant, platform.product_offering_version, platform.entitlement_definition_version, platform.usage_measure_definition_version CASCADE',
+  );
   await setupPool.query(
     `INSERT INTO platform.tenant (tenant_id, display_name) VALUES ($1, 'Tenant A'), ($2, 'Tenant B')`,
     [tenantA, tenantB],
@@ -358,7 +368,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await setupPool.query('TRUNCATE TABLE platform.subscription_lifecycle_occurrence, platform.tenant_subscription_item_version, platform.tenant_subscription_item, platform.tenant_subscription CASCADE');
+  await setupPool.query(
+    'TRUNCATE TABLE platform.subscription_lifecycle_occurrence, platform.tenant_subscription_item_version, platform.tenant_subscription_item, platform.tenant_subscription CASCADE',
+  );
   await setupPool.query('TRUNCATE TABLE platform.tenant_entitlement_authority_guard');
   await setupPool.query(
     'INSERT INTO platform.tenant_entitlement_authority_guard (tenant_id, guard_version) VALUES ($1, 1), ($2, 1)',
@@ -368,7 +380,9 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await setupPool.query('TRUNCATE TABLE platform.bootstrap_intent, platform.tenant CASCADE');
-  await setupPool.query('TRUNCATE TABLE platform.product_offering_entitlement_grant, platform.product_offering_version, platform.entitlement_definition_version, platform.usage_measure_definition_version CASCADE');
+  await setupPool.query(
+    'TRUNCATE TABLE platform.product_offering_entitlement_grant, platform.product_offering_version, platform.entitlement_definition_version, platform.usage_measure_definition_version CASCADE',
+  );
   await runtime.close();
   await dropSchema(setupPool, trackingSchema);
   await setupPool.end();
@@ -381,7 +395,11 @@ describe('B02 C2 production subscription and entitlement authority', () => {
     const addonItemId = '019d5000-0000-7000-8000-000000000003';
 
     const created = await mutate(tenantA, 1, 'base-plus-addon', async (handle) => {
-      await handle.createSubscription({ id: subscriptionId, tenantId: tenantA, channel: 'SELF_SERVICE' });
+      await handle.createSubscription({
+        id: subscriptionId,
+        tenantId: tenantA,
+        channel: 'SELF_SERVICE',
+      });
       await handle.appendLifecycle({
         id: '019d5000-0000-7000-8000-000000000004',
         subscriptionId,
@@ -431,7 +449,9 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       }),
     ).rejects.toMatchObject({ code: '23P01' });
 
-    expect(await withHandle(tenantA, 'guard-after-overlap', (handle) => handle.lockGuard())).toBe(2);
+    expect(await withHandle(tenantA, 'guard-after-overlap', (handle) => handle.lockGuard())).toBe(
+      2,
+    );
   });
 
   it('preserves superseded item content and permits an adjacent replacement without rewriting history', async () => {
@@ -440,7 +460,11 @@ describe('B02 C2 production subscription and entitlement authority', () => {
     const originalVersionId = '019d5100-0000-7000-8000-000000000003';
 
     await mutate(tenantA, 1, 'seed-original-base', async (handle) => {
-      await handle.createSubscription({ id: subscriptionId, tenantId: tenantA, channel: 'SELF_SERVICE' });
+      await handle.createSubscription({
+        id: subscriptionId,
+        tenantId: tenantA,
+        channel: 'SELF_SERVICE',
+      });
       await handle.appendLifecycle({
         id: '019d5100-0000-7000-8000-000000000004',
         subscriptionId,
@@ -484,8 +508,12 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       });
     });
 
-    const rows = await withHandle(tenantA, 'read-version-history', (handle) => handle.readItemVersions());
-    const original = rows.find((row) => row.tenant_subscription_item_version_id === originalVersionId);
+    const rows = await withHandle(tenantA, 'read-version-history', (handle) =>
+      handle.readItemVersions(),
+    );
+    const original = rows.find(
+      (row) => row.tenant_subscription_item_version_id === originalVersionId,
+    );
     expect(original).toMatchObject({
       product_offering_version_id: offeringBase,
       version: '1',
@@ -494,14 +522,20 @@ describe('B02 C2 production subscription and entitlement authority', () => {
     expect(rows.filter((row) => row.superseded_at === null)).toHaveLength(2);
 
     await expect(
-      withHandle(tenantA, 'double-supersede', (handle) => handle.supersedeItemVersion(originalVersionId)),
+      withHandle(tenantA, 'double-supersede', (handle) =>
+        handle.supersedeItemVersion(originalVersionId),
+      ),
     ).rejects.toThrow(/already superseded/u);
   });
 
   it('invalidates a stale entitlement preview through the stable tenant guard', async () => {
     const firstSubscription = '019d5200-0000-7000-8000-000000000001';
     await mutate(tenantA, 1, 'first-guarded-mutation', async (handle) => {
-      await handle.createSubscription({ id: firstSubscription, tenantId: tenantA, channel: 'SELF_SERVICE' });
+      await handle.createSubscription({
+        id: firstSubscription,
+        tenantId: tenantA,
+        channel: 'SELF_SERVICE',
+      });
     });
 
     const previewGuardVersion = 2;
@@ -525,7 +559,11 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       }),
     ).rejects.toThrow(/stale entitlement authority guard/u);
 
-    expect(await withHandle(tenantA, 'subscription-count-after-stale', (handle) => handle.countSubscriptions())).toBe(1);
+    expect(
+      await withHandle(tenantA, 'subscription-count-after-stale', (handle) =>
+        handle.countSubscriptions(),
+      ),
+    ).toBe(1);
     expect(await withHandle(tenantA, 'guard-after-stale', (handle) => handle.lockGuard())).toBe(3);
   });
 
@@ -560,7 +598,9 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       ),
     ).rejects.toMatchObject({ code: '42501' });
 
-    expect(await withHandle(tenantB, 'tenant-b-count', (handle) => handle.countSubscriptions())).toBe(0);
+    expect(
+      await withHandle(tenantB, 'tenant-b-count', (handle) => handle.countSubscriptions()),
+    ).toBe(0);
   });
 
   it('rejects assignment of a retired-for-sale offering but preserves an already assigned grandfathered version', async () => {
@@ -568,7 +608,11 @@ describe('B02 C2 production subscription and entitlement authority', () => {
     const itemId = '019d5400-0000-7000-8000-000000000002';
 
     await mutate(tenantA, 1, 'grandfather-base', async (handle) => {
-      await handle.createSubscription({ id: subscriptionId, tenantId: tenantA, channel: 'SELF_SERVICE' });
+      await handle.createSubscription({
+        id: subscriptionId,
+        tenantId: tenantA,
+        channel: 'SELF_SERVICE',
+      });
       await handle.appendLifecycle({
         id: '019d5400-0000-7000-8000-000000000003',
         subscriptionId,
@@ -588,7 +632,9 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       });
     });
 
-    const grandfathered = await withHandle(tenantA, 'grandfather-read', (handle) => handle.readItemVersions());
+    const grandfathered = await withHandle(tenantA, 'grandfather-read', (handle) =>
+      handle.readItemVersions(),
+    );
     expect(grandfathered).toHaveLength(1);
     expect(grandfathered[0]?.product_offering_version_id).toBe(offeringBase);
 
@@ -612,7 +658,11 @@ describe('B02 C2 production subscription and entitlement authority', () => {
     const subscriptionId = '019d5500-0000-7000-8000-000000000001';
     const lifecycleId = '019d5500-0000-7000-8000-000000000002';
     await mutate(tenantA, 1, 'authority-separation-seed', async (handle) => {
-      await handle.createSubscription({ id: subscriptionId, tenantId: tenantA, channel: 'SELF_SERVICE' });
+      await handle.createSubscription({
+        id: subscriptionId,
+        tenantId: tenantA,
+        channel: 'SELF_SERVICE',
+      });
       await handle.appendLifecycle({
         id: lifecycleId,
         subscriptionId,
@@ -622,13 +672,23 @@ describe('B02 C2 production subscription and entitlement authority', () => {
       });
     });
 
-    await expect(withHandle(tenantA, 'role-grant-attack', (handle) => handle.attemptRoleGrant())).rejects.toMatchObject({ code: '42501' });
-    await expect(withHandle(tenantA, 'catalog-rewrite-attack', (handle) => handle.attemptCatalogRewrite())).rejects.toMatchObject({ code: '42501' });
-    await expect(withHandle(tenantA, 'lifecycle-rewrite-attack', (handle) => handle.attemptLifecycleRewrite(lifecycleId))).rejects.toMatchObject({ code: '42501' });
+    await expect(
+      withHandle(tenantA, 'role-grant-attack', (handle) => handle.attemptRoleGrant()),
+    ).rejects.toMatchObject({ code: '42501' });
+    await expect(
+      withHandle(tenantA, 'catalog-rewrite-attack', (handle) => handle.attemptCatalogRewrite()),
+    ).rejects.toMatchObject({ code: '42501' });
+    await expect(
+      withHandle(tenantA, 'lifecycle-rewrite-attack', (handle) =>
+        handle.attemptLifecycleRewrite(lifecycleId),
+      ),
+    ).rejects.toMatchObject({ code: '42501' });
   });
 
   it('allows the entitlement guard to move by exactly one and rejects arbitrary jumps', async () => {
-    await expect(withHandle(tenantA, 'guard-jump', (handle) => handle.attemptGuardJump(9))).rejects.toThrow(/increment by exactly one/u);
+    await expect(
+      withHandle(tenantA, 'guard-jump', (handle) => handle.attemptGuardJump(9)),
+    ).rejects.toThrow(/increment by exactly one/u);
     expect(await withHandle(tenantA, 'guard-still-one', (handle) => handle.lockGuard())).toBe(1);
 
     const moved = await withHandle(tenantA, 'guard-normal-bump', (handle) => handle.bumpGuard(1));

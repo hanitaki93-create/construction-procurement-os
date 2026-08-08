@@ -5,7 +5,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createDatabaseRuntime } from '../src/public.js';
 import { definePersistenceAdapter, sql } from '../src/persistence.js';
 import { runMigrations } from '../src/internal/migrations.js';
-import { createIntegrationPool, dropSchema, requiredDatabaseUrl, uniqueSchema } from './test-support.js';
+import {
+  createIntegrationPool,
+  dropSchema,
+  requiredDatabaseUrl,
+  uniqueSchema,
+} from './test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b02-platform-c1-v2-setup');
 const runtime = createDatabaseRuntime({
@@ -187,7 +192,8 @@ const bootstrapAdapter = definePersistenceAdapter<BootstrapHandle>({
         `);
 
         const current = await find(input.idempotencyKey);
-        if (current === undefined) throw new Error('bootstrap intent is not visible to its owner identity');
+        if (current === undefined)
+          throw new Error('bootstrap intent is not visible to its owner identity');
         if (current.payload_digest !== input.payloadDigest) {
           throw new Error('bootstrap idempotency key was reused with a different payload');
         }
@@ -200,7 +206,8 @@ const bootstrapAdapter = definePersistenceAdapter<BootstrapHandle>({
           INSERT INTO platform.tenant (tenant_id, display_name)
           VALUES (${input.ids.tenant}, ${input.tenantName})
         `);
-        if (options.failAfterTenant === true) throw new Error('forced bootstrap failure after tenant insert');
+        if (options.failAfterTenant === true)
+          throw new Error('forced bootstrap failure after tenant insert');
 
         const legalEntityId = options.wrongLegalEntityId ?? input.ids.legalEntity;
         await executor.execute(sql`
@@ -321,7 +328,8 @@ const bootstrapAdapter = definePersistenceAdapter<BootstrapHandle>({
           SET state = 'ESTABLISHED', established_at = ${input.effectiveAt}::timestamptz, version = version + 1
           WHERE idempotency_key = ${input.idempotencyKey} AND state = 'PENDING'
         `);
-        if (marked.rowCount !== 1) throw new Error('bootstrap establishment update did not affect one row');
+        if (marked.rowCount !== 1)
+          throw new Error('bootstrap establishment update did not affect one row');
 
         const finalRow = await find(input.idempotencyKey);
         if (finalRow === undefined) throw new Error('established bootstrap row disappeared');
@@ -455,8 +463,12 @@ describe('B02 C1 production bootstrap v2', () => {
       },
     };
 
-    await expect(runBootstrap(failed, { failAfterTenant: true })).rejects.toThrow(/forced bootstrap failure/u);
-    expect(await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-failure'")) .toBe(0);
+    await expect(runBootstrap(failed, { failAfterTenant: true })).rejects.toThrow(
+      /forced bootstrap failure/u,
+    );
+    expect(await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-failure'")).toBe(
+      0,
+    );
     expect(await count('platform.tenant', `tenant_id = '${failed.ids.tenant}'::uuid`)).toBe(0);
   });
 
@@ -479,23 +491,45 @@ describe('B02 C1 production bootstrap v2', () => {
     await expect(
       runBootstrap(wrong, { wrongLegalEntityId: '019c8999-9999-7999-8999-999999999999' }),
     ).rejects.toMatchObject({ code: '42501' });
-    expect(await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-wrong-id'")) .toBe(0);
+    expect(await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-wrong-id'")).toBe(
+      0,
+    );
   });
 
   it('converges twenty concurrent identical attempts to one OWNER lineage', async () => {
     const results = await Promise.all(Array.from({ length: 20 }, () => runBootstrap(request)));
 
     expect(results.every((result) => result.state === 'ESTABLISHED')).toBe(true);
-    expect(new Set(results.map((result) => result.proposedTenantId))).toEqual(new Set([canonicalIds.tenant]));
-    expect(new Set(results.map((result) => result.principalId))).toEqual(new Set([canonicalIds.principal]));
+    expect(new Set(results.map((result) => result.proposedTenantId))).toEqual(
+      new Set([canonicalIds.tenant]),
+    );
+    expect(new Set(results.map((result) => result.principalId))).toEqual(
+      new Set([canonicalIds.principal]),
+    );
 
-    expect(await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-request-001'")) .toBe(1);
+    expect(
+      await count('platform.bootstrap_intent', "idempotency_key = 'bootstrap-request-001'"),
+    ).toBe(1);
     expect(await count('platform.tenant', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(1);
-    expect(await count('platform.legal_entity', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(1);
+    expect(await count('platform.legal_entity', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(
+      1,
+    );
     expect(await count('platform.principal', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(1);
-    expect(await count('platform.tenant_membership', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(1);
-    expect(await count('platform.role_assignment', `tenant_id = '${canonicalIds.tenant}'::uuid AND role_key = 'OWNER'`)).toBe(1);
-    expect(await count('platform.contracting_authority_context', `tenant_id = '${canonicalIds.tenant}'::uuid`)).toBe(1);
+    expect(
+      await count('platform.tenant_membership', `tenant_id = '${canonicalIds.tenant}'::uuid`),
+    ).toBe(1);
+    expect(
+      await count(
+        'platform.role_assignment',
+        `tenant_id = '${canonicalIds.tenant}'::uuid AND role_key = 'OWNER'`,
+      ),
+    ).toBe(1);
+    expect(
+      await count(
+        'platform.contracting_authority_context',
+        `tenant_id = '${canonicalIds.tenant}'::uuid`,
+      ),
+    ).toBe(1);
   });
 
   it('returns the same established result on a lost-result retry', async () => {
@@ -506,7 +540,9 @@ describe('B02 C1 production bootstrap v2', () => {
   });
 
   it('fails closed when one idempotency key is reused with a changed payload', async () => {
-    await expect(runBootstrap({ ...request, payloadDigest: 'c'.repeat(64) })).rejects.toThrow(/different payload/u);
+    await expect(runBootstrap({ ...request, payloadDigest: 'c'.repeat(64) })).rejects.toThrow(
+      /different payload/u,
+    );
   });
 
   it('exposes the established lineage only through ordinary tenant context', async () => {

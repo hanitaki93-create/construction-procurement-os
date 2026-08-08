@@ -1,16 +1,8 @@
 export type SubscriptionLifecycleOccurrenceKind =
-  | 'ACTIVATED'
-  | 'SUSPENDED'
-  | 'RESUMED'
-  | 'CANCELLED'
-  | 'EXPIRED';
+  'ACTIVATED' | 'SUSPENDED' | 'RESUMED' | 'CANCELLED' | 'EXPIRED';
 
 export type SubscriptionLifecycleState =
-  | 'INACTIVE'
-  | 'ACTIVE'
-  | 'SUSPENDED'
-  | 'CANCELLED'
-  | 'EXPIRED';
+  'INACTIVE' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED' | 'EXPIRED';
 
 export type SubscriptionCommercialChannel = 'SELF_SERVICE' | 'MANUAL_ENTERPRISE';
 export type EntitlementDefinitionKind = 'CAPABILITY' | 'METERED_LIMIT';
@@ -324,7 +316,8 @@ export function validateProductOfferingVersion(offering: ProductOfferingVersion)
   if (!Number.isSafeInteger(offering.version) || offering.version <= 0) {
     throw new Error('ProductOfferingVersion.version must be a positive safe integer');
   }
-  if (!offering.offeringKey.trim()) throw new Error('ProductOfferingVersion.offeringKey is required');
+  if (!offering.offeringKey.trim())
+    throw new Error('ProductOfferingVersion.offeringKey is required');
   assertEffectivePeriod({
     effectiveFrom: offering.availableFrom,
     effectiveUntil: offering.availableUntil,

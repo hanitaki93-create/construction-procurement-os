@@ -274,7 +274,11 @@ describe('platform subscription contracts', () => {
   });
 
   it('keeps a grandfathered item entitled after its offering stops being sold', () => {
-    const snapshot = resolve({ items: [baseItem], itemVersions: [baseItemVersion], offerings: [baseOffering] });
+    const snapshot = resolve({
+      items: [baseItem],
+      itemVersions: [baseItemVersion],
+      offerings: [baseOffering],
+    });
     expect(snapshot.entitlements['sourcing.rfq.issue']).toMatchObject({
       kind: 'CAPABILITY',
       enabled: true,
