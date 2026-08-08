@@ -8,7 +8,10 @@ import {
   type CommandOperationEnvelope,
   type RegisteredOperationDefinition,
 } from './operation.js';
-import type { EntitlementSourceBinding, ResolvedEntitlementSnapshot } from './platform.js';
+import type {
+  EntitlementSourceBinding,
+  ResolvedEntitlementSnapshot,
+} from './platform.js';
 
 const commandDefinition: RegisteredOperationDefinition = {
   key: 'tenant.project.create',
