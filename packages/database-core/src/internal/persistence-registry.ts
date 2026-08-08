@@ -1,12 +1,10 @@
+import type { QueryResultRow } from 'pg';
+
 import type { PrivateTransaction } from './transaction.js';
 
 export interface InternalSqlExecutor {
-  all<Row extends Record<string, unknown>>(
-    statement: InternalSqlStatement,
-  ): Promise<readonly Row[]>;
-  oneOrNone<Row extends Record<string, unknown>>(
-    statement: InternalSqlStatement,
-  ): Promise<Row | undefined>;
+  all<Row>(statement: InternalSqlStatement): Promise<readonly Row[]>;
+  oneOrNone<Row>(statement: InternalSqlStatement): Promise<Row | undefined>;
   execute(statement: InternalSqlStatement): Promise<Readonly<{ rowCount: number }>>;
 }
 
@@ -207,18 +205,16 @@ export function createTransactionSqlExecutor(transaction: PrivateTransaction): I
     if (!active) throw new Error('transaction-bound SQL executor is no longer active');
   };
 
-  const executeRows = async <Row extends Record<string, unknown>>(
-    statement: InternalSqlStatement,
-  ): Promise<readonly Row[]> => {
+  const executeRows = async <Row>(statement: InternalSqlStatement): Promise<readonly Row[]> => {
     ensureActive();
     assertPersistenceSqlIsBounded(statement.text);
-    const result = await transaction.query<Row>(statement.text, statement.values);
-    return result.rows;
+    const result = await transaction.query<QueryResultRow>(statement.text, statement.values);
+    return result.rows as readonly Row[];
   };
 
   const executor: InternalSqlExecutor & { deactivate(): void } = {
     all: executeRows,
-    oneOrNone: async <Row extends Record<string, unknown>>(statement: InternalSqlStatement) => {
+    oneOrNone: async <Row>(statement: InternalSqlStatement) => {
       const rows = await executeRows<Row>(statement);
       if (rows.length > 1) throw new Error('expected at most one row');
       return rows[0];
