@@ -1,0 +1,139 @@
+name: B02 Provisional Verification
+
+on:
+  pull_request:
+    branches:
+      - build/b01-engineering-foundation
+    paths:
+      - '.github/workflows/b02-provisional-verification.yml'
+      - '04_phases/phase_2_build_decomposition/**'
+      - 'apps/**'
+      - 'docs/build/**'
+      - 'migrations/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/**'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b02-provisional-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    name: Strict workspace and architecture verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288ca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Run complete workspace verification
+        shell: bash
+        run: pnpm verify
+
+      - name: Re-run database boundary guards explicitly
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-boundaries.mjs
+          node scripts/check-database-public-surface.mjs
+
+  postgresql:
+    name: PostgreSQL 18.4 execution-context regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cpos_test
+      MIGRATIONS_DIR: ../../migrations/sql
+      BUILD_ID: b02-provisional-ci
+
+    services:
+      postgres:
+        image: postgres:18.4-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cpos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cpos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify database package and hostile public surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/database-core typecheck
+          node scripts/check-database-public-surface.mjs
+
+      - name: Run PostgreSQL integration suite
+        shell: bash
+        run: pnpm db:integration
+
+      - name: Rebuild committed migrations and scan catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm db:migrate
+          pnpm db:status
+          pnpm db:scan
