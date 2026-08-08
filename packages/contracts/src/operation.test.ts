@@ -8,7 +8,7 @@ import {
   type CommandOperationEnvelope,
   type RegisteredOperationDefinition,
 } from './operation.js';
-import type { ResolvedEntitlementSnapshot } from './platform.js';
+import type { EntitlementSourceBinding, ResolvedEntitlementSnapshot } from './platform.js';
 
 const commandDefinition: RegisteredOperationDefinition = {
   key: 'tenant.project.create',
@@ -33,25 +33,39 @@ const commandEnvelope: CommandOperationEnvelope = {
   requestedAt: '2026-08-07T12:01:00.000Z',
 };
 
+const entitlementSource = (
+  entitlementDefinitionVersionId: string,
+): EntitlementSourceBinding => ({
+  tenantSubscriptionId: 'sub-1',
+  tenantSubscriptionItemId: 'item-1',
+  tenantSubscriptionItemVersionId: 'item-version-1',
+  productOfferingVersionId: 'offering-v1',
+  entitlementDefinitionVersionId,
+});
+
 const capabilitySnapshot: ResolvedEntitlementSnapshot = {
   tenantId: 'tenant-1',
-  tenantSubscriptionId: 'sub-1',
-  productOfferingVersionId: 'offering-v1',
   resolvedAt: '2026-08-07T12:00:30.000Z',
   validAt: '2026-08-07T12:01:00.000Z',
+  entitlementAuthorityGuardVersion: 1,
+  subscriptionIds: ['sub-1'],
+  subscriptionItemIds: ['item-1'],
+  subscriptionItemVersionIds: ['item-version-1'],
+  productOfferingVersionIds: ['offering-v1'],
   entitlements: {
     'project.create': {
-      definitionVersionId: 'ent-project-create-v1',
       definitionKey: 'project.create',
       kind: 'CAPABILITY',
       enabled: true,
+      sources: [entitlementSource('ent-project-create-v1')],
     },
     'ai.quote_extraction': {
-      definitionVersionId: 'ent-ai-quote-v1',
       definitionKey: 'ai.quote_extraction',
       kind: 'METERED_LIMIT',
       usageMeasureKey: 'ai.quote_extraction.run',
+      limitMode: 'FINITE',
       limitQuantity: '20',
+      sources: [entitlementSource('ent-ai-quote-v1')],
     },
   },
 };
