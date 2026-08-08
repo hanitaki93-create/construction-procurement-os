@@ -25,6 +25,8 @@ interface ContextView {
   readonly represented_principal_id: string;
   readonly project_id: string;
   readonly authority_context_id: string;
+  readonly authentication_identity_id: string;
+  readonly proposed_tenant_id: string;
   readonly operation_key: string;
   readonly invocation_id: string;
   readonly service_identity: string;
@@ -47,6 +49,7 @@ interface TestPersistenceHandle {
 const adapter = definePersistenceAdapter<TestPersistenceHandle>({
   moduleKey: 'platform',
   databaseRole: role,
+  executionScope: 'TENANT',
   buildHandle: (executor) => ({
     context: () =>
       executor.oneOrNone<ContextView>(sql`
@@ -57,6 +60,8 @@ const adapter = definePersistenceAdapter<TestPersistenceHandle>({
           current_setting('cpos.represented_principal_id', true) AS represented_principal_id,
           current_setting('cpos.project_id', true) AS project_id,
           current_setting('cpos.authority_context_id', true) AS authority_context_id,
+          current_setting('cpos.authentication_identity_id', true) AS authentication_identity_id,
+          current_setting('cpos.proposed_tenant_id', true) AS proposed_tenant_id,
           current_setting('cpos.operation_key', true) AS operation_key,
           current_setting('cpos.invocation_id', true) AS invocation_id,
           current_setting('cpos.service_identity', true) AS service_identity,
@@ -148,6 +153,8 @@ describe('B02 fail-closed execution context and FORCE RLS', () => {
       represented_principal_id: 'represented-tenant-a',
       project_id: 'project-tenant-a',
       authority_context_id: 'authority-tenant-a',
+      authentication_identity_id: '',
+      proposed_tenant_id: '',
       operation_key: 'platform.test-tenant-item.v1',
       invocation_id: 'invocation-context-readback',
       service_identity: 'api',
