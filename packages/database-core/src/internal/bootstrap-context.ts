@@ -62,8 +62,12 @@ export async function withBootstrapContextTransaction<Handle, Result>(
     await transaction.query(
       `SET LOCAL cpos.proposed_tenant_id TO ${quoteLiteral(context.proposedTenantId)}`,
     );
-    await transaction.query(`SET LOCAL cpos.operation_key TO ${quoteLiteral(context.operationKey)}`);
-    await transaction.query(`SET LOCAL cpos.invocation_id TO ${quoteLiteral(context.invocationId)}`);
+    await transaction.query(
+      `SET LOCAL cpos.operation_key TO ${quoteLiteral(context.operationKey)}`,
+    );
+    await transaction.query(
+      `SET LOCAL cpos.invocation_id TO ${quoteLiteral(context.invocationId)}`,
+    );
     await transaction.query(
       `SET LOCAL cpos.service_identity TO ${quoteLiteral(context.serviceIdentity)}`,
     );

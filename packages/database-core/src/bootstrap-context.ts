@@ -8,7 +8,8 @@ export interface BootstrapExecutionContext {
 
 function requireBoundedValue(value: string, field: string): void {
   if (!value.trim()) throw new Error(`${field} is required`);
-  if (value.length > 512) throw new Error(`${field} exceeds the 512-character bootstrap-context bound`);
+  if (value.length > 512)
+    throw new Error(`${field} exceeds the 512-character bootstrap-context bound`);
   if (value.includes('\u0000')) throw new Error(`${field} contains a NUL character`);
 }
 

@@ -54,12 +54,16 @@ interface BootstrapHandle {
     payloadDigest: string,
   ): Promise<void>;
   insertTenant(tenantId: string, payload: string): Promise<void>;
-  readTenant(tenantId: string): Promise<Readonly<{ tenant_id: string; payload: string }> | undefined>;
+  readTenant(
+    tenantId: string,
+  ): Promise<Readonly<{ tenant_id: string; payload: string }> | undefined>;
   updateTenant(tenantId: string, payload: string): Promise<void>;
 }
 
 interface TenantHandle {
-  readTenant(tenantId: string): Promise<Readonly<{ tenant_id: string; payload: string }> | undefined>;
+  readTenant(
+    tenantId: string,
+  ): Promise<Readonly<{ tenant_id: string; payload: string }> | undefined>;
   readBootstrapIntent(idempotencyKey: string): Promise<BootstrapIntentRow | undefined>;
 }
 
@@ -144,7 +148,11 @@ const tenantAdapter = definePersistenceAdapter<TenantHandle>({
   }),
 });
 
-function bootstrapContext(authenticationIdentityId: string, proposedTenantId: string, invocationId: string) {
+function bootstrapContext(
+  authenticationIdentityId: string,
+  proposedTenantId: string,
+  invocationId: string,
+) {
   return {
     authenticationIdentityId,
     proposedTenantId,
@@ -224,9 +232,7 @@ beforeAll(async () => {
 
   await setupPool.query(`GRANT USAGE ON SCHEMA "${schema}" TO "${bootstrapRole}"`);
   await setupPool.query(`GRANT USAGE ON SCHEMA "${schema}" TO "${tenantRole}"`);
-  await setupPool.query(
-    `GRANT SELECT, INSERT ON ${bootstrapIntentTable} TO "${bootstrapRole}"`,
-  );
+  await setupPool.query(`GRANT SELECT, INSERT ON ${bootstrapIntentTable} TO "${bootstrapRole}"`);
   await setupPool.query(`GRANT INSERT ON ${tenantTable} TO "${bootstrapRole}"`);
   await setupPool.query(`GRANT SELECT ON ${tenantTable} TO "${tenantRole}"`);
 
