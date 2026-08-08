@@ -2,6 +2,8 @@ import type { QueryResultRow } from 'pg';
 
 import type { PrivateTransaction } from './transaction.js';
 
+export type InternalPersistenceExecutionScope = 'TENANT' | 'BOOTSTRAP';
+
 export interface InternalSqlExecutor {
   all<Row>(statement: InternalSqlStatement): Promise<readonly Row[]>;
   oneOrNone<Row>(statement: InternalSqlStatement): Promise<Row | undefined>;
@@ -16,6 +18,7 @@ export interface InternalSqlStatement {
 export interface InternalPersistenceAdapterDefinition<Handle> {
   readonly moduleKey: string;
   readonly databaseRole: string;
+  readonly executionScope: InternalPersistenceExecutionScope;
   readonly buildHandle: (executor: InternalSqlExecutor) => Handle;
 }
 
