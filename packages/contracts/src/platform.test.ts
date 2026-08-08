@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  assertNoSubscriptionItemOverlap,
+  assertNoSubscriptionItemVersionOverlap,
   deriveSubscriptionLifecycleState,
   isCanonicalNonNegativeDecimal,
   isEffectiveAt,
   isOfferingAvailableAt,
   resolveEntitlementSnapshot,
-  selectEffectiveSubscriptionItems,
+  selectSubscriptionItemVersions,
   validateProductOfferingVersion,
-  validateSubscriptionItemAssignment,
+  validateSubscriptionItemVersionAssignment,
   type ExactEntitlementArithmetic,
   type ProductOfferingVersion,
   type SubscriptionLifecycleOccurrence,
   type TenantSubscription,
   type TenantSubscriptionItem,
+  type TenantSubscriptionItemVersion,
 } from './platform.js';
 
 const arithmetic: ExactEntitlementArithmetic = {
@@ -34,11 +35,7 @@ const baseItem: TenantSubscriptionItem = {
   tenantSubscriptionId: 'sub-1',
   tenantId: 'tenant-1',
   itemSlotKey: 'BASE',
-  productOfferingVersionId: 'offering-base-v1',
-  effectiveFrom: '2026-08-01T00:00:00.000Z',
-  effectiveUntil: '2026-09-01T00:00:00.000Z',
   recordedAt: '2026-08-01T00:00:00.000Z',
-  version: 1,
 };
 
 const addonItem: TenantSubscriptionItem = {
@@ -46,11 +43,31 @@ const addonItem: TenantSubscriptionItem = {
   tenantSubscriptionId: 'sub-1',
   tenantId: 'tenant-1',
   itemSlotKey: 'AI_ADDON',
+  recordedAt: '2026-08-01T00:00:00.000Z',
+};
+
+const baseItemVersion: TenantSubscriptionItemVersion = {
+  id: 'item-base-version-1',
+  tenantSubscriptionItemId: 'item-base-1',
+  tenantId: 'tenant-1',
+  itemSlotKey: 'BASE',
+  version: 1,
+  productOfferingVersionId: 'offering-base-v1',
+  effectiveFrom: '2026-08-01T00:00:00.000Z',
+  effectiveUntil: '2026-09-01T00:00:00.000Z',
+  recordedAt: '2026-08-01T00:00:00.000Z',
+};
+
+const addonItemVersion: TenantSubscriptionItemVersion = {
+  id: 'item-ai-version-1',
+  tenantSubscriptionItemId: 'item-ai-1',
+  tenantId: 'tenant-1',
+  itemSlotKey: 'AI_ADDON',
+  version: 1,
   productOfferingVersionId: 'offering-ai-v1',
   effectiveFrom: '2026-08-01T00:00:00.000Z',
   effectiveUntil: '2026-09-01T00:00:00.000Z',
   recordedAt: '2026-08-01T00:00:00.000Z',
-  version: 1,
 };
 
 const baseOffering: ProductOfferingVersion = {
@@ -109,49 +126,84 @@ const lifecycle: SubscriptionLifecycleOccurrence[] = [
   },
 ];
 
+function resolve(input: {
+  readonly items?: readonly TenantSubscriptionItem[];
+  readonly itemVersions?: readonly TenantSubscriptionItemVersion[];
+  readonly offerings?: readonly ProductOfferingVersion[];
+  readonly lifecycleOccurrences?: readonly SubscriptionLifecycleOccurrence[];
+  readonly resolvedAt?: string;
+  readonly validAt?: string;
+  readonly guardVersion?: number;
+}) {
+  return resolveEntitlementSnapshot({
+    tenantId: 'tenant-1',
+    subscriptions: [subscription],
+    subscriptionItems: input.items ?? [baseItem, addonItem],
+    subscriptionItemVersions: input.itemVersions ?? [baseItemVersion, addonItemVersion],
+    offerings: input.offerings ?? [baseOffering, addonOffering],
+    lifecycleOccurrences: input.lifecycleOccurrences ?? lifecycle,
+    entitlementAuthorityGuardVersion: input.guardVersion ?? 4,
+    resolvedAt: input.resolvedAt ?? '2026-08-20T10:00:00.000Z',
+    validAt: input.validAt ?? '2026-08-20T10:00:00.000Z',
+    arithmetic,
+  });
+}
+
 describe('platform subscription contracts', () => {
   it('uses half-open effective periods', () => {
-    expect(isEffectiveAt(baseItem, '2026-08-01T00:00:00.000Z')).toBe(true);
-    expect(isEffectiveAt(baseItem, '2026-08-31T23:59:59.999Z')).toBe(true);
-    expect(isEffectiveAt(baseItem, '2026-09-01T00:00:00.000Z')).toBe(false);
+    expect(isEffectiveAt(baseItemVersion, '2026-08-01T00:00:00.000Z')).toBe(true);
+    expect(isEffectiveAt(baseItemVersion, '2026-08-31T23:59:59.999Z')).toBe(true);
+    expect(isEffectiveAt(baseItemVersion, '2026-09-01T00:00:00.000Z')).toBe(false);
   });
 
-  it('rejects overlapping authority inside one tenant and item slot', () => {
+  it('rejects overlapping current authority inside one tenant and item slot', () => {
     expect(() =>
-      assertNoSubscriptionItemOverlap([
-        baseItem,
+      assertNoSubscriptionItemVersionOverlap([
+        baseItemVersion,
         {
-          ...baseItem,
-          id: 'item-base-2',
+          ...baseItemVersion,
+          id: 'item-base-version-2',
+          tenantSubscriptionItemId: 'item-base-2',
           effectiveFrom: '2026-08-20T00:00:00.000Z',
           effectiveUntil: '2026-10-01T00:00:00.000Z',
+          version: 1,
         },
       ]),
-    ).toThrow(/overlapping TenantSubscriptionItem/);
+    ).toThrow(/overlapping current TenantSubscriptionItemVersion/);
   });
 
   it('allows independent base and add-on slots to coexist', () => {
-    expect(() => assertNoSubscriptionItemOverlap([baseItem, addonItem])).not.toThrow();
-    expect(selectEffectiveSubscriptionItems([baseItem, addonItem], 'tenant-1', '2026-08-20T00:00:00.000Z')).toHaveLength(2);
+    expect(() =>
+      assertNoSubscriptionItemVersionOverlap([baseItemVersion, addonItemVersion]),
+    ).not.toThrow();
+    expect(
+      selectSubscriptionItemVersions({
+        versions: [baseItemVersion, addonItemVersion],
+        tenantId: 'tenant-1',
+        validAt: '2026-08-20T00:00:00.000Z',
+        knownAt: '2026-08-20T00:00:00.000Z',
+      }),
+    ).toHaveLength(2);
   });
 
-  it('allows adjacent replacements in the same slot', () => {
+  it('allows adjacent current authority versions in the same slot', () => {
     expect(() =>
-      assertNoSubscriptionItemOverlap([
-        baseItem,
+      assertNoSubscriptionItemVersionOverlap([
+        { ...baseItemVersion, effectiveUntil: '2026-08-20T00:00:00.000Z' },
         {
-          ...baseItem,
-          id: 'item-base-2',
+          ...baseItemVersion,
+          id: 'item-base-version-2',
+          tenantSubscriptionItemId: 'item-base-2',
           productOfferingVersionId: 'offering-base-v2',
-          effectiveFrom: '2026-09-01T00:00:00.000Z',
+          effectiveFrom: '2026-08-20T00:00:00.000Z',
           effectiveUntil: '2026-10-01T00:00:00.000Z',
-          version: 2,
+          version: 1,
         },
       ]),
     ).not.toThrow();
   });
 
-  it('derives lifecycle state from append-only occurrences as of time', () => {
+  it('derives lifecycle state from append-only occurrences as of valid and recorded time', () => {
     const occurrences: SubscriptionLifecycleOccurrence[] = [
       ...lifecycle,
       {
@@ -159,22 +211,27 @@ describe('platform subscription contracts', () => {
         tenantSubscriptionId: 'sub-1',
         kind: 'SUSPENDED',
         effectiveAt: '2026-08-10T00:00:00.000Z',
-        recordedAt: '2026-08-10T00:00:00.000Z',
-        sequence: 2,
-      },
-      {
-        id: 'occ-3',
-        tenantSubscriptionId: 'sub-1',
-        kind: 'RESUMED',
-        effectiveAt: '2026-08-12T00:00:00.000Z',
         recordedAt: '2026-08-12T00:00:00.000Z',
-        sequence: 3,
+        sequence: 2,
       },
     ];
 
-    expect(deriveSubscriptionLifecycleState(occurrences, 'sub-1', '2026-08-05T00:00:00.000Z')).toBe('ACTIVE');
-    expect(deriveSubscriptionLifecycleState(occurrences, 'sub-1', '2026-08-11T00:00:00.000Z')).toBe('SUSPENDED');
-    expect(deriveSubscriptionLifecycleState(occurrences, 'sub-1', '2026-08-13T00:00:00.000Z')).toBe('ACTIVE');
+    expect(
+      deriveSubscriptionLifecycleState(
+        occurrences,
+        'sub-1',
+        '2026-08-11T00:00:00.000Z',
+        '2026-08-11T00:00:00.000Z',
+      ),
+    ).toBe('ACTIVE');
+    expect(
+      deriveSubscriptionLifecycleState(
+        occurrences,
+        'sub-1',
+        '2026-08-11T00:00:00.000Z',
+        '2026-08-13T00:00:00.000Z',
+      ),
+    ).toBe('SUSPENDED');
   });
 
   it('keeps decimal quantities as canonical strings', () => {
@@ -195,32 +252,29 @@ describe('platform subscription contracts', () => {
     ).toThrow(/duplicate entitlement/);
   });
 
-  it('requires an offering to be available when a new item starts', () => {
+  it('requires an offering to be available when a new item version starts', () => {
     expect(isOfferingAvailableAt(baseOffering, '2026-08-01T00:00:00.000Z')).toBe(true);
     expect(isOfferingAvailableAt(baseOffering, '2026-08-20T00:00:00.000Z')).toBe(false);
-    expect(() => validateSubscriptionItemAssignment({ subscription, item: baseItem, offering: baseOffering })).not.toThrow();
     expect(() =>
-      validateSubscriptionItemAssignment({
+      validateSubscriptionItemVersionAssignment({
         subscription,
-        item: { ...baseItem, effectiveFrom: '2026-08-20T00:00:00.000Z' },
+        item: baseItem,
+        itemVersion: baseItemVersion,
+        offering: baseOffering,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateSubscriptionItemVersionAssignment({
+        subscription,
+        item: baseItem,
+        itemVersion: { ...baseItemVersion, effectiveFrom: '2026-08-20T00:00:00.000Z' },
         offering: baseOffering,
       }),
     ).toThrow(/not available/);
   });
 
   it('keeps a grandfathered item entitled after its offering stops being sold', () => {
-    const snapshot = resolveEntitlementSnapshot({
-      tenantId: 'tenant-1',
-      subscriptions: [subscription],
-      subscriptionItems: [baseItem],
-      offerings: [baseOffering],
-      lifecycleOccurrences: lifecycle,
-      entitlementAuthorityGuardVersion: 3,
-      resolvedAt: '2026-08-20T10:00:00.000Z',
-      validAt: '2026-08-20T10:00:00.000Z',
-      arithmetic,
-    });
-
+    const snapshot = resolve({ items: [baseItem], itemVersions: [baseItemVersion], offerings: [baseOffering] });
     expect(snapshot.entitlements['sourcing.rfq.issue']).toMatchObject({
       kind: 'CAPABILITY',
       enabled: true,
@@ -228,25 +282,17 @@ describe('platform subscription contracts', () => {
   });
 
   it('aggregates a base finite allowance plus an independent add-on exactly', () => {
-    const snapshot = resolveEntitlementSnapshot({
-      tenantId: 'tenant-1',
-      subscriptions: [subscription],
-      subscriptionItems: [baseItem, addonItem],
-      offerings: [baseOffering, addonOffering],
-      lifecycleOccurrences: lifecycle,
-      entitlementAuthorityGuardVersion: 4,
-      resolvedAt: '2026-08-20T10:00:00.000Z',
-      validAt: '2026-08-20T10:00:00.000Z',
-      arithmetic,
-    });
-
+    const snapshot = resolve({});
     expect(snapshot.entitlements['ai.quote_extraction']).toMatchObject({
       kind: 'METERED_LIMIT',
       limitMode: 'FINITE',
       limitQuantity: '30',
       usageMeasureKey: 'ai.quote_extraction.run',
     });
-    expect(snapshot.subscriptionItemIds).toEqual(['item-ai-1', 'item-base-1']);
+    expect(snapshot.subscriptionItemVersionIds).toEqual([
+      'item-ai-version-1',
+      'item-base-version-1',
+    ]);
     expect(snapshot.entitlementAuthorityGuardVersion).toBe(4);
   });
 
@@ -266,31 +312,23 @@ describe('platform subscription contracts', () => {
         },
       ],
     };
-    const unlimitedItem = {
-      ...addonItem,
-      id: 'item-ai-unlimited',
+    const unlimitedVersion: TenantSubscriptionItemVersion = {
+      ...addonItemVersion,
+      id: 'item-ai-unlimited-version-1',
       productOfferingVersionId: unlimitedOffering.id,
     };
 
-    const snapshot = resolveEntitlementSnapshot({
-      tenantId: 'tenant-1',
-      subscriptions: [subscription],
-      subscriptionItems: [baseItem, unlimitedItem],
+    const snapshot = resolve({
+      itemVersions: [baseItemVersion, unlimitedVersion],
       offerings: [baseOffering, unlimitedOffering],
-      lifecycleOccurrences: lifecycle,
-      entitlementAuthorityGuardVersion: 5,
-      resolvedAt: '2026-08-20T10:00:00.000Z',
-      validAt: '2026-08-20T10:00:00.000Z',
-      arithmetic,
     });
-
     expect(snapshot.entitlements['ai.quote_extraction']).toMatchObject({
       kind: 'METERED_LIMIT',
       limitMode: 'UNBOUNDED',
     });
   });
 
-  it('removes suspended subscriptions from current entitlement without rewriting items', () => {
+  it('removes suspended subscriptions from current entitlement without rewriting item versions', () => {
     const suspendedLifecycle: SubscriptionLifecycleOccurrence[] = [
       ...lifecycle,
       {
@@ -302,19 +340,44 @@ describe('platform subscription contracts', () => {
         sequence: 2,
       },
     ];
-    const snapshot = resolveEntitlementSnapshot({
-      tenantId: 'tenant-1',
-      subscriptions: [subscription],
-      subscriptionItems: [baseItem, addonItem],
-      offerings: [baseOffering, addonOffering],
-      lifecycleOccurrences: suspendedLifecycle,
-      entitlementAuthorityGuardVersion: 6,
-      resolvedAt: '2026-08-20T10:00:00.000Z',
-      validAt: '2026-08-20T10:00:00.000Z',
-      arithmetic,
-    });
-
+    const snapshot = resolve({ lifecycleOccurrences: suspendedLifecycle });
     expect(snapshot.entitlements).toEqual({});
-    expect(snapshot.subscriptionItemIds).toEqual([]);
+    expect(snapshot.subscriptionItemVersionIds).toEqual([]);
+  });
+
+  it('reconstructs the exact item version known at an earlier recorded time', () => {
+    const original: TenantSubscriptionItemVersion = {
+      ...baseItemVersion,
+      id: 'item-base-original',
+      effectiveUntil: '2026-09-01T00:00:00.000Z',
+      supersededAt: '2026-08-15T12:00:00.000Z',
+    };
+    const corrected: TenantSubscriptionItemVersion = {
+      ...baseItemVersion,
+      id: 'item-base-corrected',
+      version: 2,
+      effectiveUntil: '2026-08-15T00:00:00.000Z',
+      recordedAt: '2026-08-15T12:00:00.000Z',
+    };
+
+    const thenSnapshot = resolve({
+      items: [baseItem],
+      itemVersions: [original, corrected],
+      offerings: [baseOffering],
+      resolvedAt: '2026-08-10T12:00:00.000Z',
+      validAt: '2026-08-10T12:00:00.000Z',
+      guardVersion: 1,
+    });
+    expect(thenSnapshot.subscriptionItemVersionIds).toEqual(['item-base-original']);
+
+    const laterReconstruction = resolve({
+      items: [baseItem],
+      itemVersions: [original, corrected],
+      offerings: [baseOffering],
+      resolvedAt: '2026-08-20T12:00:00.000Z',
+      validAt: '2026-08-10T12:00:00.000Z',
+      guardVersion: 2,
+    });
+    expect(laterReconstruction.subscriptionItemVersionIds).toEqual(['item-base-corrected']);
   });
 });
