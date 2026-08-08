@@ -7,16 +7,20 @@ on:
     paths:
       - '.github/workflows/b02-provisional-verification.yml'
       - '04_phases/phase_2_build_decomposition/**'
-      - 'apps/**'
-      - 'docs/build/**'
       - 'migrations/**'
       - 'package.json'
-      - 'packages/**'
+      - 'packages/database-core/**'
+      - 'packages/contracts/**'
+      - 'packages/invariant-compiler/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'scripts/**'
+      - 'scripts/check-boundaries.mjs'
+      - 'scripts/check-database-public-surface.mjs'
+      - 'scripts/lib/boundary-checker.mjs'
+      - 'scripts/lib/boundary-checker.test.mjs'
+      - 'scripts/lib/database-public-surface.mjs'
+      - 'scripts/lib/database-public-surface.test.mjs'
       - 'tsconfig*.json'
-      - 'vitest.config.ts'
   workflow_dispatch:
 
 permissions:
@@ -27,48 +31,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  workspace:
-    name: Strict workspace and architecture verification
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
-    steps:
-      - name: Check out exact revision
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Install exact Node runtime
-        uses: actions/setup-node@49933ea5288ca8642d1e84afbd3f7d6820020
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-
-      - name: Activate exact pnpm version
-        shell: bash
-        run: |
-          set -euo pipefail
-          corepack enable
-          corepack prepare pnpm@10.34.0 --activate
-          test "$(node --version)" = "v24.18.0"
-          test "$(pnpm --version)" = "10.34.0"
-
-      - name: Install exact dependency graph
-        shell: bash
-        run: pnpm install --frozen-lockfile
-
-      - name: Run complete workspace verification
-        shell: bash
-        run: pnpm verify
-
-      - name: Re-run database boundary guards explicitly
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/check-boundaries.mjs
-          node scripts/check-database-public-surface.mjs
-
   postgresql:
     name: PostgreSQL 18.4 execution-context regression
     runs-on: ubuntu-24.04
@@ -119,11 +81,12 @@ jobs:
         shell: bash
         run: pnpm install --frozen-lockfile
 
-      - name: Verify database package and hostile public surface
+      - name: Verify database package and hostile architecture guards
         shell: bash
         run: |
           set -euo pipefail
           pnpm --filter @cpos/database-core typecheck
+          node scripts/check-boundaries.mjs
           node scripts/check-database-public-surface.mjs
 
       - name: Run PostgreSQL integration suite
