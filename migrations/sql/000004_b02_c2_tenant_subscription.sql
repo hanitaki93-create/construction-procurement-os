@@ -64,18 +64,43 @@ CREATE TABLE IF NOT EXISTS platform.tenant_subscription_item (
   tenant_id uuid NOT NULL,
   tenant_subscription_id uuid NOT NULL,
   item_slot_key text NOT NULL CHECK (item_slot_key ~ '^[A-Z][A-Z0-9_]{0,63}$'),
-  product_offering_version_id uuid NOT NULL REFERENCES platform.product_offering_version(product_offering_version_id),
-  effective_period tstzrange NOT NULL CHECK (NOT isempty(effective_period)),
   recorded_at timestamptz NOT NULL DEFAULT clock_timestamp(),
-  version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
   FOREIGN KEY (tenant_id, tenant_subscription_id)
     REFERENCES platform.tenant_subscription(tenant_id, tenant_subscription_id),
   UNIQUE (tenant_id, tenant_subscription_item_id),
-  UNIQUE (tenant_id, item_slot_key, effective_period WITHOUT OVERLAPS)
+  UNIQUE (tenant_id, tenant_subscription_item_id, item_slot_key)
 );
 
 COMMENT ON TABLE platform.tenant_subscription_item IS
-  'Effective-dated product-owned subscription component bound to one exact immutable offering version. Same-slot authority cannot overlap.';
+  'Stable subscription-component identity. Commercial version content lives in append-only/superseding item-version rows.';
+
+CREATE TABLE IF NOT EXISTS platform.tenant_subscription_item_version (
+  tenant_subscription_item_version_id uuid PRIMARY KEY DEFAULT uuidv7(),
+  tenant_subscription_item_id uuid NOT NULL,
+  tenant_id uuid NOT NULL,
+  item_slot_key text NOT NULL CHECK (item_slot_key ~ '^[A-Z][A-Z0-9_]{0,63}$'),
+  version bigint NOT NULL CHECK (version > 0),
+  product_offering_version_id uuid NOT NULL REFERENCES platform.product_offering_version(product_offering_version_id),
+  effective_period tstzrange NOT NULL CHECK (
+    NOT isempty(effective_period)
+    AND lower(effective_period) IS NOT NULL
+    AND lower_inc(effective_period)
+    AND NOT upper_inc(effective_period)
+  ),
+  recorded_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  superseded_at timestamptz,
+  FOREIGN KEY (tenant_id, tenant_subscription_item_id, item_slot_key)
+    REFERENCES platform.tenant_subscription_item(tenant_id, tenant_subscription_item_id, item_slot_key),
+  UNIQUE (tenant_subscription_item_id, version),
+  EXCLUDE USING gist (
+    tenant_id WITH =,
+    item_slot_key WITH =,
+    effective_period WITH &&
+  ) WHERE (superseded_at IS NULL)
+);
+
+COMMENT ON TABLE platform.tenant_subscription_item_version IS
+  'Exact recorded business version of a subscription-item grant. Supersession preserves the prior row; current unsuperseded versions cannot overlap in one tenant/product slot.';
 
 CREATE TABLE IF NOT EXISTS platform.tenant_entitlement_authority_guard (
   tenant_id uuid PRIMARY KEY REFERENCES platform.tenant(tenant_id),
@@ -91,12 +116,83 @@ SELECT tenant_id
 FROM platform.tenant
 ON CONFLICT (tenant_id) DO NOTHING;
 
+CREATE OR REPLACE FUNCTION platform.enforce_subscription_item_version_supersession()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, platform
+AS $$
+BEGIN
+  IF OLD.superseded_at IS NOT NULL THEN
+    RAISE EXCEPTION 'subscription item version is already superseded';
+  END IF;
+  IF NEW.superseded_at IS NULL THEN
+    RAISE EXCEPTION 'subscription item version supersession requires a non-null superseded_at';
+  END IF;
+  NEW.superseded_at := clock_timestamp();
+  RETURN NEW;
+END
+$$;
+
+DROP TRIGGER IF EXISTS tenant_subscription_item_version_supersession_guard
+  ON platform.tenant_subscription_item_version;
+CREATE TRIGGER tenant_subscription_item_version_supersession_guard
+BEFORE UPDATE OF superseded_at ON platform.tenant_subscription_item_version
+FOR EACH ROW
+EXECUTE FUNCTION platform.enforce_subscription_item_version_supersession();
+
+CREATE OR REPLACE FUNCTION platform.enforce_entitlement_guard_increment()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, platform
+AS $$
+BEGIN
+  IF NEW.guard_version <> OLD.guard_version + 1 THEN
+    RAISE EXCEPTION 'entitlement guard version must increment by exactly one';
+  END IF;
+  NEW.updated_at := clock_timestamp();
+  RETURN NEW;
+END
+$$;
+
+DROP TRIGGER IF EXISTS tenant_entitlement_authority_guard_increment
+  ON platform.tenant_entitlement_authority_guard;
+CREATE TRIGGER tenant_entitlement_authority_guard_increment
+BEFORE UPDATE OF guard_version ON platform.tenant_entitlement_authority_guard
+FOR EACH ROW
+EXECUTE FUNCTION platform.enforce_entitlement_guard_increment();
+
+CREATE OR REPLACE FUNCTION platform.ensure_entitlement_guard_for_tenant()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, platform
+AS $$
+BEGIN
+  INSERT INTO platform.tenant_entitlement_authority_guard (tenant_id)
+  VALUES (NEW.tenant_id)
+  ON CONFLICT (tenant_id) DO NOTHING;
+  RETURN NEW;
+END
+$$;
+
+DROP TRIGGER IF EXISTS tenant_entitlement_guard_bootstrap
+  ON platform.tenant;
+CREATE TRIGGER tenant_entitlement_guard_bootstrap
+AFTER INSERT ON platform.tenant
+FOR EACH ROW
+EXECUTE FUNCTION platform.ensure_entitlement_guard_for_tenant();
+
+REVOKE ALL ON FUNCTION platform.enforce_subscription_item_version_supersession() FROM PUBLIC;
+REVOKE ALL ON FUNCTION platform.enforce_entitlement_guard_increment() FROM PUBLIC;
+REVOKE ALL ON FUNCTION platform.ensure_entitlement_guard_for_tenant() FROM PUBLIC;
+
 ALTER TABLE platform.tenant_subscription ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform.tenant_subscription FORCE ROW LEVEL SECURITY;
 ALTER TABLE platform.subscription_lifecycle_occurrence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform.subscription_lifecycle_occurrence FORCE ROW LEVEL SECURITY;
 ALTER TABLE platform.tenant_subscription_item ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform.tenant_subscription_item FORCE ROW LEVEL SECURITY;
+ALTER TABLE platform.tenant_subscription_item_version ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform.tenant_subscription_item_version FORCE ROW LEVEL SECURITY;
 ALTER TABLE platform.tenant_entitlement_authority_guard ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform.tenant_entitlement_authority_guard FORCE ROW LEVEL SECURITY;
 
@@ -130,8 +226,18 @@ CREATE POLICY subscription_item_insert ON platform.tenant_subscription_item
   FOR INSERT TO cpos_subscription_runtime
   WITH CHECK (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
 
-DROP POLICY IF EXISTS subscription_item_update ON platform.tenant_subscription_item;
-CREATE POLICY subscription_item_update ON platform.tenant_subscription_item
+DROP POLICY IF EXISTS subscription_item_version_select ON platform.tenant_subscription_item_version;
+CREATE POLICY subscription_item_version_select ON platform.tenant_subscription_item_version
+  FOR SELECT TO cpos_subscription_runtime
+  USING (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
+
+DROP POLICY IF EXISTS subscription_item_version_insert ON platform.tenant_subscription_item_version;
+CREATE POLICY subscription_item_version_insert ON platform.tenant_subscription_item_version
+  FOR INSERT TO cpos_subscription_runtime
+  WITH CHECK (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
+
+DROP POLICY IF EXISTS subscription_item_version_update ON platform.tenant_subscription_item_version;
+CREATE POLICY subscription_item_version_update ON platform.tenant_subscription_item_version
   FOR UPDATE TO cpos_subscription_runtime
   USING (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''))
   WITH CHECK (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
@@ -160,6 +266,7 @@ CREATE POLICY bootstrap_entitlement_guard_insert ON platform.tenant_entitlement_
 REVOKE ALL ON platform.tenant_subscription FROM PUBLIC;
 REVOKE ALL ON platform.subscription_lifecycle_occurrence FROM PUBLIC;
 REVOKE ALL ON platform.tenant_subscription_item FROM PUBLIC;
+REVOKE ALL ON platform.tenant_subscription_item_version FROM PUBLIC;
 REVOKE ALL ON platform.tenant_entitlement_authority_guard FROM PUBLIC;
 
 GRANT SELECT ON platform.usage_measure_definition_version TO cpos_subscription_runtime;
@@ -170,8 +277,9 @@ GRANT SELECT ON platform.product_offering_entitlement_grant TO cpos_subscription
 GRANT SELECT, INSERT ON platform.tenant_subscription TO cpos_subscription_runtime;
 GRANT SELECT, INSERT ON platform.subscription_lifecycle_occurrence TO cpos_subscription_runtime;
 GRANT SELECT, INSERT ON platform.tenant_subscription_item TO cpos_subscription_runtime;
-GRANT UPDATE (effective_period, version) ON platform.tenant_subscription_item TO cpos_subscription_runtime;
+GRANT SELECT, INSERT ON platform.tenant_subscription_item_version TO cpos_subscription_runtime;
+GRANT UPDATE (superseded_at) ON platform.tenant_subscription_item_version TO cpos_subscription_runtime;
 GRANT SELECT, INSERT ON platform.tenant_entitlement_authority_guard TO cpos_subscription_runtime;
-GRANT UPDATE (guard_version, updated_at) ON platform.tenant_entitlement_authority_guard TO cpos_subscription_runtime;
+GRANT UPDATE (guard_version) ON platform.tenant_entitlement_authority_guard TO cpos_subscription_runtime;
 
 GRANT INSERT ON platform.tenant_entitlement_authority_guard TO cpos_platform_bootstrap_runtime;
