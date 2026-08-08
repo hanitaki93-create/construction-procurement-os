@@ -72,6 +72,7 @@ describe('restricted persistence SQL', () => {
   it.each([
     'SELECT tenant_id FROM platform.tenant WHERE tenant_id = $1',
     'INSERT INTO platform.tenant(id) VALUES ($1)',
+    'INSERT INTO platform.bootstrap_intent(id) VALUES ($1) ON CONFLICT (id) DO NOTHING',
     'UPDATE platform.tenant SET version = version + 1 WHERE id = $1',
     'DELETE FROM platform.tenant WHERE id = $1',
     'WITH selected AS (SELECT $1::text AS value) SELECT value FROM selected',
