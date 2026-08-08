@@ -108,14 +108,14 @@ describe('SQL-first migration runner', () => {
     expect(results.map((entry) => entry.newlyApplied.length).sort()).toEqual([0, 1]);
   });
 
-  it('rebuilds the committed B01 migration set from an empty schema', async () => {
+  it('rebuilds the committed migration set including B02 C1 from an empty tracking schema', async () => {
     const schema = uniqueSchema('migration_rebuild');
     schemas.push(schema);
     const directory = path.resolve('../../migrations/sql');
     const first = await runMigrations(pool, { directory, schema, buildId: 'rebuild-one' });
-    expect(first.newlyApplied.map((entry) => entry.id)).toEqual(['000001']);
+    expect(first.newlyApplied.map((entry) => entry.id)).toEqual(['000001', '000002']);
     await dropSchema(pool, schema);
     const second = await runMigrations(pool, { directory, schema, buildId: 'rebuild-two' });
-    expect(second.newlyApplied.map((entry) => entry.id)).toEqual(['000001']);
+    expect(second.newlyApplied.map((entry) => entry.id)).toEqual(['000001', '000002']);
   });
 });
