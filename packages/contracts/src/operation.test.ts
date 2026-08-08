@@ -8,10 +8,7 @@ import {
   type CommandOperationEnvelope,
   type RegisteredOperationDefinition,
 } from './operation.js';
-import type {
-  EntitlementSourceBinding,
-  ResolvedEntitlementSnapshot,
-} from './platform.js';
+import type { EntitlementSourceBinding, ResolvedEntitlementSnapshot } from './platform.js';
 
 const commandDefinition: RegisteredOperationDefinition = {
   key: 'tenant.project.create',
@@ -36,9 +33,7 @@ const commandEnvelope: CommandOperationEnvelope = {
   requestedAt: '2026-08-07T12:01:00.000Z',
 };
 
-const entitlementSource = (
-  entitlementDefinitionVersionId: string,
-): EntitlementSourceBinding => ({
+const entitlementSource = (entitlementDefinitionVersionId: string): EntitlementSourceBinding => ({
   tenantSubscriptionId: 'sub-1',
   tenantSubscriptionItemId: 'item-1',
   tenantSubscriptionItemVersionId: 'item-version-1',
