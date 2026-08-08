@@ -193,13 +193,11 @@ export function isEffectiveAt(period: EffectivePeriod, at: string): boolean {
 }
 
 export function isOfferingAvailableAt(offering: ProductOfferingVersion, at: string): boolean {
-  return isEffectiveAt(
-    {
-      effectiveFrom: offering.availableFrom,
-      effectiveUntil: offering.availableUntil,
-    },
-    at,
-  );
+  const period: EffectivePeriod =
+    offering.availableUntil === undefined
+      ? { effectiveFrom: offering.availableFrom }
+      : { effectiveFrom: offering.availableFrom, effectiveUntil: offering.availableUntil };
+  return isEffectiveAt(period, at);
 }
 
 function isVersionKnownAt(version: TenantSubscriptionItemVersion, knownAt: string): boolean {
@@ -318,10 +316,11 @@ export function validateProductOfferingVersion(offering: ProductOfferingVersion)
   }
   if (!offering.offeringKey.trim())
     throw new Error('ProductOfferingVersion.offeringKey is required');
-  assertEffectivePeriod({
-    effectiveFrom: offering.availableFrom,
-    effectiveUntil: offering.availableUntil,
-  });
+  const availabilityPeriod: EffectivePeriod =
+    offering.availableUntil === undefined
+      ? { effectiveFrom: offering.availableFrom }
+      : { effectiveFrom: offering.availableFrom, effectiveUntil: offering.availableUntil };
+  assertEffectivePeriod(availabilityPeriod);
 
   const seenKeys = new Set<string>();
   for (const entitlement of offering.entitlements) {
