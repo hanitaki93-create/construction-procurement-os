@@ -60,7 +60,9 @@ export async function withExecutionContextTransaction<Handle, Result>(
 
   return withPrivateTransaction(pool, transactionOptions, async (transaction) => {
     for (const [setting, key] of contextSettings) {
-      await transaction.query(`SET LOCAL ${setting} TO ${quoteLiteral(contextValue(context, key))}`);
+      await transaction.query(
+        `SET LOCAL ${setting} TO ${quoteLiteral(contextValue(context, key))}`,
+      );
     }
     await transaction.query(`SET LOCAL cpos.module_key TO ${quoteLiteral(adapter.moduleKey)}`);
 
