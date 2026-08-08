@@ -1,16 +1,8 @@
 export type SubscriptionLifecycleOccurrenceKind =
-  | 'ACTIVATED'
-  | 'SUSPENDED'
-  | 'RESUMED'
-  | 'CANCELLED'
-  | 'EXPIRED';
+  'ACTIVATED' | 'SUSPENDED' | 'RESUMED' | 'CANCELLED' | 'EXPIRED';
 
 export type SubscriptionLifecycleState =
-  | 'INACTIVE'
-  | 'ACTIVE'
-  | 'SUSPENDED'
-  | 'CANCELLED'
-  | 'EXPIRED';
+  'INACTIVE' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED' | 'EXPIRED';
 
 export type EntitlementDefinitionKind = 'CAPABILITY' | 'METERED_LIMIT';
 export type MeteredUsageEffect = 'CONSUME' | 'CREDIT';
@@ -120,9 +112,7 @@ export function isEffectiveAt(period: EffectivePeriod, at: string): boolean {
   return target >= from && (until === undefined || target < until);
 }
 
-export function assertNoEffectivePeriodOverlap(
-  subscriptions: readonly TenantSubscription[],
-): void {
+export function assertNoEffectivePeriodOverlap(subscriptions: readonly TenantSubscription[]): void {
   const byTenant = new Map<string, TenantSubscription[]>();
   for (const subscription of subscriptions) {
     const existing = byTenant.get(subscription.tenantId) ?? [];
@@ -149,7 +139,9 @@ export function assertNoEffectivePeriodOverlap(
       const currentFrom = parseInstant(current.effectiveFrom, 'effectiveFrom');
 
       if (currentFrom < previousUntil) {
-        throw new Error(`overlapping TenantSubscription effective periods for tenant ${current.tenantId}`);
+        throw new Error(
+          `overlapping TenantSubscription effective periods for tenant ${current.tenantId}`,
+        );
       }
     }
   }
@@ -171,7 +163,9 @@ export function selectEffectiveSubscription(
   return matches[0];
 }
 
-function lifecycleStateForKind(kind: SubscriptionLifecycleOccurrenceKind): SubscriptionLifecycleState {
+function lifecycleStateForKind(
+  kind: SubscriptionLifecycleOccurrenceKind,
+): SubscriptionLifecycleState {
   switch (kind) {
     case 'ACTIVATED':
     case 'RESUMED':
@@ -199,7 +193,8 @@ export function deriveSubscriptionLifecycleState(
     )
     .sort((left, right) => {
       const effectiveDifference =
-        parseInstant(left.effectiveAt, 'effectiveAt') - parseInstant(right.effectiveAt, 'effectiveAt');
+        parseInstant(left.effectiveAt, 'effectiveAt') -
+        parseInstant(right.effectiveAt, 'effectiveAt');
       if (effectiveDifference !== 0) return effectiveDifference;
       if (left.sequence !== right.sequence) return left.sequence - right.sequence;
       return left.id.localeCompare(right.id);
@@ -218,7 +213,8 @@ export function validateProductOfferingVersion(offering: ProductOfferingVersion)
     throw new Error('ProductOfferingVersion.version must be a positive safe integer');
   }
 
-  if (!offering.offeringKey.trim()) throw new Error('ProductOfferingVersion.offeringKey is required');
+  if (!offering.offeringKey.trim())
+    throw new Error('ProductOfferingVersion.offeringKey is required');
 
   const seenKeys = new Set<string>();
   for (const entitlement of offering.entitlements) {

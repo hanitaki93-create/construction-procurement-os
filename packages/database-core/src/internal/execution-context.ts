@@ -51,13 +51,18 @@ export async function withExecutionContextTransaction<Handle, Result>(
 ): Promise<Result> {
   validateDatabaseExecutionContext(context);
   const adapter = resolvePersistenceAdapter<Handle>(adapterToken);
-  if (adapter.moduleKey !== adapterToken.moduleKey || adapter.databaseRole !== adapterToken.databaseRole) {
+  if (
+    adapter.moduleKey !== adapterToken.moduleKey ||
+    adapter.databaseRole !== adapterToken.databaseRole
+  ) {
     throw new Error('persistence adapter token metadata mismatch');
   }
 
   return withPrivateTransaction(pool, transactionOptions, async (transaction) => {
     for (const [setting, key] of contextSettings) {
-      await transaction.query(`SET LOCAL ${setting} TO ${quoteLiteral(contextValue(context, key))}`);
+      await transaction.query(
+        `SET LOCAL ${setting} TO ${quoteLiteral(contextValue(context, key))}`,
+      );
     }
     await transaction.query(`SET LOCAL cpos.module_key TO ${quoteLiteral(adapter.moduleKey)}`);
 

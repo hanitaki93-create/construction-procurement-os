@@ -60,7 +60,11 @@ export type EntitlementPreconditionResult =
   | Readonly<{ state: 'NOT_REQUIRED' }>
   | Readonly<{ state: 'SATISFIED'; entitlementKey: string }>
   | Readonly<{ state: 'BLOCKED_NOT_ENTITLED'; entitlementKey: string }>
-  | Readonly<{ state: 'REQUIRES_USAGE_EVALUATION'; entitlementKey: string; usageMeasureKey: string }>;
+  | Readonly<{
+      state: 'REQUIRES_USAGE_EVALUATION';
+      entitlementKey: string;
+      usageMeasureKey: string;
+    }>;
 
 function requireNonBlank(value: string, field: string): void {
   if (!value.trim()) throw new Error(`${field} is required`);
@@ -72,7 +76,9 @@ function requirePositiveVersion(value: number, field: string): void {
   }
 }
 
-export function validateRegisteredOperationDefinition(definition: RegisteredOperationDefinition): void {
+export function validateRegisteredOperationDefinition(
+  definition: RegisteredOperationDefinition,
+): void {
   requireNonBlank(definition.key, 'operation key');
   requirePositiveVersion(definition.version, 'operation version');
 
@@ -99,7 +105,10 @@ export function validateOperationEnvelope(
   requireNonBlank(envelope.context.tenantId, 'context.tenantId');
   requireNonBlank(envelope.context.principalId, 'context.principalId');
 
-  if (definition.key !== envelope.operationKey || definition.version !== envelope.operationVersion) {
+  if (
+    definition.key !== envelope.operationKey ||
+    definition.version !== envelope.operationVersion
+  ) {
     throw new Error('operation envelope does not match the registered operation version');
   }
   if (definition.operationClass !== envelope.operationClass) {

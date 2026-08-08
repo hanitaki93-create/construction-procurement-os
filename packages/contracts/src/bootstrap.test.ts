@@ -30,7 +30,9 @@ const establishedIntent: TenantBootstrapIntent = {
 
 describe('tenant bootstrap contracts', () => {
   it('requires a verified identity that already exists as of the bootstrap decision', () => {
-    expect(() => assertVerifiedIdentityForBootstrap(identity, '2026-08-07T12:05:00.000Z')).not.toThrow();
+    expect(() =>
+      assertVerifiedIdentityForBootstrap(identity, '2026-08-07T12:05:00.000Z'),
+    ).not.toThrow();
     expect(() => assertVerifiedIdentityForBootstrap(identity, '2026-08-07T11:59:59.000Z')).toThrow(
       /cannot be in the future/,
     );

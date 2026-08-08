@@ -56,7 +56,8 @@ export function assertVerifiedIdentityForBootstrap(
 ): void {
   if (!identity.id.trim()) throw new Error('authentication identity id is required');
   if (!identity.providerKey.trim()) throw new Error('authentication provider key is required');
-  if (!identity.providerSubject.trim()) throw new Error('authentication provider subject is required');
+  if (!identity.providerSubject.trim())
+    throw new Error('authentication provider subject is required');
 
   const verifiedAt = parseInstant(identity.verifiedAt, 'verifiedAt');
   const target = parseInstant(asOf, 'asOf');

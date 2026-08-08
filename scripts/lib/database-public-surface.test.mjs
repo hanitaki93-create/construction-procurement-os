@@ -92,7 +92,9 @@ test('database-core root guard rejects unrestricted query methods', async () => 
     publicSourceOverride: mutatedSource,
   });
 
-  assert.ok(errors.includes('database-core root public surface exposes an unrestricted query method'));
+  assert.ok(
+    errors.includes('database-core root public surface exposes an unrestricted query method'),
+  );
 });
 
 test('restricted persistence surface rejects an extra raw pool export', async () => {

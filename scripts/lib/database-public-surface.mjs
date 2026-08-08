@@ -320,6 +320,6 @@ export async function inspectDatabasePublicSurface({
 }
 
 export const approvedDatabasePublicExports = Object.freeze([...APPROVED_EXPORTS.keys()].sort());
-export const approvedDatabasePersistenceExports = Object.freeze([
-  ...APPROVED_PERSISTENCE_EXPORTS.keys(),
-].sort());
+export const approvedDatabasePersistenceExports = Object.freeze(
+  [...APPROVED_PERSISTENCE_EXPORTS.keys()].sort(),
+);

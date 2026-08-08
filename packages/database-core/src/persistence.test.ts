@@ -32,19 +32,17 @@ describe('restricted persistence SQL', () => {
     const hostileValue = "tenant'; SET ROLE postgres; --";
     const statement = sql`SELECT tenant_id FROM platform.tenant WHERE tenant_id = ${hostileValue}`;
 
-    expect(statement.text).toBe(
-      'SELECT tenant_id FROM platform.tenant WHERE tenant_id = $1',
-    );
+    expect(statement.text).toBe('SELECT tenant_id FROM platform.tenant WHERE tenant_id = $1');
     expect(statement.values).toEqual([hostileValue]);
     expect(() => assertPersistenceSqlIsBounded(statement.text)).not.toThrow();
   });
 
   it.each([
-    'SET LOCAL cpos.tenant_id = \'other\'',
+    "SET LOCAL cpos.tenant_id = 'other'",
     "SELECT set_config('cpos.tenant_id', 'other', true)",
     "SELECT pg_catalog.set_config('cpos.tenant_id', 'other', true)",
-    'SELECT /* evade */ set_config(\'x\', \'y\', true)',
-    'SELECT "set_config"(\'x\', \'y\', true)',
+    "SELECT /* evade */ set_config('x', 'y', true)",
+    "SELECT \"set_config\"('x', 'y', true)",
     'RESET ALL',
     'DISCARD ALL',
     'CREATE TABLE attack(id int)',
@@ -53,7 +51,7 @@ describe('restricted persistence SQL', () => {
     'GRANT ALL ON platform.tenant TO public',
     'REVOKE ALL ON platform.tenant FROM public',
     'CALL attack()',
-    'DO $$ BEGIN RAISE NOTICE \'x\'; END $$',
+    "DO $$ BEGIN RAISE NOTICE 'x'; END $$",
     'COPY platform.tenant TO STDOUT',
     'SELECT 1; SELECT 2',
   ])('rejects context mutation, DDL or multiple statements: %s', (text) => {
