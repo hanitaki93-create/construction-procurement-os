@@ -209,7 +209,7 @@ export function createTransactionSqlExecutor(transaction: PrivateTransaction): I
     ensureActive();
     assertPersistenceSqlIsBounded(statement.text);
     const result = await transaction.query<QueryResultRow>(statement.text, statement.values);
-    return result.rows as readonly Row[];
+    return result.rows as unknown as readonly Row[];
   };
 
   const executor: InternalSqlExecutor & { deactivate(): void } = {
