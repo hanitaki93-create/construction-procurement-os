@@ -1,10 +1,8 @@
-import { randomUUID } from 'node:crypto';
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createDatabaseRuntime } from '../src/public.js';
 import { definePersistenceAdapter, sql } from '../src/persistence.js';
-import { createIntegrationPool, requiredDatabaseUrl, uniqueSchema } from './test-support.js';
+import { createIntegrationPool, requiredDatabaseUrl } from './test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b02-execution-context-setup');
 const runtime = createDatabaseRuntime({
@@ -16,9 +14,9 @@ const runtime = createDatabaseRuntime({
   applicationName: 'cpos-b02-execution-context-runtime',
 });
 
-const schema = uniqueSchema('b02_execution_context');
-const role = `cpos_b02_${randomUUID().replaceAll('-', '').slice(0, 16)}`;
-const table = `"${schema}"."tenant_item"`;
+const schema = 'b02_execution_context_test';
+const role = 'cpos_b02_platform_runtime_test';
+const table = '"b02_execution_context_test"."tenant_item"';
 
 interface ContextView {
   readonly current_user: string;
@@ -67,12 +65,12 @@ const adapter = definePersistenceAdapter<TestPersistenceHandle>({
     list: () =>
       executor.all<TenantItemRow>(sql`
         SELECT tenant_id, item_id, payload
-        FROM ${schema}.tenant_item
+        FROM b02_execution_context_test.tenant_item
         ORDER BY item_id
       `),
     insert: async (tenantId, itemId, payload) => {
       await executor.execute(sql`
-        INSERT INTO ${schema}.tenant_item (tenant_id, item_id, payload)
+        INSERT INTO b02_execution_context_test.tenant_item (tenant_id, item_id, payload)
         VALUES (${tenantId}, ${itemId}, ${payload})
       `);
     },
@@ -98,7 +96,11 @@ function context(tenantId: string, invocationId: string) {
 }
 
 beforeAll(async () => {
-  await setupPool.query(`CREATE ROLE "${role}" NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS`);
+  await setupPool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+  await setupPool.query(`DROP ROLE IF EXISTS "${role}"`);
+  await setupPool.query(
+    `CREATE ROLE "${role}" NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS`,
+  );
   await setupPool.query(`CREATE SCHEMA "${schema}"`);
   await setupPool.query(`
     CREATE TABLE ${table} (
@@ -167,8 +169,12 @@ describe('B02 fail-closed execution context and FORCE RLS', () => {
       (handle) => handle.list(),
     );
 
-    expect(tenantA).toEqual([{ tenant_id: 'tenant-a', item_id: 'a-1', payload: 'A secret' }]);
-    expect(tenantB).toEqual([{ tenant_id: 'tenant-b', item_id: 'b-1', payload: 'B secret' }]);
+    expect(tenantA).toEqual([
+      { tenant_id: 'tenant-a', item_id: 'a-1', payload: 'A secret' },
+    ]);
+    expect(tenantB).toEqual([
+      { tenant_id: 'tenant-b', item_id: 'b-1', payload: 'B secret' },
+    ]);
   });
 
   it('prevents a tenant-A transaction from inserting tenant-B data', async () => {
