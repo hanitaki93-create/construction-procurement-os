@@ -58,7 +58,7 @@ export const technicalOpenApiDocument = {
       get: {
         operationId: 'technicalBuildMetadata',
         summary: 'Non-sensitive build metadata',
-        responses: { '200': { description: 'Technical shell is ready' } },
+        responses: { '200': { description: 'Build compatibility metadata' } },
       },
     },
     '/openapi.json': {
