@@ -8,7 +8,7 @@ import {
 const statementBrand: unique symbol = Symbol('cpos.persistence.sql-statement');
 const adapterHandleBrand: unique symbol = Symbol('cpos.persistence.adapter-handle');
 
-export type PersistenceExecutionScope = InternalPersistenceExecutionScope;
+type PersistenceExecutionScope = InternalPersistenceExecutionScope;
 export type SqlBindable = null | string | number | bigint | boolean | Date | Uint8Array;
 
 export interface SqlStatement {
