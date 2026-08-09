@@ -1,0 +1,70 @@
+name: B02 Offline Audit Package
+
+on:
+  push:
+    branches:
+      - ci/b02-audit-package
+    paths-ignore:
+      - 'audit-b64/**'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: true
+      - name: Build exact source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf audit-src audit-b64
+          mkdir -p audit-src audit-b64
+          files=(
+            migrations/sql/000002_b02_c1_platform_bootstrap_tenancy.sql
+            migrations/sql/000003_b02_c2_product_entitlement_registry.sql
+            migrations/sql/000004_b02_c2_tenant_subscription.sql
+            migrations/sql/000005_b02_c1_c2_hostile_audit_remediation.sql
+            packages/contracts/src/platform.ts
+            packages/contracts/src/platform-entitlement-combination.audit.test.ts
+            packages/database-core/src/public.ts
+            packages/database-core/integration/platform-c1-bootstrap-v2.integration.test.ts
+            packages/database-core/integration/platform-c2-subscription.integration.test.ts
+            packages/database-core/integration/platform-c1-c2-audit-remediation.integration.test.ts
+            scripts/lib/database-public-surface.mjs
+            scripts/lib/database-public-surface.test.mjs
+            scripts/lib/boundary-checker.mjs
+            scripts/lib/boundary-checker.test.mjs
+            04_phases/phase_2_build_decomposition/change_control/B02_INVARIANT_RECONCILIATION_002_C1_C2_HOSTILE_AUDIT_V1_0.md
+            04_phases/phase_2_build_decomposition/design/B02_C2_SUBSCRIPTION_ENTITLEMENT_PHYSICAL_DESIGN_V0_1_CANDIDATE.md
+            04_phases/phase_2_build_decomposition/evidence/B02_C1_C2_IMPLEMENTATION_EVIDENCE_V0_1.md
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "audit-src/$(dirname "$file")"
+            cp "$file" "audit-src/$file"
+          done
+          cat > audit-src/SNAPSHOT.txt <<EOF
+          Repository: hanitaki93-create/construction-procurement-os
+          Source branch: build/b02-platform-saas-provisional
+          Exact verified code head: 76d5c260cf48c4b3bce842687d3cbe1690b228d8
+          Package branch source commit: ${GITHUB_SHA}
+          Purpose: C1/C2 hostile-audit remediation closure only
+          EOF
+          (cd audit-src && zip -qr ../CPOS_B02_C1_C2_CLOSURE_SOURCE.zip .)
+          sha256sum CPOS_B02_C1_C2_CLOSURE_SOURCE.zip > audit-b64/SHA256.txt
+          base64 -w 0 CPOS_B02_C1_C2_CLOSURE_SOURCE.zip | split -b 12000 -d -a 3 - audit-b64/part-
+          ls audit-b64/part-* | wc -l | tr -d ' ' > audit-b64/PART_COUNT.txt
+      - name: Commit encoded package chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit-b64
+          git commit -m "ci: publish encoded B02 audit snapshot"
+          git push origin HEAD:ci/b02-audit-package
