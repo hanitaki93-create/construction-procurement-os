@@ -102,7 +102,10 @@ test('database-core root guard traverses an approved export type graph and rejec
     publicSourceOverride: mutatedSource,
   });
 
-  assert.match(errors.join('\n'), /approved export DatabaseRuntimeOptions exposes forbidden type Pool/u);
+  assert.match(
+    errors.join('\n'),
+    /approved export DatabaseRuntimeOptions exposes forbidden type Pool/u,
+  );
 });
 
 test('database-core root guard rejects unrestricted query methods', async () => {
