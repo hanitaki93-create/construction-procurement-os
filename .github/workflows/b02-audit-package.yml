@@ -59,6 +59,14 @@ jobs:
           sha256sum CPOS_B02_C1_C2_CLOSURE_SOURCE.zip > audit-b64/SHA256.txt
           base64 -w 0 CPOS_B02_C1_C2_CLOSURE_SOURCE.zip | split -b 5000 -d -a 3 - audit-b64/part-
           ls audit-b64/part-* | wc -l | tr -d ' ' > audit-b64/PART_COUNT.txt
+      - name: Upload exact audit source artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cpos-b02-c1-c2-closure-source
+          path: CPOS_B02_C1_C2_CLOSURE_SOURCE.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
       - name: Commit encoded package chunks
         shell: bash
         run: |
