@@ -60,6 +60,16 @@ test('database-core root guard rejects a renamed raw pool factory export', async
   assert.match(errors.join('\n'), /received \[.*createPrivatePool/u);
 });
 
+test('database-core root guard rejects an innocuously named extra export', async () => {
+  const publicSource = await readPublicSource();
+  const errors = await inspectDatabasePublicSurface({
+    repositoryRoot,
+    publicSourceOverride: `${publicSource}\nexport const harmlessMetadata = 1;\n`,
+  });
+
+  assert.match(errors.join('\n'), /received \[.*harmlessMetadata/u);
+});
+
 test('database-core root guard rejects forbidden types behind approved names', async () => {
   const publicSource = await readPublicSource();
   const mutatedSource = publicSource.replace(
@@ -77,6 +87,22 @@ test('database-core root guard rejects forbidden types behind approved names', a
     errors.join('\n'),
     /approved export DatabaseRuntimeOptions exposes forbidden type Pool/u,
   );
+});
+
+test('database-core root guard traverses an approved export type graph and rejects a nested pg Pool', async () => {
+  const publicSource = await readPublicSource();
+  const mutatedSource = `interface SmuggledPoolHolder { readonly nestedPool: import('pg').Pool; }\n${publicSource.replace(
+    'export type DatabaseRuntimeOptions = PrivatePoolOptions;',
+    'export type DatabaseRuntimeOptions = PrivatePoolOptions & { readonly hidden: SmuggledPoolHolder };',
+  )}`;
+  assert.notEqual(mutatedSource, publicSource);
+
+  const errors = await inspectDatabasePublicSurface({
+    repositoryRoot,
+    publicSourceOverride: mutatedSource,
+  });
+
+  assert.match(errors.join('\n'), /approved export DatabaseRuntimeOptions exposes forbidden type Pool/u);
 });
 
 test('database-core root guard rejects unrestricted query methods', async () => {
