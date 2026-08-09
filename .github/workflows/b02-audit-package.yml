@@ -6,6 +6,9 @@ on:
       - ci/b02-audit-package
     paths-ignore:
       - 'audit-b64/**'
+  pull_request:
+    paths:
+      - 'audit-package-trigger.txt'
 
 permissions:
   contents: write
@@ -68,6 +71,7 @@ jobs:
           retention-days: 7
           compression-level: 0
       - name: Commit encoded package chunks
+        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
