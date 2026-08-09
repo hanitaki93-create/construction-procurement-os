@@ -267,28 +267,25 @@ describe('B02 C1/C2 hostile-audit remediation', () => {
     expect(residue.rows[0]?.count).toBe('0');
   });
 
-  it(
-    'rejects a material entitlement mutation that does not advance the guard in the same transaction',
-    async () => {
-      await expect(
-        withSubscription('unguarded-lifecycle', (handle) =>
-          handle.appendLifecycle({
-            id: '019d7000-0000-7000-8000-000000000030',
-            subscriptionId: subscriptionA,
-            sequence: 1,
-            kind: 'ACTIVATED',
-            effectiveAt: '2026-08-01T00:00:00.000Z',
-          }),
-        ),
-      ).rejects.toThrow(/must advance the tenant entitlement guard in the same transaction/u);
+  it('rejects a material entitlement mutation that does not advance the guard in the same transaction', async () => {
+    await expect(
+      withSubscription('unguarded-lifecycle', (handle) =>
+        handle.appendLifecycle({
+          id: '019d7000-0000-7000-8000-000000000030',
+          subscriptionId: subscriptionA,
+          sequence: 1,
+          kind: 'ACTIVATED',
+          effectiveAt: '2026-08-01T00:00:00.000Z',
+        }),
+      ),
+    ).rejects.toThrow(/must advance the tenant entitlement guard in the same transaction/u);
 
-      const lifecycle = await setupPool.query<{ count: string }>(
-        'SELECT count(*)::text AS count FROM platform.subscription_lifecycle_occurrence WHERE tenant_subscription_id = $1',
-        [subscriptionA],
-      );
-      expect(lifecycle.rows[0]?.count).toBe('0');
-    },
-  );
+    const lifecycle = await setupPool.query<{ count: string }>(
+      'SELECT count(*)::text AS count FROM platform.subscription_lifecycle_occurrence WHERE tenant_subscription_id = $1',
+      [subscriptionA],
+    );
+    expect(lifecycle.rows[0]?.count).toBe('0');
+  });
 
   it('accepts a material mutation only when the same transaction advances the guard', async () => {
     const result = await withSubscription('guarded-lifecycle', async (handle) => {
@@ -370,10 +367,8 @@ describe('B02 C1/C2 hostile-audit remediation', () => {
     ).rejects.toThrow(/immutable/u);
   });
 
-  it(
-    'rejects overlapping cross-slot contributions that use different entitlement definition versions',
-    async () => {
-      await setupPool.query(`
+  it('rejects overlapping cross-slot contributions that use different entitlement definition versions', async () => {
+    await setupPool.query(`
         INSERT INTO platform.entitlement_definition_version (
           entitlement_definition_version_id, entitlement_key, version, entitlement_kind,
           aggregation, effective_period
@@ -395,50 +390,49 @@ describe('B02 C1/C2 hostile-audit remediation', () => {
           ('${newOffering}', '${newDefinition}', 'shared.capability', 'CAPABILITY', NULL, NULL);
       `);
 
-      await withSubscription('seed-old-component', async (handle) => {
-        await handle.appendLifecycle({
-          id: '019d7000-0000-7000-8000-000000000040',
-          subscriptionId: subscriptionA,
-          sequence: 1,
-          kind: 'ACTIVATED',
-          effectiveAt: '2026-07-15T00:00:00.000Z',
-        });
+    await withSubscription('seed-old-component', async (handle) => {
+      await handle.appendLifecycle({
+        id: '019d7000-0000-7000-8000-000000000040',
+        subscriptionId: subscriptionA,
+        sequence: 1,
+        kind: 'ACTIVATED',
+        effectiveAt: '2026-07-15T00:00:00.000Z',
+      });
+      await handle.createItem({
+        id: '019d7000-0000-7000-8000-000000000041',
+        subscriptionId: subscriptionA,
+        slot: 'BASE',
+      });
+      await handle.assignVersion({
+        id: '019d7000-0000-7000-8000-000000000042',
+        itemId: '019d7000-0000-7000-8000-000000000041',
+        slot: 'BASE',
+        version: 1,
+        offeringVersionId: oldOffering,
+        from: '2026-07-15T00:00:00.000Z',
+        until: '2026-09-01T00:00:00.000Z',
+      });
+      await handle.bumpGuard(1);
+    });
+
+    await expect(
+      withSubscription('conflicting-new-component', async (handle) => {
         await handle.createItem({
-          id: '019d7000-0000-7000-8000-000000000041',
+          id: '019d7000-0000-7000-8000-000000000043',
           subscriptionId: subscriptionA,
-          slot: 'BASE',
+          slot: 'ADDON',
         });
         await handle.assignVersion({
-          id: '019d7000-0000-7000-8000-000000000042',
-          itemId: '019d7000-0000-7000-8000-000000000041',
-          slot: 'BASE',
+          id: '019d7000-0000-7000-8000-000000000044',
+          itemId: '019d7000-0000-7000-8000-000000000043',
+          slot: 'ADDON',
           version: 1,
-          offeringVersionId: oldOffering,
-          from: '2026-07-15T00:00:00.000Z',
+          offeringVersionId: newOffering,
+          from: '2026-08-10T00:00:00.000Z',
           until: '2026-09-01T00:00:00.000Z',
         });
-        await handle.bumpGuard(1);
-      });
-
-      await expect(
-        withSubscription('conflicting-new-component', async (handle) => {
-          await handle.createItem({
-            id: '019d7000-0000-7000-8000-000000000043',
-            subscriptionId: subscriptionA,
-            slot: 'ADDON',
-          });
-          await handle.assignVersion({
-            id: '019d7000-0000-7000-8000-000000000044',
-            itemId: '019d7000-0000-7000-8000-000000000043',
-            slot: 'ADDON',
-            version: 1,
-            offeringVersionId: newOffering,
-            from: '2026-08-10T00:00:00.000Z',
-            until: '2026-09-01T00:00:00.000Z',
-          });
-          await handle.bumpGuard(2);
-        }),
-      ).rejects.toThrow(/incompatible entitlement semantics/u);
-    },
-  );
+        await handle.bumpGuard(2);
+      }),
+    ).rejects.toThrow(/incompatible entitlement semantics/u);
+  });
 });
