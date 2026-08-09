@@ -91,7 +91,11 @@ interface SubscriptionHandle {
     readonly kind: 'ACTIVATED' | 'SUSPENDED' | 'RESUMED' | 'CANCELLED' | 'EXPIRED';
     readonly effectiveAt: string;
   }): Promise<void>;
-  createItem(input: { readonly id: string; readonly subscriptionId: string; readonly slot: string }): Promise<void>;
+  createItem(input: {
+    readonly id: string;
+    readonly subscriptionId: string;
+    readonly slot: string;
+  }): Promise<void>;
   assignVersion(input: {
     readonly id: string;
     readonly itemId: string;
@@ -263,25 +267,28 @@ describe('B02 C1/C2 hostile-audit remediation', () => {
     expect(residue.rows[0]?.count).toBe('0');
   });
 
-  it('rejects a material entitlement mutation that does not advance the guard in the same transaction', async () => {
-    await expect(
-      withSubscription('unguarded-lifecycle', (handle) =>
-        handle.appendLifecycle({
-          id: '019d7000-0000-7000-8000-000000000030',
-          subscriptionId: subscriptionA,
-          sequence: 1,
-          kind: 'ACTIVATED',
-          effectiveAt: '2026-08-01T00:00:00.000Z',
-        }),
-      ),
-    ).rejects.toThrow(/must advance the tenant entitlement guard in the same transaction/u);
+  it(
+    'rejects a material entitlement mutation that does not advance the guard in the same transaction',
+    async () => {
+      await expect(
+        withSubscription('unguarded-lifecycle', (handle) =>
+          handle.appendLifecycle({
+            id: '019d7000-0000-7000-8000-000000000030',
+            subscriptionId: subscriptionA,
+            sequence: 1,
+            kind: 'ACTIVATED',
+            effectiveAt: '2026-08-01T00:00:00.000Z',
+          }),
+        ),
+      ).rejects.toThrow(/must advance the tenant entitlement guard in the same transaction/u);
 
-    const lifecycle = await setupPool.query<{ count: string }>(
-      'SELECT count(*)::text AS count FROM platform.subscription_lifecycle_occurrence WHERE tenant_subscription_id = $1',
-      [subscriptionA],
-    );
-    expect(lifecycle.rows[0]?.count).toBe('0');
-  });
+      const lifecycle = await setupPool.query<{ count: string }>(
+        'SELECT count(*)::text AS count FROM platform.subscription_lifecycle_occurrence WHERE tenant_subscription_id = $1',
+        [subscriptionA],
+      );
+      expect(lifecycle.rows[0]?.count).toBe('0');
+    },
+  );
 
   it('accepts a material mutation only when the same transaction advances the guard', async () => {
     const result = await withSubscription('guarded-lifecycle', async (handle) => {
@@ -363,72 +370,75 @@ describe('B02 C1/C2 hostile-audit remediation', () => {
     ).rejects.toThrow(/immutable/u);
   });
 
-  it('rejects overlapping cross-slot contributions that use different entitlement definition versions', async () => {
-    await setupPool.query(`
-      INSERT INTO platform.entitlement_definition_version (
-        entitlement_definition_version_id, entitlement_key, version, entitlement_kind,
-        aggregation, effective_period
-      ) VALUES
-        ('${oldDefinition}', 'shared.capability', 1, 'CAPABILITY', 'ANY', tstzrange('2026-01-01', '2026-08-01', '[)')),
-        ('${newDefinition}', 'shared.capability', 2, 'CAPABILITY', 'ANY', tstzrange('2026-08-01', NULL, '[)'));
+  it(
+    'rejects overlapping cross-slot contributions that use different entitlement definition versions',
+    async () => {
+      await setupPool.query(`
+        INSERT INTO platform.entitlement_definition_version (
+          entitlement_definition_version_id, entitlement_key, version, entitlement_kind,
+          aggregation, effective_period
+        ) VALUES
+          ('${oldDefinition}', 'shared.capability', 1, 'CAPABILITY', 'ANY', tstzrange('2026-01-01', '2026-08-01', '[)')),
+          ('${newDefinition}', 'shared.capability', 2, 'CAPABILITY', 'ANY', tstzrange('2026-08-01', NULL, '[)'));
 
-      INSERT INTO platform.product_offering_version (
-        product_offering_version_id, offering_key, version, display_name, lifecycle_state, availability_period
-      ) VALUES
-        ('${oldOffering}', 'OLD_COMPONENT', 1, 'Old Component', 'AVAILABLE', tstzrange('2026-01-01', NULL, '[)')),
-        ('${newOffering}', 'NEW_COMPONENT', 1, 'New Component', 'AVAILABLE', tstzrange('2026-08-01', NULL, '[)'));
+        INSERT INTO platform.product_offering_version (
+          product_offering_version_id, offering_key, version, display_name, lifecycle_state, availability_period
+        ) VALUES
+          ('${oldOffering}', 'OLD_COMPONENT', 1, 'Old Component', 'AVAILABLE', tstzrange('2026-01-01', NULL, '[)')),
+          ('${newOffering}', 'NEW_COMPONENT', 1, 'New Component', 'AVAILABLE', tstzrange('2026-08-01', NULL, '[)'));
 
-      INSERT INTO platform.product_offering_entitlement_grant (
-        product_offering_version_id, entitlement_definition_version_id, entitlement_key,
-        entitlement_kind, limit_mode, limit_quantity_text
-      ) VALUES
-        ('${oldOffering}', '${oldDefinition}', 'shared.capability', 'CAPABILITY', NULL, NULL),
-        ('${newOffering}', '${newDefinition}', 'shared.capability', 'CAPABILITY', NULL, NULL);
-    `);
+        INSERT INTO platform.product_offering_entitlement_grant (
+          product_offering_version_id, entitlement_definition_version_id, entitlement_key,
+          entitlement_kind, limit_mode, limit_quantity_text
+        ) VALUES
+          ('${oldOffering}', '${oldDefinition}', 'shared.capability', 'CAPABILITY', NULL, NULL),
+          ('${newOffering}', '${newDefinition}', 'shared.capability', 'CAPABILITY', NULL, NULL);
+      `);
 
-    await withSubscription('seed-old-component', async (handle) => {
-      await handle.appendLifecycle({
-        id: '019d7000-0000-7000-8000-000000000040',
-        subscriptionId: subscriptionA,
-        sequence: 1,
-        kind: 'ACTIVATED',
-        effectiveAt: '2026-07-15T00:00:00.000Z',
-      });
-      await handle.createItem({
-        id: '019d7000-0000-7000-8000-000000000041',
-        subscriptionId: subscriptionA,
-        slot: 'BASE',
-      });
-      await handle.assignVersion({
-        id: '019d7000-0000-7000-8000-000000000042',
-        itemId: '019d7000-0000-7000-8000-000000000041',
-        slot: 'BASE',
-        version: 1,
-        offeringVersionId: oldOffering,
-        from: '2026-07-15T00:00:00.000Z',
-        until: '2026-09-01T00:00:00.000Z',
-      });
-      await handle.bumpGuard(1);
-    });
-
-    await expect(
-      withSubscription('conflicting-new-component', async (handle) => {
-        await handle.createItem({
-          id: '019d7000-0000-7000-8000-000000000043',
+      await withSubscription('seed-old-component', async (handle) => {
+        await handle.appendLifecycle({
+          id: '019d7000-0000-7000-8000-000000000040',
           subscriptionId: subscriptionA,
-          slot: 'ADDON',
+          sequence: 1,
+          kind: 'ACTIVATED',
+          effectiveAt: '2026-07-15T00:00:00.000Z',
+        });
+        await handle.createItem({
+          id: '019d7000-0000-7000-8000-000000000041',
+          subscriptionId: subscriptionA,
+          slot: 'BASE',
         });
         await handle.assignVersion({
-          id: '019d7000-0000-7000-8000-000000000044',
-          itemId: '019d7000-0000-7000-8000-000000000043',
-          slot: 'ADDON',
+          id: '019d7000-0000-7000-8000-000000000042',
+          itemId: '019d7000-0000-7000-8000-000000000041',
+          slot: 'BASE',
           version: 1,
-          offeringVersionId: newOffering,
-          from: '2026-08-10T00:00:00.000Z',
+          offeringVersionId: oldOffering,
+          from: '2026-07-15T00:00:00.000Z',
           until: '2026-09-01T00:00:00.000Z',
         });
-        await handle.bumpGuard(2);
-      }),
-    ).rejects.toThrow(/incompatible entitlement semantics/u);
-  });
+        await handle.bumpGuard(1);
+      });
+
+      await expect(
+        withSubscription('conflicting-new-component', async (handle) => {
+          await handle.createItem({
+            id: '019d7000-0000-7000-8000-000000000043',
+            subscriptionId: subscriptionA,
+            slot: 'ADDON',
+          });
+          await handle.assignVersion({
+            id: '019d7000-0000-7000-8000-000000000044',
+            itemId: '019d7000-0000-7000-8000-000000000043',
+            slot: 'ADDON',
+            version: 1,
+            offeringVersionId: newOffering,
+            from: '2026-08-10T00:00:00.000Z',
+            until: '2026-09-01T00:00:00.000Z',
+          });
+          await handle.bumpGuard(2);
+        }),
+      ).rejects.toThrow(/incompatible entitlement semantics/u);
+    },
+  );
 });
