@@ -2,6 +2,7 @@ import { loadRuntimeConfig } from '@cpos/config';
 import { createTechnicalLogger, startTechnicalTelemetry } from '@cpos/observability';
 
 import { buildApi } from './app.js';
+import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
 
 const config = loadRuntimeConfig('api');
 const logger = createTechnicalLogger({
@@ -13,7 +14,18 @@ const telemetry = await startTechnicalTelemetry({
   environment: config.build.environment,
   ...(config.otelEndpoint === undefined ? {} : { endpoint: config.otelEndpoint }),
 });
-const app = buildApi({ config, logger });
+
+const productDemoEnabled =
+  config.build.environment !== 'production' &&
+  process.env['CPOS_DEMO_MODE']?.trim().toLowerCase() === 'true';
+
+const app = buildApi({
+  config,
+  logger,
+  ...(productDemoEnabled
+    ? { platformWorkspaceService: createDevelopmentPlatformWorkspaceService() }
+    : {}),
+});
 let closing = false;
 
 async function shutdown(signal: string): Promise<void> {
@@ -45,6 +57,7 @@ try {
     port: config.port,
     buildId: config.build.buildId,
     telemetryEnabled: telemetry.enabled,
+    productDemoEnabled,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });

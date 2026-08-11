@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/b02-provisional-verification.yml'
       - '04_phases/phase_2_build_decomposition/**'
+      - 'apps/api/**'
+      - 'apps/web-internal/**'
       - 'migrations/**'
       - 'package.json'
       - 'packages/database-core/**'
@@ -88,6 +90,16 @@ jobs:
           pnpm --filter @cpos/database-core typecheck
           node scripts/check-boundaries.mjs
           node scripts/check-database-public-surface.mjs
+
+      - name: Verify B02 product shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/contracts typecheck
+          pnpm --filter @cpos/api typecheck
+          pnpm --filter @cpos/api test
+          pnpm --filter @cpos/web-internal typecheck
+          pnpm --filter @cpos/web-internal build
 
       - name: Run PostgreSQL integration suite
         shell: bash

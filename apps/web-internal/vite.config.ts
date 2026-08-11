@@ -10,6 +10,7 @@ export default defineConfig({
     proxy: {
       '/health': 'http://127.0.0.1:3001',
       '/meta': 'http://127.0.0.1:3001',
+      '/platform': 'http://127.0.0.1:3001',
       '/openapi.json': 'http://127.0.0.1:3001',
     },
   },
