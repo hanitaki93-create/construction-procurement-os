@@ -1,4 +1,8 @@
-import { isCanonicalNonNegativeDecimal, type MeteredUsageOccurrence } from './platform.js';
+import {
+  isCanonicalNonNegativeDecimal,
+  type MeteredUsageOccurrence,
+  type SubscriptionLifecycleState,
+} from './platform.js';
 
 export interface ExactUsageArithmetic {
   readonly zero: string;
@@ -19,6 +23,33 @@ export interface MeteredUsagePosition {
   readonly remainingQuantity: string;
   readonly overageQuantity: string;
   readonly occurrenceIds: readonly string[];
+}
+
+export type SubscriptionCommercialAccessMode = 'FULL' | 'RESTRICTED_READ_EXPORT';
+
+export interface SubscriptionCommercialAccessDisposition {
+  readonly mode: SubscriptionCommercialAccessMode;
+  readonly allowsNewEntitledCommands: boolean;
+  readonly preservesAuthorizedRead: true;
+  readonly preservesAuthorizedExport: true;
+  readonly lifecycleState: SubscriptionLifecycleState;
+}
+
+/**
+ * Commercial gating only. The preserved read/export flags do not grant access:
+ * normal tenant/project/security/business authorization still applies.
+ */
+export function deriveSubscriptionCommercialAccessDisposition(
+  lifecycleState: SubscriptionLifecycleState,
+): SubscriptionCommercialAccessDisposition {
+  const active = lifecycleState === 'ACTIVE';
+  return {
+    mode: active ? 'FULL' : 'RESTRICTED_READ_EXPORT',
+    allowsNewEntitledCommands: active,
+    preservesAuthorizedRead: true,
+    preservesAuthorizedExport: true,
+    lifecycleState,
+  };
 }
 
 function parseInstant(value: string, field: string): number {
