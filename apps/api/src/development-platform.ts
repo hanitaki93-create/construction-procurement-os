@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import type {
   CreateProjectRequest,
+  CreateProjectResponse,
   PlatformWorkspaceSnapshot,
   WorkspaceProject,
 } from '@cpos/contracts';
@@ -128,12 +129,17 @@ export function createDevelopmentPlatformWorkspaceService(): PlatformWorkspaceSe
   }
 
   return Object.freeze({
-    async readWorkspace(context): Promise<PlatformWorkspaceSnapshot> {
+    async readWorkspace(
+      context: PlatformRequestContext,
+    ): Promise<PlatformWorkspaceSnapshot> {
       validateSession(context);
       return snapshot();
     },
 
-    async createProject(context, request) {
+    async createProject(
+      context: PlatformRequestContext,
+      request: CreateProjectRequest,
+    ): Promise<CreateProjectResponse> {
       validateSession(context);
       const input = validateProject(request);
       if (
