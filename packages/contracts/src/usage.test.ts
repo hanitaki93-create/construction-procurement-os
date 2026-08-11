@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveMeteredUsagePosition, type ExactUsageArithmetic } from './usage.js';
-import type { MeteredUsageOccurrence } from './platform.js';
+import {
+  deriveMeteredUsagePosition,
+  deriveSubscriptionCommercialAccessDisposition,
+  type ExactUsageArithmetic,
+} from './usage.js';
+import type { MeteredUsageOccurrence, SubscriptionLifecycleState } from './platform.js';
 
 const integerArithmetic: ExactUsageArithmetic = {
   zero: '0',
@@ -130,5 +134,36 @@ describe('derived usage positions', () => {
 
     expect(result.consumedQuantity).toBe('4');
     expect(result.occurrenceIds).toEqual(['inside']);
+  });
+});
+
+describe('subscription commercial offboarding floor', () => {
+  it('permits new entitled commands only while the subscription lifecycle is ACTIVE', () => {
+    const active = deriveSubscriptionCommercialAccessDisposition('ACTIVE');
+    expect(active).toMatchObject({
+      mode: 'FULL',
+      allowsNewEntitledCommands: true,
+      preservesAuthorizedRead: true,
+      preservesAuthorizedExport: true,
+    });
+  });
+
+  it('preserves the commercial read/export floor without granting authority for every non-active state', () => {
+    const restrictedStates: readonly SubscriptionLifecycleState[] = [
+      'INACTIVE',
+      'SUSPENDED',
+      'CANCELLED',
+      'EXPIRED',
+    ];
+
+    for (const state of restrictedStates) {
+      expect(deriveSubscriptionCommercialAccessDisposition(state)).toEqual({
+        mode: 'RESTRICTED_READ_EXPORT',
+        allowsNewEntitledCommands: false,
+        preservesAuthorizedRead: true,
+        preservesAuthorizedExport: true,
+        lifecycleState: state,
+      });
+    }
   });
 });
