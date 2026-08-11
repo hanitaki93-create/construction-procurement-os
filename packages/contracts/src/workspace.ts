@@ -2,7 +2,7 @@ export type TenantLifecycleState = 'ACTIVE' | 'SUSPENDED' | 'TERMINATED';
 export type PrincipalLifecycleState = 'ACTIVE' | 'SUSPENDED' | 'ENDED';
 export type MembershipLifecycleState = 'ACTIVE' | 'SUSPENDED' | 'ENDED';
 export type ProjectLifecycleState = 'ACTIVE' | 'ARCHIVED';
-export type SubscriptionLifecycleState =
+export type WorkspaceSubscriptionLifecycleState =
   | 'INACTIVE'
   | 'ACTIVE'
   | 'SUSPENDED'
@@ -52,7 +52,7 @@ export interface WorkspaceProject {
 export interface WorkspaceSubscription {
   readonly tenantSubscriptionId: string;
   readonly commercialChannel: 'SELF_SERVICE' | 'MANUAL_ENTERPRISE';
-  readonly lifecycleState: SubscriptionLifecycleState;
+  readonly lifecycleState: WorkspaceSubscriptionLifecycleState;
   readonly accessMode: SubscriptionAccessMode;
   readonly entitlementGuardVersion: string | null;
 }
