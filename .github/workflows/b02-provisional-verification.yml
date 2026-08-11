@@ -9,6 +9,7 @@ on:
       - '04_phases/phase_2_build_decomposition/**'
       - 'apps/api/**'
       - 'apps/web-internal/**'
+      - 'deploy/b02-demo/**'
       - 'migrations/**'
       - 'package.json'
       - 'packages/database-core/**'
@@ -170,7 +171,7 @@ jobs:
             "${WEB_ORIGIN}/platform/projects")"
           grep -Fq '"projectCode":"CI-001"' <<<"${CREATED}"
 
-          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace")"
+          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace)"
           grep -Fq '"projectCode":"CI-001"' <<<"${AFTER}"
 
           echo 'B02_PRODUCT_SHELL_RUNTIME_SMOKE_PASS'
@@ -186,3 +187,86 @@ jobs:
           pnpm db:migrate
           pnpm db:status
           pnpm db:scan
+
+      - name: Deploy persistent B02 demo dashboard
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IMAGE="cpos-b02-demo:${GITHUB_SHA}"
+          CANDIDATE="cpos-b02-demo-candidate"
+          LIVE="cpos-b02-demo"
+          CANDIDATE_PORT=43119
+          PUBLIC_PORT=43120
+
+          docker rm -f "${CANDIDATE}" >/dev/null 2>&1 || true
+          docker build -f deploy/b02-demo/Dockerfile -t "${IMAGE}" .
+
+          docker run -d \
+            --name "${CANDIDATE}" \
+            -p "127.0.0.1:${CANDIDATE_PORT}:43118" \
+            "${IMAGE}" >/dev/null
+
+          candidate_ready=false
+          for attempt in $(seq 1 45); do
+            if curl -fsS "http://127.0.0.1:${CANDIDATE_PORT}/" >/dev/null; then
+              candidate_ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [[ "${candidate_ready}" != "true" ]]; then
+            docker logs "${CANDIDATE}" || true
+            docker rm -f "${CANDIDATE}" >/dev/null 2>&1 || true
+            exit 1
+          fi
+
+          SESSION_HEADERS=(
+            -H 'x-cpos-session-mode: development'
+            -H 'x-cpos-tenant-id: 019d1111-1111-7111-8111-111111111111'
+            -H 'x-cpos-principal-id: 019d3333-3333-7333-8333-333333333333'
+          )
+          WORKSPACE="$(curl -fsS "${SESSION_HEADERS[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/platform/workspace")"
+          grep -Fq '"displayName":"CPOS Demo Contractor"' <<<"${WORKSPACE}"
+          grep -Fq '"projectCode":"JP-047"' <<<"${WORKSPACE}"
+          docker rm -f "${CANDIDATE}" >/dev/null
+
+          docker rm -f "${LIVE}" >/dev/null 2>&1 || true
+          docker run -d \
+            --name "${LIVE}" \
+            --restart unless-stopped \
+            --label cpos.surface=b02-demo \
+            --label "cpos.source=${GITHUB_SHA}" \
+            -p "0.0.0.0:${PUBLIC_PORT}:43118" \
+            "${IMAGE}" >/dev/null
+
+          live_ready=false
+          for attempt in $(seq 1 45); do
+            if curl -fsS "http://127.0.0.1:${PUBLIC_PORT}/" >/dev/null; then
+              live_ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [[ "${live_ready}" != "true" ]]; then
+            docker logs "${LIVE}" || true
+            exit 1
+          fi
+
+          PUBLIC_IP="$(curl -fsS --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]' || true)"
+          if [[ -z "${PUBLIC_IP}" ]]; then
+            TOKEN="$(curl -fsS --max-time 2 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token 2>/dev/null || true)"
+            if [[ -n "${TOKEN}" ]]; then
+              PUBLIC_IP="$(curl -fsS --max-time 2 -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)"
+            fi
+          fi
+
+          echo "CPOS_B02_DEMO_CONTAINER=$(docker inspect -f '{{.Name}} {{.State.Status}} {{.HostConfig.RestartPolicy.Name}}' "${LIVE}")"
+          echo "CPOS_B02_DEMO_LOCAL_URL=http://127.0.0.1:${PUBLIC_PORT}"
+          if [[ -n "${PUBLIC_IP}" ]]; then
+            echo "CPOS_B02_DEMO_URL=http://${PUBLIC_IP}:${PUBLIC_PORT}"
+          else
+            echo "CPOS_B02_DEMO_PUBLIC_IP_UNRESOLVED"
+          fi
