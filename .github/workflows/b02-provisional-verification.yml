@@ -171,7 +171,7 @@ jobs:
             "${WEB_ORIGIN}/platform/projects")"
           grep -Fq '"projectCode":"CI-001"' <<<"${CREATED}"
 
-          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace)"
+          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace")"
           grep -Fq '"projectCode":"CI-001"' <<<"${AFTER}"
 
           echo 'B02_PRODUCT_SHELL_RUNTIME_SMOKE_PASS'
