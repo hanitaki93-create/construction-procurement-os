@@ -108,11 +108,11 @@ describe('SQL-first migration runner', () => {
     expect(results.map((entry) => entry.newlyApplied.length).sort()).toEqual([0, 1]);
   });
 
-  it('rebuilds the committed migration set including B02 C1/C2 remediation from an empty tracking schema', async () => {
+  it('rebuilds the committed migration set including B02 C1/C2 closure and C3 usage from an empty tracking schema', async () => {
     const schema = uniqueSchema('migration_rebuild');
     schemas.push(schema);
     const directory = path.resolve('../../migrations/sql');
-    const expected = ['000001', '000002', '000003', '000004', '000005'];
+    const expected = ['000001', '000002', '000003', '000004', '000005', '000006', '000007'];
     const first = await runMigrations(pool, {
       directory,
       schema,
