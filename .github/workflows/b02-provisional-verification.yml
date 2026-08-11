@@ -33,7 +33,7 @@ concurrency:
 jobs:
   postgresql:
     name: PostgreSQL 18.4 execution-context regression
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
     timeout-minutes: 30
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cpos_test
