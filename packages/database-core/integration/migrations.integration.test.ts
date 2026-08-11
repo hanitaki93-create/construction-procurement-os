@@ -121,6 +121,7 @@ describe('SQL-first migration runner', () => {
       '000006',
       '000007',
       '000008',
+      '000009',
     ];
     const first = await runMigrations(pool, {
       directory,
