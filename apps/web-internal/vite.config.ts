@@ -1,6 +1,8 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+const apiOrigin = process.env['CPOS_API_ORIGIN']?.trim() || 'http://127.0.0.1:3001';
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,10 +10,10 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     proxy: {
-      '/health': 'http://127.0.0.1:3001',
-      '/meta': 'http://127.0.0.1:3001',
-      '/platform': 'http://127.0.0.1:3001',
-      '/openapi.json': 'http://127.0.0.1:3001',
+      '/health': apiOrigin,
+      '/meta': apiOrigin,
+      '/platform': apiOrigin,
+      '/openapi.json': apiOrigin,
     },
   },
   preview: {

@@ -108,20 +108,25 @@ jobs:
         run: |
           set -euo pipefail
 
+          API_PORT=43117
+          WEB_PORT=43118
+          API_ORIGIN="http://127.0.0.1:${API_PORT}"
+          WEB_ORIGIN="http://127.0.0.1:${WEB_PORT}"
           API_LOG="${RUNNER_TEMP}/cpos-b02-api.log"
           WEB_LOG="${RUNNER_TEMP}/cpos-b02-web.log"
 
           APP_ENV=development \
           CPOS_DEMO_MODE=true \
           HOST=127.0.0.1 \
-          PORT=3001 \
+          PORT="${API_PORT}" \
           LOG_LEVEL=error \
           node apps/api/dist/main.js >"${API_LOG}" 2>&1 &
           API_PID=$!
 
+          CPOS_API_ORIGIN="${API_ORIGIN}" \
           pnpm --filter @cpos/web-internal exec vite \
             --host 127.0.0.1 \
-            --port 3000 \
+            --port "${WEB_PORT}" \
             --strictPort >"${WEB_LOG}" 2>&1 &
           WEB_PID=$!
 
@@ -133,8 +138,8 @@ jobs:
 
           ready=false
           for attempt in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:3001/health/live >/dev/null \
-              && curl -fsS http://127.0.0.1:3000/ >/dev/null; then
+            if curl -fsS "${API_ORIGIN}/health/live" >/dev/null \
+              && curl -fsS "${WEB_ORIGIN}/" >/dev/null; then
               ready=true
               break
             fi
@@ -153,7 +158,7 @@ jobs:
             -H 'x-cpos-principal-id: 019d3333-3333-7333-8333-333333333333'
           )
 
-          WORKSPACE="$(curl -fsS "${SESSION_HEADERS[@]}" http://127.0.0.1:3000/platform/workspace)"
+          WORKSPACE="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace")"
           grep -Fq '"displayName":"CPOS Demo Contractor"' <<<"${WORKSPACE}"
           grep -Fq '"projectCode":"JP-047"' <<<"${WORKSPACE}"
 
@@ -162,10 +167,10 @@ jobs:
             -H 'content-type: application/json' \
             -X POST \
             --data '{"projectCode":"CI-001","displayName":"CI Runtime Project"}' \
-            http://127.0.0.1:3000/platform/projects)"
+            "${WEB_ORIGIN}/platform/projects")"
           grep -Fq '"projectCode":"CI-001"' <<<"${CREATED}"
 
-          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" http://127.0.0.1:3000/platform/workspace)"
+          AFTER="$(curl -fsS "${SESSION_HEADERS[@]}" "${WEB_ORIGIN}/platform/workspace")"
           grep -Fq '"projectCode":"CI-001"' <<<"${AFTER}"
 
           echo 'B02_PRODUCT_SHELL_RUNTIME_SMOKE_PASS'
