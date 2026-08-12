@@ -1,0 +1,56 @@
+name: ETH Chart Trader Export 2024
+on:
+  push:
+    branches: [research/isolated-eth-candlestick-v1]
+    paths: ['.github/workflows/eth-chart-trader-export-2024.yml']
+permissions:
+  contents: read
+concurrency:
+  group: eth-chart-trader-export-2024
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: self-hosted
+    timeout-minutes: 15
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/isolated-eth-candlestick-v1
+          fetch-depth: 1
+          clean: false
+      - name: Safety preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$RUNNER_TEMP/eth-chart-trader-${GITHUB_RUN_ID}"; mkdir -p "$WORK"; echo "WORK=$WORK" >> "$GITHUB_ENV"
+          uptime | tee "$WORK/safety.txt"; free -m | tee -a "$WORK/safety.txt"
+          ps -eo pid,comm,args | grep -E 'docker-proxy|/app/apps/api/dist/main.js|/app/deploy/b02-demo/serve.mjs|dockerd' | grep -v grep | tee -a "$WORK/safety.txt" || true
+          [ "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 1200000 ]
+      - name: Export public Binance candles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$WORK/.venv"; PY="$WORK/.venv/bin/python"; echo "PY=$PY" >> "$GITHUB_ENV"
+          nice -n 19 ionice -c3 "$PY" -m pip install --quiet pandas
+          nice -n 19 ionice -c3 "$PY" "$GITHUB_WORKSPACE/research_tools/eth_chart_trader_v1/export_eth_2024_context.py"
+      - name: Safety postflight
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          uptime | tee "$WORK/safety_after.txt"; free -m | tee -a "$WORK/safety_after.txt"
+          ps -eo pid,comm,args | grep -E 'docker-proxy|/app/apps/api/dist/main.js|/app/deploy/b02-demo/serve.mjs|dockerd' | grep -v grep | tee -a "$WORK/safety_after.txt" || true
+      - name: Upload chart data
+        uses: actions/upload-artifact@v4
+        with:
+          name: eth-chart-trader-2024-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/eth-chart-trader-${{ github.run_id }}/chart_export
+            ${{ runner.temp }}/eth-chart-trader-${{ github.run_id }}/safety*.txt
+          retention-days: 14
