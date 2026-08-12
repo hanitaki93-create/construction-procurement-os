@@ -1,0 +1,50 @@
+name: Audit Package Export
+
+on:
+  push:
+    branches:
+      - audit/package-ebb1e1ac26
+    paths:
+      - .github/workflows/audit-package-export.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Export exact corrected audit source archive
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    steps:
+      - name: Check out packaging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify immutable audit target
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='ebb1e1ac265320f1e09800ee5debeb53748b7ff8'
+          git cat-file -e "${target}^{commit}"
+          test "$(git rev-parse "${target}^{commit}")" = "$target"
+
+      - name: Create exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='ebb1e1ac265320f1e09800ee5debeb53748b7ff8'
+          archive='CPOS_B02_C3_C4_B03_COMPLETE_HOSTILE_AUDIT_PACKAGE_ebb1e1ac26.zip'
+          git archive --format=zip --output="$archive" "$target"
+          unzip -l "$archive" | tee AUDIT_ARCHIVE_CONTENTS.txt
+          sha256sum "$archive" | tee AUDIT_ARCHIVE_SHA256.txt
+
+      - name: Upload exact audit source
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpos-b02-c3-c4-b03-complete-hostile-audit-package-ebb1e1ac26
+          path: |
+            CPOS_B02_C3_C4_B03_COMPLETE_HOSTILE_AUDIT_PACKAGE_ebb1e1ac26.zip
+            AUDIT_ARCHIVE_CONTENTS.txt
+            AUDIT_ARCHIVE_SHA256.txt
+          if-no-files-found: error
+          retention-days: 7
