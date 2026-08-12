@@ -119,13 +119,21 @@ export async function seedProcurementWaveFixture(pool: Pool): Promise<void> {
      VALUES ($1,$2,$3),($4,$5,$6)`,
     [projectA, tenantA, authorityA, projectB, tenantB, authorityB],
   );
-  await pool.query(
-    `INSERT INTO platform.project_version (project_id,tenant_id,version,project_code,display_name,lifecycle_state,effective_period)
-     VALUES
-       ($1,$2,1,'UAQ-001','UAQ Villa','ACTIVE',tstzrange('2026-01-01',NULL,'[)')),
-       ($3,$4,1,'OTHER-001','Other Tenant Project','ACTIVE',tstzrange('2026-01-01',NULL,'[)'))`,
-    [projectA, tenantA, projectB, tenantB],
-  );
+  await pool.query('BEGIN');
+  try {
+    await pool.query("SELECT set_config('cpos.tenant_id', $1, true)", [tenantA]);
+    await pool.query("SELECT set_config('cpos.principal_id', $1, true)", [ownerPrincipal]);
+    await pool.query(
+      `INSERT INTO platform.project_version (
+         project_id,tenant_id,version,project_code,display_name,lifecycle_state,effective_period
+       ) VALUES ($1,$2,1,'UAQ-001','UAQ Villa','ACTIVE',tstzrange('2026-01-01',NULL,'[)'))`,
+      [projectA, tenantA],
+    );
+    await pool.query('COMMIT');
+  } catch (error: unknown) {
+    await pool.query('ROLLBACK');
+    throw error;
+  }
 
   await pool.query('BEGIN');
   try {
