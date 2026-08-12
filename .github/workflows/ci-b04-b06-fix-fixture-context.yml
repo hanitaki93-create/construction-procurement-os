@@ -59,10 +59,6 @@ jobs:
           corepack prepare pnpm@10.34.0 --activate
           pnpm install --frozen-lockfile
           pnpm --filter @cpos/database-core typecheck
-          pnpm --filter @cpos/database-core exec vitest run --config vitest.integration.config.ts \
-            integration/platform-b04-evidence-files.integration.test.ts \
-            integration/platform-b05-requirements-allocation.integration.test.ts \
-            integration/platform-b06-sourcing-rfq.integration.test.ts
           pnpm db:integration
           git diff --check
           git diff -- packages/database-core/integration/procurement-wave-test-support.ts
