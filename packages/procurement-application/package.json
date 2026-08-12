@@ -1,0 +1,26 @@
+{
+  "name": "@cpos/procurement-application",
+  "version": "0.0.0-b04-b06",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@cpos/contracts": "workspace:0.0.0-b01",
+    "@cpos/database-core": "workspace:0.0.0-b01",
+    "@cpos/object-store": "workspace:0.0.0-b01"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

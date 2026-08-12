@@ -1,709 +1,80 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { StrictMode, useEffect, useState, type FormEvent } from 'react';
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { StrictMode, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import type {
   CreateProjectResponse,
   PlatformWorkspaceSnapshot,
-  WorkspaceProject,
+  ProcurementWorkspaceSnapshot,
 } from '@cpos/contracts';
-import {
-  AppShell,
-  directionForLocale,
-  LocaleToggle,
-  type SupportedLocale,
-} from '@cpos/ui-foundation';
+import { AppShell, directionForLocale, LocaleToggle, type SupportedLocale } from '@cpos/ui-foundation';
 import '@cpos/ui-foundation/styles.css';
-
 import './styles.css';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: false,
-      staleTime: 15_000,
-    },
-    mutations: {
-      retry: false,
-    },
-  },
-});
+const queryClient = new QueryClient({defaultOptions:{queries:{refetchOnWindowFocus:false,retry:false,staleTime:5_000},mutations:{retry:false}}});
 
-interface DevelopmentSession {
-  readonly tenantId: string;
-  readonly principalId: string;
+interface DevelopmentSession { readonly tenantId:string; readonly principalId:string; }
+const storageKey='cpos.development-session.v2';
+const demoTenant='019d1111-1111-7111-8111-111111111111';
+const demoIdentities=[
+  {label:'Workspace Owner',principalId:'019d3333-3333-7333-8333-333333333333',role:'OWNER'},
+  {label:'Procurement Manager',principalId:'019d3333-3333-7333-8333-333333333334',role:'PROCUREMENT_MANAGER'},
+  {label:'Commercial Reviewer',principalId:'019d3333-3333-7333-8333-333333333335',role:'COMMERCIAL_REVIEWER'},
+] as const;
+const defaultSession:DevelopmentSession={tenantId:demoTenant,principalId:demoIdentities[0].principalId};
+
+type Section='overview'|'evidence'|'requirements'|'suppliers'|'rfqs'|'access';
+
+function loadSession():DevelopmentSession|null{try{const x=JSON.parse(localStorage.getItem(storageKey)??'null') as Partial<DevelopmentSession>|null;return x?.tenantId&&x?.principalId?{tenantId:x.tenantId,principalId:x.principalId}:null;}catch{return null;}}
+function headers(session:DevelopmentSession):HeadersInit{return {'accept':'application/json','x-cpos-session-mode':'development','x-cpos-tenant-id':session.tenantId,'x-cpos-principal-id':session.principalId};}
+class ApiError extends Error{constructor(readonly status:number,message:string){super(message);this.name='ApiError';}}
+async function json<T>(url:string,session:DevelopmentSession,init?:RequestInit):Promise<T>{const response=await fetch(url,{...init,headers:{...headers(session),...(init?.headers??{})}});if(!response.ok){let msg=`HTTP ${response.status}`;try{const b=await response.json() as {message?:string;code?:string};msg=b.message??b.code??msg;}catch{}throw new ApiError(response.status,msg);}return await response.json() as T;}
+function post<T>(url:string,session:DevelopmentSession,body:unknown):Promise<T>{return json<T>(url,session,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});}
+function tone(state:string){return ['ACTIVE','ISSUED','ACCEPTED_EVIDENCE_VERSION','ALLOCATED'].includes(state)?'good':['SUSPENDED','EXPIRED','REVOKED','TRANSFER_REISSUED'].includes(state)?'warn':'muted';}
+function moneyish(value:string){const n=Number(value);return Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:3}):value;}
+
+function SessionSetup({locale,onConnect}:{locale:SupportedLocale;onConnect:(s:DevelopmentSession)=>void}){
+  const [tenantId,setTenantId]=useState(demoTenant); const [principalId,setPrincipalId]=useState(defaultSession.principalId);
+  const ar=locale==='ar';
+  return <section className="session-stage"><div className="session-card"><div className="brand-mark">CP</div><p className="product-eyebrow">CPOS ALPHA</p><h2>{ar?'اختر دور مساحة العمل':'Choose a workspace role'}</h2><p className="session-copy">{ar?'هذه جلسة عرض غير إنتاجية. غيّر الدور لترى الصلاحيات الفعلية لكل مستخدم.':'This is a non-production alpha surface. Switch identities to inspect the actual command/read boundary for each role.'}</p><div className="role-picker">{demoIdentities.map(x=><button type="button" key={x.principalId} className={`role-choice${principalId===x.principalId?' role-choice--active':''}`} onClick={()=>setPrincipalId(x.principalId)}><strong>{x.label}</strong><small>{x.role}</small></button>)}</div><form className="session-form" onSubmit={e=>{e.preventDefault();onConnect({tenantId,principalId});}}><label><span>Tenant ID</span><input value={tenantId} onChange={e=>setTenantId(e.target.value)}/></label><button className="primary-button" type="submit">{ar?'فتح CPOS':'Open CPOS'}</button></form></div></section>;
 }
 
-const storageKey = 'cpos.development-session.v1';
+function ModalForm({title,children,onClose,error}:{title:string;children:ReactNode;onClose:()=>void;error?:string}){return <div className="form-sheet"><div className="form-sheet__head"><h4>{title}</h4><button type="button" className="icon-button" onClick={onClose}>×</button></div>{children}{error?<p className="form-error">{error}</p>:null}</div>;}
 
-const demoSession: DevelopmentSession = {
-  tenantId: '019d1111-1111-7111-8111-111111111111',
-  principalId: '019d3333-3333-7333-8333-333333333333',
-};
+function NewProject({session,onClose}:{session:DevelopmentSession;onClose:()=>void}){const qc=useQueryClient();const [code,setCode]=useState('');const [name,setName]=useState('');const m=useMutation({mutationFn:()=>post<CreateProjectResponse>('/platform/projects',session,{projectCode:code,displayName:name}),onSuccess:async()=>{await qc.invalidateQueries({queryKey:['platform',session]});onClose();}});return <ModalForm title="Create project" onClose={onClose} error={m.error?.message}><form className="form-grid" onSubmit={e=>{e.preventDefault();m.mutate();}}><label><span>Project code</span><input required value={code} onChange={e=>setCode(e.target.value)} placeholder="UAQ-0067"/></label><label><span>Project name</span><input required value={name} onChange={e=>setName(e.target.value)} placeholder="Private Villa"/></label><div className="form-actions"><button className="primary-button" disabled={m.isPending}>Create</button></div></form></ModalForm>}
 
-function loadStoredSession(): DevelopmentSession | null {
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<DevelopmentSession>;
-    return typeof parsed.tenantId === 'string' && typeof parsed.principalId === 'string'
-      ? { tenantId: parsed.tenantId, principalId: parsed.principalId }
-      : null;
-  } catch {
-    return null;
-  }
+function EvidencePanel({session,projectId,authorityContextId,data,canCommand}:{session:DevelopmentSession;projectId:string;authorityContextId:string;data:ProcurementWorkspaceSnapshot;canCommand:boolean}){
+ const qc=useQueryClient(); const [show,setShow]=useState(false); const [file,setFile]=useState<File|null>(null); const [klass,setKlass]=useState('PROCUREMENT_SOURCE'); const [use,setUse]=useState('Authorized procurement source evidence');
+ const m=useMutation({mutationFn:async()=>{if(!file)throw new Error('Choose a file');const contentBase64=await new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onerror=()=>reject(new Error('File could not be read'));r.onload=()=>resolve(String(r.result).split(',')[1]??'');r.readAsDataURL(file);});return post('/procurement/evidence/uploads',session,{projectId,authorityContextId,evidenceClass:klass,intendedUse:use,fileName:file.name,mimeType:file.type||'application/octet-stream',contentBase64});},onSuccess:async()=>{await qc.invalidateQueries({queryKey:['procurement',session,projectId]});setShow(false);setFile(null);}});
+ return <div className="domain-stack"><div className="section-heading"><div><p className="panel-kicker">B04 · Evidence truth</p><h3>Evidence & files</h3><p>Captured source evidence stays distinct from accepted evidence and issued artifacts.</p></div><button className="primary-button primary-button--compact" disabled={!canCommand} onClick={()=>setShow(true)}>+ Upload evidence</button></div>{show?<ModalForm title="Capture evidence" onClose={()=>setShow(false)} error={m.error?.message}><form className="form-grid" onSubmit={e=>{e.preventDefault();m.mutate();}}><label><span>Evidence class</span><input value={klass} onChange={e=>setKlass(e.target.value)}/></label><label><span>Intended use</span><input value={use} onChange={e=>setUse(e.target.value)}/></label><label className="span-2"><span>File</span><input type="file" required onChange={e=>setFile(e.target.files?.[0]??null)}/></label><div className="form-actions"><button className="primary-button" disabled={m.isPending}>Verify & accept</button></div></form></ModalForm>:null}<div className="data-table"><div className="data-row data-row--head"><span>Source</span><span>Class</span><span>Type</span><span>Accepted</span></div>{data.evidence.map(x=><div className="data-row" key={x.evidenceVersionId}><strong>{x.sourceLocator}</strong><span>{x.evidenceClass}</span><span>{x.mimeType??'—'}</span><span>{new Date(x.acceptedAt).toLocaleDateString()}</span></div>)}{data.evidence.length===0?<p className="empty-copy">No accepted evidence yet.</p>:null}</div><div className="status-strip">{data.uploadSessions.slice(0,5).map(x=><span key={x.uploadSessionId} className={`status-pill status-pill--${tone(x.state)}`}>{x.state.replaceAll('_',' ')}</span>)}</div></div>;
 }
 
-function sessionHeaders(session: DevelopmentSession): HeadersInit {
-  return {
-    accept: 'application/json',
-    'x-cpos-session-mode': 'development',
-    'x-cpos-tenant-id': session.tenantId,
-    'x-cpos-principal-id': session.principalId,
-  };
+function RequirementsPanel({session,projectId,authorityContextId,data,canCommand}:{session:DevelopmentSession;projectId:string;authorityContextId:string;data:ProcurementWorkspaceSnapshot;canCommand:boolean}){
+ const qc=useQueryClient();const [mode,setMode]=useState<'requirement'|'allocation'|'package'|null>(null); const [ref,setRef]=useState('');const [desc,setDesc]=useState('');const [qty,setQty]=useState('');const [uom,setUom]=useState('EA');const [source,setSource]=useState(data.requirements[0]?.authorizedRequirementSourceId??'');const [purpose,setPurpose]=useState('RFQ allocation');const [pkg,setPkg]=useState('');const [pkgName,setPkgName]=useState('');
+ const m=useMutation({mutationFn:async()=>{if(mode==='requirement')return post('/procurement/requirements',session,{projectId,authorityContextId,sourceKind:'MANUAL_AUTHORIZED_REQUIREMENT',sourceReference:ref,description:desc,authorizedQuantity:qty,uomKey:uom});if(mode==='allocation')return post('/procurement/allocations',session,{projectId,authorizedRequirementSourceId:source,quantity:qty,uomKey:uom,purpose});return post('/procurement/packages',session,{projectId,authorityContextId,packageCode:pkg,displayName:pkgName});},onSuccess:async()=>{await qc.invalidateQueries({queryKey:['procurement',session,projectId]});setMode(null);}});
+ return <div className="domain-stack"><div className="section-heading"><div><p className="panel-kicker">B05 · Authorized scope</p><h3>Requirements & allocation</h3><p>Allocation consumes only authorized quantity. Packages group allocations without owning their lineage.</p></div><div className="button-row"><button className="secondary-button" disabled={!canCommand} onClick={()=>setMode('allocation')}>Allocate</button><button className="secondary-button" disabled={!canCommand} onClick={()=>setMode('package')}>Package</button><button className="primary-button primary-button--compact" disabled={!canCommand} onClick={()=>setMode('requirement')}>+ Requirement</button></div></div>{mode?<ModalForm title={mode==='requirement'?'Create authorized requirement':mode==='allocation'?'Allocate requirement':'Create procurement package'} onClose={()=>setMode(null)} error={m.error?.message}><form className="form-grid" onSubmit={e=>{e.preventDefault();m.mutate();}}>{mode==='requirement'?<><label><span>Source reference</span><input required value={ref} onChange={e=>setRef(e.target.value)}/></label><label><span>Description</span><input required value={desc} onChange={e=>setDesc(e.target.value)}/></label></>:null}{mode==='allocation'?<><label className="span-2"><span>Authorized source</span><select value={source} onChange={e=>setSource(e.target.value)}>{data.requirements.map(r=><option key={r.authorizedRequirementSourceId} value={r.authorizedRequirementSourceId}>{r.sourceReference} · {r.description}</option>)}</select></label><label className="span-2"><span>Purpose</span><input value={purpose} onChange={e=>setPurpose(e.target.value)}/></label></>:null}{mode!=='package'?<><label><span>Quantity</span><input required value={qty} onChange={e=>setQty(e.target.value)}/></label><label><span>UOM</span><input required value={uom} onChange={e=>setUom(e.target.value)}/></label></>:<><label><span>Package code</span><input required value={pkg} onChange={e=>setPkg(e.target.value)}/></label><label><span>Package name</span><input required value={pkgName} onChange={e=>setPkgName(e.target.value)}/></label></>}<div className="form-actions"><button className="primary-button" disabled={m.isPending}>Save</button></div></form></ModalForm>:null}<div className="data-table requirements-table"><div className="data-row data-row--head"><span>Requirement</span><span>Authorized</span><span>Allocated</span><span>Available</span></div>{data.requirements.map(r=><div className="data-row" key={r.authorizedRequirementSourceId}><span><strong>{r.sourceReference}</strong><small>{r.description}</small></span><span>{moneyish(r.authorizedQuantity)} {r.uomKey}</span><span>{moneyish(r.allocatedQuantity)}</span><strong>{moneyish(r.availableQuantity)}</strong></div>)}</div><div className="card-grid compact-cards">{data.packages.map(p=><article className="mini-card" key={p.procurementPackageId}><span className="project-code">{p.packageCode}</span><strong>{p.displayName}</strong><small>{p.activeAllocationIds.length} active allocations</small></article>)}</div></div>;
 }
 
-class ApiError extends Error {
-  public constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
+function SuppliersPanel({session,projectId,data,canCommand}:{session:DevelopmentSession;projectId:string;data:ProcurementWorkspaceSnapshot;canCommand:boolean}){
+ const qc=useQueryClient();const [show,setShow]=useState(false);const [supplier,setSupplier]=useState('');const [contact,setContact]=useState('');const [email,setEmail]=useState('');const m=useMutation({mutationFn:()=>post('/procurement/suppliers',session,{supplierName:supplier,contactName:contact,emailAddress:email,mailboxKind:'PERSON'}),onSuccess:async()=>{await qc.invalidateQueries({queryKey:['procurement',session,projectId]});setShow(false);}});
+ return <div className="domain-stack"><div className="section-heading"><div><p className="panel-kicker">B06 · Tenant-private relationships</p><h3>Suppliers & contacts</h3><p>Supplier participation does not require a CPOS account. Contacts remain tenant-private sourcing identities.</p></div><button className="primary-button primary-button--compact" disabled={!canCommand} onClick={()=>setShow(true)}>+ Supplier</button></div>{show?<ModalForm title="Add supplier contact" onClose={()=>setShow(false)} error={m.error?.message}><form className="form-grid" onSubmit={e=>{e.preventDefault();m.mutate();}}><label><span>Supplier</span><input required value={supplier} onChange={e=>setSupplier(e.target.value)}/></label><label><span>Contact</span><input required value={contact} onChange={e=>setContact(e.target.value)}/></label><label className="span-2"><span>Email</span><input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><div className="form-actions"><button className="primary-button">Add</button></div></form></ModalForm>:null}<div className="card-grid">{data.suppliers.map(s=><article className="supplier-card" key={s.supplierContactId}><div className="avatar">{s.supplierName.slice(0,1)}</div><div><strong>{s.supplierName}</strong><span>{s.displayName}</span><small>{s.emailAddress}</small></div><span className="quiet-badge">{s.mailboxKind.replaceAll('_',' ')}</span></article>)}</div></div>;
 }
 
-async function fetchJson<T>(
-  url: string,
-  session: DevelopmentSession,
-  init?: RequestInit,
-): Promise<T> {
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      ...sessionHeaders(session),
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!response.ok) {
-    let detail = `Request failed with status ${response.status}`;
-    try {
-      const body = (await response.json()) as { message?: string; code?: string };
-      detail = body.message ?? body.code ?? detail;
-    } catch {
-      // Keep the HTTP fallback.
-    }
-    throw new ApiError(response.status, detail);
-  }
-  return (await response.json()) as T;
+function RfqPanel({session,projectId,authorityContextId,data,canCommand}:{session:DevelopmentSession;projectId:string;authorityContextId:string;data:ProcurementWorkspaceSnapshot;canCommand:boolean}){
+ const qc=useQueryClient();const [show,setShow]=useState(false);const [number,setNumber]=useState('');const [title,setTitle]=useState('');const [due,setDue]=useState('');const [contacts,setContacts]=useState<string[]>([]);const [fields,setFields]=useState<string[]>(['RFQ_ITEM_REFERENCE','RFQ_QUANTITY','RFQ_UNIT_RATE','RFQ_LEAD_TIME']);
+ const create=useMutation({mutationFn:()=>post('/procurement/rfqs',session,{projectId,authorityContextId,eventNumber:number,title,responseDueAt:new Date(due).toISOString(),responseFieldKeys:fields,supplierContactIds:contacts}),onSuccess:async()=>{await qc.invalidateQueries({queryKey:['procurement',session,projectId]});setShow(false);}});
+ const action=useMutation({mutationFn:({kind,id,version}:{kind:'issue'|'addendum';id:string;version:string})=>kind==='issue'?post(`/procurement/rfqs/${id}/issue`,session,{projectId,expectedDraftVersion:version}):post(`/procurement/rfqs/${id}/addenda`,session,{projectId,expectedIssuedVersion:version,responseDueAt:new Date(Date.now()+7*86400000).toISOString(),reason:'Buyer-issued addendum / response period extension'}),onSuccess:async()=>qc.invalidateQueries({queryKey:['procurement',session,projectId]})});
+ const grant=useMutation({mutationFn:({id,kind}:{id:string;kind:'revoke'|'transfer'})=>{if(kind==='revoke')return post(`/procurement/grants/${id}/revoke`,session,{projectId,reason:'Buyer revoked external task'});const current=data.externalTaskGrants.find(g=>g.externalTaskGrantId===id);const replacement=data.suppliers.find(s=>s.supplierRelationshipId===current?.supplierRelationshipId&&s.supplierContactId!==current?.supplierContactId);if(!replacement)throw new Error('Add another contact under this supplier relationship before transfer');return post(`/procurement/grants/${id}/transfer`,session,{projectId,replacementSupplierContactId:replacement.supplierContactId,reason:'Controlled buyer reissue to alternate supplier contact'});},onSuccess:async()=>qc.invalidateQueries({queryKey:['procurement',session,projectId]})});
+ return <div className="domain-stack"><div className="section-heading"><div><p className="panel-kicker">B06 · Sourcing & issue</p><h3>RFQs & external grants</h3><p>Issue binds the exact schema, policy, supplier population, immutable artifact and external task grants.</p></div><button className="primary-button primary-button--compact" disabled={!canCommand} onClick={()=>setShow(true)}>+ RFQ</button></div>{show?<ModalForm title="Create RFQ draft" onClose={()=>setShow(false)} error={create.error?.message}><form className="form-grid" onSubmit={e=>{e.preventDefault();create.mutate();}}><label><span>RFQ number</span><input required value={number} onChange={e=>setNumber(e.target.value)}/></label><label><span>Title</span><input required value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="span-2"><span>Response due</span><input type="datetime-local" required value={due} onChange={e=>setDue(e.target.value)}/></label><fieldset className="span-2 checkbox-grid"><legend>Supplier contacts</legend>{data.suppliers.map(s=><label key={s.supplierContactId}><input type="checkbox" checked={contacts.includes(s.supplierContactId)} onChange={e=>setContacts(v=>e.target.checked?[...v,s.supplierContactId]:v.filter(x=>x!==s.supplierContactId))}/>{s.supplierName} · {s.displayName}</label>)}</fieldset><fieldset className="span-2 checkbox-grid"><legend>Registered response fields</legend>{data.registeredFields.map(f=><label key={f.fieldKey}><input type="checkbox" checked={fields.includes(f.fieldKey)} onChange={e=>setFields(v=>e.target.checked?[...v,f.fieldKey]:v.filter(x=>x!==f.fieldKey))}/>{f.fieldKey}</label>)}</fieldset><div className="form-actions"><button className="primary-button" disabled={create.isPending}>Create draft</button></div></form></ModalForm>:null}{(action.error||grant.error)?<p className="form-error">{action.error?.message??grant.error?.message}</p>:null}<div className="rfq-grid">{data.rfqs.map(r=><article className="rfq-card" key={r.sourcingEventId}><div className="rfq-card__top"><span className="project-code">{r.eventNumber}</span><span className={`status-pill status-pill--${tone(r.lifecycleState)}`}>{r.lifecycleState}</span></div><h4>{r.title}</h4><dl className="detail-list"><div><dt>Version</dt><dd>v{r.version}</dd></div><div><dt>Due</dt><dd>{new Date(r.responseDueAt).toLocaleString()}</dd></div><div><dt>Suppliers</dt><dd>{r.memberCount}</dd></div><div><dt>Grants</dt><dd>{r.grantCount}</dd></div></dl>{r.addendumReason?<p className="audit-note">Addendum: {r.addendumReason}</p>:null}<div className="button-row">{r.lifecycleState==='DRAFT'?<button className="primary-button primary-button--compact" disabled={!canCommand||action.isPending} onClick={()=>action.mutate({kind:'issue',id:r.sourcingEventId,version:r.version})}>Issue exact version</button>:<button className="secondary-button" disabled={!canCommand||action.isPending} onClick={()=>action.mutate({kind:'addendum',id:r.sourcingEventId,version:r.version})}>Create addendum</button>}</div></article>)}</div><h4 className="subsection-title">External task grants</h4><div className="data-table"><div className="data-row data-row--head"><span>Supplier / contact</span><span>Channel</span><span>State</span><span>Control</span></div>{data.externalTaskGrants.map(g=><div className="data-row" key={g.externalTaskGrantId}><span><strong>{g.supplierName}</strong><small>{g.contactDisplayName}</small></span><span>{g.channel??'—'}</span><span className={`status-pill status-pill--${tone(g.state)}`}>{g.state.replaceAll('_',' ')}</span><span className="button-row">{g.state==='ISSUED'?<><button className="link-button" disabled={!canCommand} onClick={()=>grant.mutate({id:g.externalTaskGrantId,kind:'transfer'})}>Transfer</button><button className="link-button link-button--danger" disabled={!canCommand} onClick={()=>grant.mutate({id:g.externalTaskGrantId,kind:'revoke'})}>Revoke</button></>:<small>Historical</small>}</span></div>)}</div></div>;
 }
 
-function stateTone(state: string): 'good' | 'warn' | 'muted' {
-  if (state === 'ACTIVE') return 'good';
-  if (state === 'SUSPENDED' || state === 'EXPIRED') return 'warn';
-  return 'muted';
+function AccessPanel({workspace,session,onSession}:{workspace:PlatformWorkspaceSnapshot;session:DevelopmentSession;onSession:(s:DevelopmentSession)=>void}){return <div className="domain-stack"><div className="section-heading"><div><p className="panel-kicker">Authority context</p><h3>Workspace access</h3><p>Role display is not business approval authority; commands remain enforced in the governed persistence layer.</p></div></div><div className="role-picker">{demoIdentities.map(x=><button type="button" key={x.principalId} className={`role-choice${session.principalId===x.principalId?' role-choice--active':''}`} onClick={()=>onSession({tenantId:demoTenant,principalId:x.principalId})}><strong>{x.label}</strong><small>{x.role}</small></button>)}</div><div className="member-table">{workspace.memberships.map(m=><div className="member-row" key={m.membershipId}><div className="member-person"><span className="avatar">{m.displayName[0]}</span><span><strong>{m.displayName}</strong><small>{m.principalId.slice(0,13)}…</small></span></div><span>{m.membershipState}</span><span>{m.roles.join(', ')||'—'}</span></div>)}</div></div>}
+
+function Dashboard({workspace,session,locale,onSession,onDisconnect}:{workspace:PlatformWorkspaceSnapshot;session:DevelopmentSession;locale:SupportedLocale;onSession:(s:DevelopmentSession)=>void;onDisconnect:()=>void}){
+ const [projectId,setProjectId]=useState(workspace.projects[0]?.projectId??'');const [section,setSection]=useState<Section>('overview');const [newProject,setNewProject]=useState(false);useEffect(()=>{if(!workspace.projects.some(p=>p.projectId===projectId))setProjectId(workspace.projects[0]?.projectId??'');},[workspace.projects,projectId]);const project=workspace.projects.find(p=>p.projectId===projectId);const procurement=useQuery({queryKey:['procurement',session,projectId],enabled:!!projectId,queryFn:()=>json<ProcurementWorkspaceSnapshot>(`/procurement/workspace?projectId=${encodeURIComponent(projectId)}`,session)});const role=workspace.currentMembership?.roles.join(', ')||'NO ROLE';const nav:[Section,string,number|string][]=[['overview','Overview',workspace.projects.length],['evidence','Evidence',procurement.data?.evidence.length??'—'],['requirements','Requirements',procurement.data?.requirements.length??'—'],['suppliers','Suppliers',procurement.data?.suppliers.length??'—'],['rfqs','RFQs',procurement.data?.rfqs.length??'—'],['access','Access',workspace.memberships.length]];const authorityContextId=workspace.authorityContext?.authorityContextId??'';const can=procurement.data?.capabilities.canManageSourcing??false;
+ return <div className="dashboard-layout"><aside className="side-rail"><div className="side-brand"><div className="brand-mark brand-mark--small">CP</div><div><strong>CPOS</strong><span>Procurement Alpha</span></div></div><nav className="side-nav">{nav.map(([id,label,count])=><button key={id} className={`nav-item${section===id?' nav-item--active':''}`} onClick={()=>setSection(id)}><span>{label}</span><small>{count}</small></button>)}</nav><div className="side-footer"><button className="session-chip" type="button" onClick={()=>setSection('access')}><span className="avatar">{workspace.principal.displayName[0]}</span><span><strong>{workspace.principal.displayName}</strong><small>{role}</small></span></button><button className="link-button" onClick={onDisconnect}>Change session</button></div></aside><main className="dashboard-content"><div className="workspace-hero"><div><p className="product-eyebrow">{project?.projectCode??'WORKSPACE'} · {section.toUpperCase()}</p><h2>{project?.displayName??workspace.tenant.displayName}</h2><p>{workspace.company?.legalName??workspace.tenant.displayName} · {workspace.principal.displayName}</p></div><div className="hero-controls"><label><span>Project</span><select value={projectId} onChange={e=>setProjectId(e.target.value)}>{workspace.projects.map(p=><option key={p.projectId} value={p.projectId}>{p.projectCode} — {p.displayName}</option>)}</select></label><button className="secondary-button" disabled={!workspace.capabilities.canCreateProject} onClick={()=>setNewProject(true)}>+ Project</button></div></div>{newProject?<NewProject session={session} onClose={()=>setNewProject(false)}/>:null}{workspace.subscription?.accessMode!=='FULL'?<div className="restriction-banner"><div><strong>Commercial access restricted</strong><span>Historical/read surfaces remain available where authorized; new entitled commands are blocked.</span></div><span className="status-pill status-pill--warn">{workspace.subscription?.lifecycleState??'NO SUBSCRIPTION'}</span></div>:null}{section==='overview'?<div className="domain-stack"><div className="metric-grid"><article className="metric-card"><span>Evidence</span><strong>{procurement.data?.evidence.length??'—'}</strong><small>accepted versions</small></article><article className="metric-card"><span>Requirements</span><strong>{procurement.data?.requirements.length??'—'}</strong><small>authorized sources</small></article><article className="metric-card"><span>Suppliers</span><strong>{procurement.data?.suppliers.length??'—'}</strong><small>tenant-private contacts</small></article><article className="metric-card"><span>RFQs</span><strong>{procurement.data?.rfqs.length??'—'}</strong><small>draft / issued</small></article></div><section className="panel"><div className="panel-heading"><div><p className="panel-kicker">Initial procurement workspace</p><h3>B04–B06 working surface</h3><p>This dashboard now exposes evidence capture, authorized scope/allocation, supplier contacts, RFQ schema/issue/addenda and external task-grant controls.</p></div><span className={`status-pill status-pill--${can?'good':'muted'}`}>{can?'COMMAND ACCESS':'READ / REVIEW'}</span></div><div className="lifecycle-line"><span>B04 Evidence</span><b>→</b><span>B05 Requirement allocation</span><b>→</b><span>B06 RFQ issue & grants</span></div></section></div>:null}{procurement.isPending&&section!=='access'?<div className="loading-inline">Loading governed procurement truth…</div>:null}{procurement.isError&&section!=='access'?<p className="form-error">{procurement.error.message}</p>:null}{procurement.data&&project&&section==='evidence'?<EvidencePanel session={session} projectId={projectId} authorityContextId={authorityContextId} data={procurement.data} canCommand={procurement.data.capabilities.canCaptureEvidence}/>:null}{procurement.data&&project&&section==='requirements'?<RequirementsPanel session={session} projectId={projectId} authorityContextId={authorityContextId} data={procurement.data} canCommand={procurement.data.capabilities.canManageRequirements}/>:null}{procurement.data&&project&&section==='suppliers'?<SuppliersPanel session={session} projectId={projectId} data={procurement.data} canCommand={procurement.data.capabilities.canManageSourcing}/>:null}{procurement.data&&project&&section==='rfqs'?<RfqPanel session={session} projectId={projectId} authorityContextId={authorityContextId} data={procurement.data} canCommand={procurement.data.capabilities.canIssueRfq}/>:null}{section==='access'?<AccessPanel workspace={workspace} session={session} onSession={onSession}/>:null}</main></div>;
 }
 
-function SessionSetup({
-  locale,
-  onConnect,
-}: {
-  readonly locale: SupportedLocale;
-  readonly onConnect: (session: DevelopmentSession) => void;
-}) {
-  const [tenantId, setTenantId] = useState('');
-  const [principalId, setPrincipalId] = useState('');
-  const copy =
-    locale === 'ar'
-      ? {
-          eyebrow: 'جلسة تطوير آمنة',
-          title: 'افتح مساحة عمل CPOS',
-          body: 'أدخل معرف المستأجر ومعرف المستخدم من بيانات B02. هذه بوابة تطوير فقط وليست بديلاً عن مزود تسجيل الدخول النهائي.',
-          tenant: 'معرف المستأجر',
-          principal: 'معرف المستخدم',
-          action: 'فتح مساحة العمل',
-          demo: 'فتح مساحة العرض',
-          note: 'مساحة العرض معزولة وغير إنتاجية. قاعدة بيانات B02 المحكومة تبقى مستقلة ولا يتم تجاوزها.',
-        }
-      : {
-          eyebrow: 'Safe development session',
-          title: 'Open a CPOS workspace',
-          body: 'Enter a tenant ID and principal ID from the B02 dataset. This is a development gateway, not a replacement for the final authentication provider.',
-          tenant: 'Tenant ID',
-          principal: 'Principal ID',
-          action: 'Open workspace',
-          demo: 'Open demo workspace',
-          note: 'The demo workspace is isolated and non-production. The governed B02 database remains separate and is not bypassed.',
-        };
+function App(){const [locale,setLocale]=useState<SupportedLocale>('en');const [session,setSession]=useState<DevelopmentSession|null>(()=>loadSession());useEffect(()=>{document.documentElement.lang=locale;document.documentElement.dir=directionForLocale(locale);},[locale]);useEffect(()=>{if(session)localStorage.setItem(storageKey,JSON.stringify(session));else localStorage.removeItem(storageKey);queryClient.clear();},[session]);const platform=useQuery({queryKey:['platform',session],enabled:!!session,queryFn:()=>json<PlatformWorkspaceSnapshot>('/platform/workspace',session!)});return <AppShell productName="Construction Procurement OS" surfaceName={locale==='ar'?'المشتريات والحوكمة':'Procurement & governance'} locale={locale} navigationLabel="Workspace actions" actions={<LocaleToggle locale={locale} onChange={setLocale}/>}>{!session?<SessionSetup locale={locale} onConnect={setSession}/>:platform.isPending?<div className="loading-stage"><div className="loading-orbit"/><strong>Opening governed workspace…</strong></div>:platform.isError?<section className="error-stage"><h2>Workspace could not be opened</h2><p>{platform.error.message}</p><button className="primary-button" onClick={()=>setSession(null)}>Change session</button></section>:platform.data?<Dashboard workspace={platform.data} session={session} locale={locale} onSession={setSession} onDisconnect={()=>setSession(null)}/>:null}</AppShell>}
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!tenantId.trim() || !principalId.trim()) return;
-    onConnect({ tenantId: tenantId.trim(), principalId: principalId.trim() });
-  }
-
-  return (
-    <section className="session-stage">
-      <div className="session-card">
-        <div className="brand-mark" aria-hidden="true">
-          CP
-        </div>
-        <p className="product-eyebrow">{copy.eyebrow}</p>
-        <h2>{copy.title}</h2>
-        <p className="session-copy">{copy.body}</p>
-        <form className="session-form" onSubmit={submit}>
-          <label>
-            <span>{copy.tenant}</span>
-            <input
-              value={tenantId}
-              onChange={(event) => setTenantId(event.target.value)}
-              placeholder="019d…"
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </label>
-          <label>
-            <span>{copy.principal}</span>
-            <input
-              value={principalId}
-              onChange={(event) => setPrincipalId(event.target.value)}
-              placeholder="019d…"
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </label>
-          <button className="primary-button" type="submit">
-            {copy.action}
-          </button>
-          <button className="secondary-button" type="button" onClick={() => onConnect(demoSession)}>
-            {copy.demo}
-          </button>
-        </form>
-        <p className="session-note">{copy.note}</p>
-      </div>
-    </section>
-  );
-}
-
-function SubscriptionCard({
-  workspace,
-  locale,
-}: {
-  readonly workspace: PlatformWorkspaceSnapshot;
-  readonly locale: SupportedLocale;
-}) {
-  const subscription = workspace.subscription;
-  const copy =
-    locale === 'ar'
-      ? {
-          title: 'الحساب والاشتراك',
-          noSubscription: 'لا يوجد اشتراك مسجل',
-          noSubscriptionBody: 'يمكن إعداد الشركة والمشاريع، لكن أوامر المنتج المدفوعة غير مفعلة.',
-          channel: 'القناة التجارية',
-          guard: 'نسخة حارس الصلاحيات',
-          access: 'وضع الوصول',
-        }
-      : {
-          title: 'Account & subscription',
-          noSubscription: 'No subscription recorded',
-          noSubscriptionBody:
-            'Company and project setup can continue, but entitled product commands are not active.',
-          channel: 'Commercial channel',
-          guard: 'Entitlement guard',
-          access: 'Access mode',
-        };
-
-  return (
-    <section className="panel subscription-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="panel-kicker">SaaS</p>
-          <h3>{copy.title}</h3>
-        </div>
-        <span className={`status-pill status-pill--${stateTone(subscription?.lifecycleState ?? '')}`}>
-          {subscription?.lifecycleState ?? copy.noSubscription}
-        </span>
-      </div>
-      {subscription ? (
-        <dl className="detail-list">
-          <div>
-            <dt>{copy.channel}</dt>
-            <dd>{subscription.commercialChannel.replaceAll('_', ' ')}</dd>
-          </div>
-          <div>
-            <dt>{copy.access}</dt>
-            <dd>{subscription.accessMode.replaceAll('_', ' ')}</dd>
-          </div>
-          <div>
-            <dt>{copy.guard}</dt>
-            <dd className="mono">{subscription.entitlementGuardVersion ?? '—'}</dd>
-          </div>
-        </dl>
-      ) : (
-        <p className="empty-copy">{copy.noSubscriptionBody}</p>
-      )}
-    </section>
-  );
-}
-
-function ProjectCard({
-  project,
-  selected,
-  onSelect,
-}: {
-  readonly project: WorkspaceProject;
-  readonly selected: boolean;
-  readonly onSelect: () => void;
-}) {
-  return (
-    <button
-      className={`project-card${selected ? ' project-card--selected' : ''}`}
-      type="button"
-      onClick={onSelect}
-    >
-      <span className="project-code">{project.projectCode}</span>
-      <strong>{project.displayName}</strong>
-      <span className={`status-pill status-pill--${stateTone(project.lifecycleState)}`}>
-        {project.lifecycleState}
-      </span>
-    </button>
-  );
-}
-
-function NewProjectForm({
-  session,
-  onDone,
-  locale,
-}: {
-  readonly session: DevelopmentSession;
-  readonly onDone: () => void;
-  readonly locale: SupportedLocale;
-}) {
-  const client = useQueryClient();
-  const [projectCode, setProjectCode] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const createProject = useMutation({
-    mutationFn: () =>
-      fetchJson<CreateProjectResponse>('/platform/projects', session, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ projectCode, displayName }),
-      }),
-    onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ['platform-workspace', session] });
-      onDone();
-    },
-  });
-
-  const copy =
-    locale === 'ar'
-      ? {
-          title: 'إنشاء مشروع',
-          code: 'رمز المشروع',
-          name: 'اسم المشروع',
-          cancel: 'إلغاء',
-          create: 'إنشاء المشروع',
-        }
-      : {
-          title: 'Create project',
-          code: 'Project code',
-          name: 'Project name',
-          cancel: 'Cancel',
-          create: 'Create project',
-        };
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    createProject.mutate();
-  }
-
-  return (
-    <form className="new-project-form" onSubmit={submit}>
-      <h4>{copy.title}</h4>
-      <div className="form-grid">
-        <label>
-          <span>{copy.code}</span>
-          <input
-            value={projectCode}
-            onChange={(event) => setProjectCode(event.target.value)}
-            placeholder="JP-047"
-            required
-          />
-        </label>
-        <label>
-          <span>{copy.name}</span>
-          <input
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder="Jumeirah Park Villa 47"
-            required
-          />
-        </label>
-      </div>
-      {createProject.isError ? (
-        <p className="form-error" role="alert">
-          {createProject.error.message}
-        </p>
-      ) : null}
-      <div className="form-actions">
-        <button className="secondary-button" type="button" onClick={onDone}>
-          {copy.cancel}
-        </button>
-        <button className="primary-button" type="submit" disabled={createProject.isPending}>
-          {copy.create}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function Dashboard({
-  workspace,
-  session,
-  locale,
-  onChangeSession,
-}: {
-  readonly workspace: PlatformWorkspaceSnapshot;
-  readonly session: DevelopmentSession;
-  readonly locale: SupportedLocale;
-  readonly onChangeSession: () => void;
-}) {
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    workspace.projects[0]?.projectId ?? null,
-  );
-  const [creatingProject, setCreatingProject] = useState(false);
-
-  const copy =
-    locale === 'ar'
-      ? {
-          overview: 'نظرة عامة',
-          projects: 'المشاريع',
-          suppliers: 'الموردون',
-          procurement: 'المشتريات',
-          approvals: 'الموافقات',
-          reports: 'التقارير',
-          settings: 'الإعدادات',
-          workspace: 'مساحة العمل',
-          welcome: 'مساء الخير',
-          subtitle: 'مركز التحكم في المشتريات والحوكمة للمقاول.',
-          projectsTitle: 'المشاريع',
-          projectsBody: 'سياقات المشاريع المصرح بها لهذا المستأجر.',
-          addProject: 'مشروع جديد',
-          noProjects: 'لا توجد مشاريع بعد. أنشئ أول سياق مشروع للبدء.',
-          members: 'أعضاء الشركة',
-          memberBody: 'العضويات والأدوار الفعالة كما تراها طبقة RLS الحالية.',
-          company: 'الشركة',
-          principal: 'المستخدم الحالي',
-          change: 'تغيير الجلسة',
-          guarded: 'محكوم',
-          restrictedTitle: 'الوصول التجاري مقيد',
-          restrictedBody:
-            'تبقى القراءة والتصدير متاحة حيث تسمح السياسة، لكن أوامر المنتج المميزة ليست نشطة.',
-          comingSoon: 'قادم في موجة نطاق المشتريات التالية',
-        }
-      : {
-          overview: 'Overview',
-          projects: 'Projects',
-          suppliers: 'Suppliers',
-          procurement: 'Procurement',
-          approvals: 'Approvals',
-          reports: 'Reports',
-          settings: 'Settings',
-          workspace: 'Workspace',
-          welcome: 'Good evening',
-          subtitle: 'Your contractor procurement and governance control centre.',
-          projectsTitle: 'Projects',
-          projectsBody: 'Governed project contexts visible to this tenant.',
-          addProject: 'New project',
-          noProjects: 'No projects yet. Create the first project context to get started.',
-          members: 'Company members',
-          memberBody: 'Effective memberships and roles as resolved by the current workspace context.',
-          company: 'Company',
-          principal: 'Current principal',
-          change: 'Change session',
-          guarded: 'Governed',
-          restrictedTitle: 'Commercial access is restricted',
-          restrictedBody:
-            'Read/export remains available where policy permits, but entitled product commands are not active.',
-          comingSoon: 'Coming in the next procurement-domain wave',
-        };
-
-  const navigation = [
-    [copy.overview, '01'],
-    [copy.projects, String(workspace.projects.length).padStart(2, '0')],
-    [copy.suppliers, '—'],
-    [copy.procurement, '—'],
-    [copy.approvals, '—'],
-    [copy.reports, '—'],
-  ] as const;
-
-  const subscriptionRestricted =
-    workspace.subscription !== null && workspace.subscription.accessMode !== 'FULL';
-
-  return (
-    <div className="dashboard-layout">
-      <aside className="side-rail" aria-label={copy.workspace}>
-        <div className="side-brand">
-          <div className="brand-mark brand-mark--small" aria-hidden="true">
-            CP
-          </div>
-          <div>
-            <strong>CPOS</strong>
-            <span>Construction OS</span>
-          </div>
-        </div>
-
-        <nav className="side-nav">
-          {navigation.map(([label, count], index) => (
-            <button
-              className={`nav-item${index === 0 ? ' nav-item--active' : ''}`}
-              type="button"
-              key={label}
-              disabled={index > 1}
-            >
-              <span>{label}</span>
-              <small>{count}</small>
-            </button>
-          ))}
-        </nav>
-
-        <div className="side-footer">
-          <button className="nav-item" type="button" disabled>
-            <span>{copy.settings}</span>
-            <small>—</small>
-          </button>
-          <button className="session-chip" type="button" onClick={onChangeSession}>
-            <span className="avatar">{workspace.principal.displayName.slice(0, 1).toUpperCase()}</span>
-            <span>
-              <strong>{workspace.principal.displayName}</strong>
-              <small>{copy.change}</small>
-            </span>
-          </button>
-        </div>
-      </aside>
-
-      <section className="dashboard-content">
-        <div className="workspace-hero">
-          <div>
-            <p className="product-eyebrow">{copy.workspace}</p>
-            <h2>
-              {copy.welcome}, {workspace.principal.displayName.split(' ')[0]}
-            </h2>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="hero-company">
-            <span>{copy.company}</span>
-            <strong>{workspace.company?.legalName ?? workspace.tenant.displayName}</strong>
-            <small className="mono">{workspace.tenant.tenantId.slice(0, 13)}…</small>
-          </div>
-        </div>
-
-        {subscriptionRestricted ? (
-          <div className="restriction-banner" role="status">
-            <div>
-              <strong>{copy.restrictedTitle}</strong>
-              <span>{copy.restrictedBody}</span>
-            </div>
-            <span className="status-pill status-pill--warn">
-              {workspace.subscription?.lifecycleState}
-            </span>
-          </div>
-        ) : null}
-
-        <div className="metric-grid">
-          <article className="metric-card">
-            <span>{copy.projects}</span>
-            <strong>{workspace.projects.length}</strong>
-            <small>{copy.guarded}</small>
-          </article>
-          <article className="metric-card">
-            <span>{copy.members}</span>
-            <strong>{workspace.memberships.length}</strong>
-            <small>{workspace.currentMembership?.roles.join(', ') || '—'}</small>
-          </article>
-          <article className="metric-card">
-            <span>{copy.principal}</span>
-            <strong>{workspace.currentMembership?.membershipState ?? '—'}</strong>
-            <small>{workspace.principal.lifecycleState}</small>
-          </article>
-          <article className="metric-card">
-            <span>Product access</span>
-            <strong>{workspace.subscription?.lifecycleState ?? 'SETUP'}</strong>
-            <small>
-              {workspace.subscription?.accessMode.replaceAll('_', ' ') ?? 'NO SUBSCRIPTION'}
-            </small>
-          </article>
-        </div>
-
-        <div className="content-grid">
-          <section className="panel projects-panel">
-            <div className="panel-heading">
-              <div>
-                <p className="panel-kicker">Context</p>
-                <h3>{copy.projectsTitle}</h3>
-                <p>{copy.projectsBody}</p>
-              </div>
-              <button
-                className="primary-button primary-button--compact"
-                type="button"
-                disabled={!workspace.capabilities.canCreateProject}
-                onClick={() => setCreatingProject(true)}
-              >
-                + {copy.addProject}
-              </button>
-            </div>
-
-            {creatingProject ? (
-              <NewProjectForm
-                session={session}
-                locale={locale}
-                onDone={() => setCreatingProject(false)}
-              />
-            ) : null}
-
-            <div className="project-list">
-              {workspace.projects.length === 0 ? (
-                <div className="empty-state">
-                  <span className="empty-icon">P</span>
-                  <p>{copy.noProjects}</p>
-                </div>
-              ) : (
-                workspace.projects.map((project) => (
-                  <ProjectCard
-                    key={project.projectId}
-                    project={project}
-                    selected={project.projectId === selectedProjectId}
-                    onSelect={() => setSelectedProjectId(project.projectId)}
-                  />
-                ))
-              )}
-            </div>
-          </section>
-
-          <SubscriptionCard workspace={workspace} locale={locale} />
-        </div>
-
-        <section className="panel members-panel">
-          <div className="panel-heading">
-            <div>
-              <p className="panel-kicker">Authority</p>
-              <h3>{copy.members}</h3>
-              <p>{copy.memberBody}</p>
-            </div>
-            <span className="quiet-badge">
-              {workspace.capabilities.canManageMemberships ? 'OWNER VIEW' : 'READ VIEW'}
-            </span>
-          </div>
-          <div className="member-table" role="table" aria-label={copy.members}>
-            {workspace.memberships.map((member) => (
-              <div className="member-row" role="row" key={member.membershipId}>
-                <div className="member-person" role="cell">
-                  <span className="avatar">{member.displayName.slice(0, 1).toUpperCase()}</span>
-                  <span>
-                    <strong>{member.displayName}</strong>
-                    <small className="mono">{member.principalId.slice(0, 13)}…</small>
-                  </span>
-                </div>
-                <span role="cell">{member.membershipState}</span>
-                <span role="cell">{member.roles.join(', ') || '—'}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="domain-preview">
-          <span>{copy.comingSoon}</span>
-          <strong>RFQ · Supplier Response · Comparison · Approval · Award</strong>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function InternalApp() {
-  const [locale, setLocale] = useState<SupportedLocale>('en');
-  const [session, setSession] = useState<DevelopmentSession | null>(() => loadStoredSession());
-
-  useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = directionForLocale(locale);
-  }, [locale]);
-
-  useEffect(() => {
-    if (session) window.localStorage.setItem(storageKey, JSON.stringify(session));
-    else window.localStorage.removeItem(storageKey);
-  }, [session]);
-
-  const workspace = useQuery({
-    queryKey: ['platform-workspace', session],
-    enabled: session !== null,
-    queryFn: () => {
-      if (!session) throw new Error('session is required');
-      return fetchJson<PlatformWorkspaceSnapshot>('/platform/workspace', session);
-    },
-  });
-
-  const surfaceName = locale === 'ar' ? 'نظام المشتريات والحوكمة' : 'Procurement & governance';
-
-  return (
-    <AppShell
-      productName="Construction Procurement OS"
-      surfaceName={surfaceName}
-      locale={locale}
-      navigationLabel={locale === 'ar' ? 'إجراءات مساحة العمل' : 'Workspace actions'}
-      actions={<LocaleToggle locale={locale} onChange={setLocale} />}
-    >
-      {!session ? <SessionSetup locale={locale} onConnect={setSession} /> : null}
-
-      {session && workspace.isPending ? (
-        <div className="loading-stage">
-          <div className="loading-orbit" aria-hidden="true" />
-          <strong>{locale === 'ar' ? 'جارٍ فتح مساحة العمل…' : 'Opening governed workspace…'}</strong>
-        </div>
-      ) : null}
-
-      {session && workspace.isError ? (
-        <section className="error-stage">
-          <p className="product-eyebrow">Connection</p>
-          <h2>{locale === 'ar' ? 'تعذر فتح مساحة العمل' : 'Workspace could not be opened'}</h2>
-          <p>{workspace.error.message}</p>
-          <div className="form-actions">
-            <button className="secondary-button" type="button" onClick={() => workspace.refetch()}>
-              {locale === 'ar' ? 'إعادة المحاولة' : 'Retry'}
-            </button>
-            <button className="primary-button" type="button" onClick={() => setSession(null)}>
-              {locale === 'ar' ? 'تغيير الجلسة' : 'Change session'}
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      {session && workspace.data ? (
-        <Dashboard
-          workspace={workspace.data}
-          session={session}
-          locale={locale}
-          onChangeSession={() => setSession(null)}
-        />
-      ) : null}
-    </AppShell>
-  );
-}
-
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('root element is missing');
-
-createRoot(rootElement).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <InternalApp />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+const root=document.getElementById('root');if(!root)throw new Error('root element is missing');createRoot(root).render(<StrictMode><QueryClientProvider client={queryClient}><App/></QueryClientProvider></StrictMode>);

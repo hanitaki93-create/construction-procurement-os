@@ -4,15 +4,37 @@
     "rootDir": "src",
     "outDir": "dist",
     "tsBuildInfoFile": "dist/.tsbuildinfo",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
   "references": [
-    { "path": "../../packages/config" },
-    { "path": "../../packages/contracts" },
-    { "path": "../../packages/database-core" },
-    { "path": "../../packages/observability" },
-    { "path": "../../packages/platform-application" }
+    {
+      "path": "../../packages/config"
+    },
+    {
+      "path": "../../packages/contracts"
+    },
+    {
+      "path": "../../packages/database-core"
+    },
+    {
+      "path": "../../packages/observability"
+    },
+    {
+      "path": "../../packages/platform-application"
+    },
+    {
+      "path": "../../packages/procurement-application"
+    },
+    {
+      "path": "../../packages/object-store"
+    }
   ]
 }
