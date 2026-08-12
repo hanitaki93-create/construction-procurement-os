@@ -107,7 +107,9 @@ export function createGovernedPlatformWorkspaceService(
   }
 
   return Object.freeze({
-    async readWorkspace(context): Promise<PlatformWorkspaceSnapshot> {
+    async readWorkspace(
+      context: GovernedPlatformRequestContext,
+    ): Promise<PlatformWorkspaceSnapshot> {
       return verifyAndUse<PlatformWorkspaceSnapshot>(
         context,
         'platform.workspace.read.v1',
@@ -179,7 +181,10 @@ export function createGovernedPlatformWorkspaceService(
       );
     },
 
-    async createProject(context, request): Promise<CreateProjectResponse> {
+    async createProject(
+      context: GovernedPlatformRequestContext,
+      request: CreateProjectRequest,
+    ): Promise<CreateProjectResponse> {
       const input = normalizedProject(request);
       return verifyAndUse<CreateProjectResponse>(
         context,
