@@ -1,0 +1,139 @@
+name: B03 Provisional Verification
+
+on:
+  pull_request:
+    branches:
+      - build/b02-platform-saas-provisional
+    paths:
+      - '.github/workflows/b03-provisional-verification.yml'
+      - '04_phases/phase_2_build_decomposition/**'
+      - 'apps/api/**'
+      - 'apps/web-internal/**'
+      - 'migrations/**'
+      - 'package.json'
+      - 'packages/database-core/**'
+      - 'packages/contracts/**'
+      - 'packages/invariant-compiler/**'
+      - 'packages/platform-application/**'
+      - 'packages/ui-foundation/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/check-boundaries.mjs'
+      - 'scripts/check-database-public-surface.mjs'
+      - 'scripts/lib/boundary-checker.mjs'
+      - 'scripts/lib/boundary-checker.test.mjs'
+      - 'scripts/lib/database-public-surface.mjs'
+      - 'scripts/lib/database-public-surface.test.mjs'
+      - 'tsconfig*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b03-provisional-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgresql:
+    name: B03 async kernel hostile regression
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cpos_test
+      MIGRATIONS_DIR: ../../migrations/sql
+      BUILD_ID: b03-provisional-ci
+
+    services:
+      postgres:
+        image: postgres:18.4-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cpos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cpos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify architecture and contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/database-core typecheck
+          node scripts/check-boundaries.mjs
+          node scripts/check-database-public-surface.mjs
+          pnpm --filter @cpos/contracts typecheck
+          pnpm --filter @cpos/contracts test
+
+      - name: Regress B02 application and product shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/platform-application typecheck
+          pnpm --filter @cpos/api typecheck
+          pnpm --filter @cpos/api test
+          pnpm --filter @cpos/ui-foundation build
+          pnpm --filter @cpos/web-internal typecheck
+          pnpm --filter @cpos/web-internal build
+
+      - name: Run PostgreSQL hostile integration suite
+        shell: bash
+        run: |
+          set -o pipefail
+          LOG_FILE="${RUNNER_TEMP}/b03-db-integration.log"
+          if pnpm db:integration 2>&1 | tee "${LOG_FILE}"; then
+            exit 0
+          fi
+
+          echo "::group::B03 PostgreSQL hostile integration failure tail"
+          tail -n 120 "${LOG_FILE}" || true
+          echo "::endgroup::"
+
+          {
+            echo '### B03 PostgreSQL hostile integration failure'
+            echo '```text'
+            tail -n 120 "${LOG_FILE}" || true
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          ANNOTATION="$(tail -n 80 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))")"
+          echo "::error title=B03 PostgreSQL hostile integration failure::${ANNOTATION}"
+          exit 1
+
+      - name: Rebuild committed migrations and scan catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm db:migrate
+          pnpm db:status
+          pnpm db:scan

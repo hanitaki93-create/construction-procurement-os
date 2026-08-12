@@ -1,3 +1,4 @@
+export * from './async.js';
 export * from './bootstrap.js';
 export * from './operation.js';
 export * from './platform.js';
