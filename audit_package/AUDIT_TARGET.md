@@ -2,7 +2,7 @@
 
 - Repository: `hanitaki93-create/construction-procurement-os`
 - Exact technically verified target commit: `b6a3a6f76c6a8baa33dd6b4f30c26228fca511d5`
-- Exact target tree: `ef75470e7a66b0e23f730966a13acf22880af0a5`
+- Exact target tree: `ef75470da5163dfedaf315d3d7b46ba483e5c1b2`
 - Focused verification run: `31607931222`
 - Verification job: `94151564073`
 - Runner: `eth-sim-cpos-ci-01`
