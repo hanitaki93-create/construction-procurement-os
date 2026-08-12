@@ -262,5 +262,5 @@ export function createGovernedProcurementService(database: DatabaseRuntime, infr
       });
       return {previousExternalTaskGrantId:request.externalTaskGrantId,externalTaskGrantId:newGrantId,state:'ISSUED'};
     },
-  });
+  } satisfies GovernedProcurementService);
 }
