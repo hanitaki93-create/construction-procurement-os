@@ -39,8 +39,7 @@ jobs:
           target='b6a3a6f76c6a8baa33dd6b4f30c26228fca511d5'
           source_zip='CPOS_B04_B05_B06_COMPLETE_SOURCE_b6a3a6f76c6a.zip'
           package_dir='CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE'
-          package_zip='CPOS_B04_B06_COMPLETE_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_b6a3a6f76c6a.zip'
-          rm -rf "$package_dir" "$source_zip" "$package_zip"
+          rm -rf "$package_dir" "$source_zip"
           mkdir -p "$package_dir"
           git archive --format=zip --output="$source_zip" "$target"
           git ls-tree -r --name-only "$target" | LC_ALL=C sort > "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt"
@@ -64,21 +63,15 @@ jobs:
           B07=OUT_OF_SCOPE
           SSV_1=DEFERRED_NOT_WAIVED
           EOF
-          (cd "$package_dir" && zip -q -r "../$package_zip" .)
-          sha256sum "$package_zip" > COMPLETE_AUDIT_PACKAGE_SHA256.txt
+          find "$package_dir" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > PACKAGE_FILE_SHA256.tmp
+          mv PACKAGE_FILE_SHA256.tmp "$package_dir/PACKAGE_FILE_SHA256.txt"
           echo "tracked_source_files=$(wc -l < "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt")"
           cat "$package_dir/SOURCE_ARCHIVE_SHA256.txt"
-          cat COMPLETE_AUDIT_PACKAGE_SHA256.txt
 
       - name: Upload exact complete-source audit package
         uses: actions/upload-artifact@v4
         with:
           name: cpos-b04-b06-complete-independent-hostile-audit-package-b6a3a6f
-          path: |
-            CPOS_B04_B06_COMPLETE_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_b6a3a6f76c6a.zip
-            COMPLETE_AUDIT_PACKAGE_SHA256.txt
-            CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE/EXPECTED_GIT_TRACKED_FILES.txt
-            CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE/ARCHIVE_FILES.txt
-            CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE/SOURCE_ARCHIVE_SHA256.txt
+          path: CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE/
           if-no-files-found: error
           retention-days: 14
