@@ -1,136 +1,13 @@
 name: Isolated ETH Candlestick Research V1
 
 on:
-  push:
-    branches:
-      - research/isolated-eth-candlestick-v1
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: isolated-eth-candlestick-v1
-  cancel-in-progress: false
-
 jobs:
-  research:
+  paused:
     runs-on: self-hosted
-    timeout-minutes: 35
-    env:
-      OMP_NUM_THREADS: "1"
-      OPENBLAS_NUM_THREADS: "1"
-      MKL_NUM_THREADS: "1"
-      NUMEXPR_NUM_THREADS: "1"
-      MALLOC_ARENA_MAX: "2"
-      PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
-      - name: Safety preflight
-        shell: bash
-        run: |
-          set -euo pipefail
-          WORK="/home/ubuntu/eth-candlestick-study-v1/${GITHUB_RUN_ID}"
-          ETH_REPO="/home/ubuntu/eth-realism-simulator"
-          mkdir -p "$WORK"
-          {
-            echo "utc=$(date -u +%FT%TZ)"
-            echo "user=$(whoami)"
-            echo "host=$(hostname)"
-            echo "work=$WORK"
-            echo "=== uptime ==="
-            uptime
-            echo "=== memory ==="
-            free -m
-            echo "=== relevant processes before ==="
-            ps -eo pid,ni,comm,args --sort=pid | grep -E 'node|pm2|docker|nginx|postgres|construction|procurement' | grep -v grep | head -n 80 || true
-          } | tee "$WORK/safety_preflight.txt"
-          test -d "$ETH_REPO/.git"
-          MEM_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
-          if [ "$MEM_KB" -lt 1200000 ]; then
-            echo "ABORT_LOW_MEMORY MemAvailable_kB=$MEM_KB" | tee -a "$WORK/safety_preflight.txt"
-            exit 75
-          fi
-          echo "WORK=$WORK" >> "$GITHUB_ENV"
-          echo "ETH_REPO=$ETH_REPO" >> "$GITHUB_ENV"
-
-      - name: Materialize frozen ETH research inputs only
-        shell: bash
-        run: |
-          set -euo pipefail
-          BR="research/eth-2025-llm-trader-review-v1"
-          BASE="research_data/eth_2025_llm_trader_review_v1"
-          nice -n 19 ionice -c3 git -C "$ETH_REPO" fetch --no-tags origin "$BR"
-          REF="FETCH_HEAD"
-          nice -n 19 ionice -c3 git -C "$ETH_REPO" show "$REF:$BASE/candlestick_pattern_research_v1.py" > "$WORK/candlestick_pattern_research_v1.py"
-          for f in ETHUSDT_5m_2025.csv.gz BTCUSDT_5m_2025.csv.gz ETHUSDT_1h_2025.csv BTCUSDT_1h_2025.csv; do
-            nice -n 19 ionice -c3 git -C "$ETH_REPO" show "$REF:$BASE/$f" > "$WORK/$f"
-          done
-          sha256sum "$WORK"/candlestick_pattern_research_v1.py "$WORK"/*.csv "$WORK"/*.csv.gz | tee "$WORK/input_sha256.txt"
-          ls -lh "$WORK" | tee "$WORK/input_listing.txt"
-
-      - name: Prepare isolated Python dependency
-        shell: bash
-        run: |
-          set -euo pipefail
-          PY="/home/ubuntu/eth-realism-audit/.venv-rtk007a-v01/bin/python"
-          if [ ! -x "$PY" ]; then PY="$(command -v python3)"; fi
-          "$PY" - <<'PYCHK'
-          import numpy, pandas, scipy
-          print('BASE_PYTHON_IMPORTS_PASS')
-          PYCHK
-          if ! "$PY" -c 'import talib' >/dev/null 2>&1; then
-            mkdir -p "$WORK/vendor"
-            nice -n 19 ionice -c3 "$PY" -m pip install --no-deps --target "$WORK/vendor" TA-Lib
-            echo "PYTHONPATH=$WORK/vendor" >> "$GITHUB_ENV"
-            export PYTHONPATH="$WORK/vendor"
-          fi
-          "$PY" - <<'PYVER' | tee "$WORK/python_versions.txt"
-          import sys, numpy, pandas, scipy, talib
-          print('python', sys.version.replace('\n',' '))
-          print('numpy', numpy.__version__)
-          print('pandas', pandas.__version__)
-          print('scipy', scipy.__version__)
-          print('talib', talib.__version__)
-          print('talib_patterns', len(talib.get_function_groups()['Pattern Recognition']))
-          PYVER
-          echo "PY=$PY" >> "$GITHUB_ENV"
-
-      - name: Run frozen candlestick study at lowest priority
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "$WORK"
-          nice -n 19 ionice -c3 "$PY" candlestick_pattern_research_v1.py 2>&1 | tee candlestick_run.log
-          test -s candlestick_research_outputs/RESULTS.md
-          test -s candlestick_research_outputs/candlestick_pattern_surface.csv
-
-      - name: Safety postflight
-        if: always()
-        shell: bash
-        run: |
-          set +e
-          {
-            echo "utc=$(date -u +%FT%TZ)"
-            echo "=== uptime ==="
-            uptime
-            echo "=== memory ==="
-            free -m
-            echo "=== relevant processes after ==="
-            ps -eo pid,ni,comm,args --sort=pid | grep -E 'node|pm2|docker|nginx|postgres|construction|procurement' | grep -v grep | head -n 80 || true
-          } | tee "$WORK/safety_postflight.txt"
-
-      - name: Upload research evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: isolated-eth-candlestick-v1-${{ github.run_id }}
-          path: |
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/candlestick_research_outputs
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/candlestick_run.log
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/python_versions.txt
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/input_sha256.txt
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/input_listing.txt
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/safety_preflight.txt
-            /home/ubuntu/eth-candlestick-study-v1/${{ github.run_id }}/safety_postflight.txt
-          if-no-files-found: warn
-          retention-days: 14
+      - run: echo "Workflow staged; no research run on this commit."
