@@ -1,0 +1,81 @@
+name: Audit Package Export
+
+on:
+  push:
+    branches:
+      - audit/b04-b06-reaudit-20260812
+    paths:
+      - .github/workflows/audit-package-export.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Export exact remediated B04-B06 complete-source re-audit package
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Check out packaging branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify immutable re-audit target
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='4f9de1ed60bbd138f1b96a8b7e7e08af403b7c15'
+          expected_tree='90588f512017d6a5344b1d7a27ce626619fa4cc9'
+          git cat-file -e "${target}^{commit}"
+          test "$(git rev-parse "${target}^{commit}")" = "$target"
+          test "$(git rev-parse "${target}^{tree}")" = "$expected_tree"
+
+      - name: Create and prove complete source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='4f9de1ed60bbd138f1b96a8b7e7e08af403b7c15'
+          source_zip='CPOS_B04_B05_B06_COMPLETE_SOURCE_4f9de1ed60bb.zip'
+          package_dir='CPOS_B04_B06_INDEPENDENT_HOSTILE_REAUDIT_PACKAGE'
+          rm -rf "$package_dir" "$source_zip"
+          mkdir -p "$package_dir"
+          git archive --format=zip --output="$source_zip" "$target"
+          git ls-tree -r --name-only "$target" | LC_ALL=C sort > "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt"
+          unzip -Z1 "$source_zip" | sed '/\/$/d' | LC_ALL=C sort > "$package_dir/ARCHIVE_FILES.txt"
+          diff -u "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt" "$package_dir/ARCHIVE_FILES.txt"
+          test "$(wc -l < "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt")" -eq "$(wc -l < "$package_dir/ARCHIVE_FILES.txt")"
+          git ls-tree -r "$target" > "$package_dir/TARGET_GIT_TREE.txt"
+          sha256sum "$source_zip" > "$package_dir/SOURCE_ARCHIVE_SHA256.txt"
+          cp "$source_zip" "$package_dir/"
+          cp audit_package/AUDIT_TARGET.md "$package_dir/"
+          cp audit_package/INDEPENDENT_HOSTILE_AUDIT_PROMPT.md "$package_dir/"
+          cp audit_package/TECHNICAL_VERIFICATION_EVIDENCE.md "$package_dir/"
+          cp audit_package/REMEDIATION_REAUDIT.md "$package_dir/"
+          cp audit_package/INDEPENDENT_AUDIT_GATE_STATUS.md "$package_dir/"
+          cat > "$package_dir/PACKAGE_STATUS.txt" <<'EOF'
+          PACKAGE_STATUS=COMPLETE_SOURCE_READY_FOR_INDEPENDENT_REAUDIT
+          TARGET_SHA=4f9de1ed60bbd138f1b96a8b7e7e08af403b7c15
+          TARGET_TREE=90588f512017d6a5344b1d7a27ce626619fa4cc9
+          TECHNICAL_VERIFICATION=PASS
+          TECHNICAL_RUN=31613259944
+          TECHNICAL_JOB=94169907665
+          PRIOR_INDEPENDENT_AUDIT=FAIL_BL-B0406-01
+          CURRENT_INDEPENDENT_REAUDIT=NOT_YET_RUN
+          DEPLOYMENT=PROHIBITED_PENDING_REAUDIT_PASS
+          B07=OUT_OF_SCOPE
+          SSV_1=DEFERRED_NOT_WAIVED
+          EOF
+          find "$package_dir" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > PACKAGE_FILE_SHA256.tmp
+          mv PACKAGE_FILE_SHA256.tmp "$package_dir/PACKAGE_FILE_SHA256.txt"
+          echo "tracked_source_files=$(wc -l < "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt")"
+          cat "$package_dir/SOURCE_ARCHIVE_SHA256.txt"
+
+      - name: Upload exact complete-source re-audit package
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpos-b04-b06-complete-independent-hostile-reaudit-package-4f9de1e
+          path: CPOS_B04_B06_INDEPENDENT_HOSTILE_REAUDIT_PACKAGE/
+          if-no-files-found: error
+          retention-days: 14
