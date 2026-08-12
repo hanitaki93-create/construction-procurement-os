@@ -1,0 +1,44 @@
+name: B04-B06 One-Shot Lockfile Refresh
+
+on:
+  push:
+    branches: [build/b04-b06-procurement-wave]
+    paths:
+      - '.github/workflows/b04-b06-lockfile-refresh.yml'
+      - 'apps/api/package.json'
+      - 'packages/procurement-application/package.json'
+      - 'pnpm-workspace.yaml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b04-b06-procurement-wave
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --lockfile-only --no-frozen-lockfile
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo LOCKFILE_ALREADY_CURRENT
+            exit 0
+          fi
+          git config user.name 'cpos-ci-lockfile'
+          git config user.email 'cpos-ci-lockfile@users.noreply.github.com'
+          git add pnpm-lock.yaml
+          git commit -m 'build: refresh pnpm lockfile for B04-B06 procurement wave'
+          git push origin HEAD:build/b04-b06-procurement-wave
