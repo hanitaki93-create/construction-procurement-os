@@ -4,18 +4,40 @@
 -- child AsyncOperation/effect-position identity rather than reusing source domain state.
 
 ALTER TABLE ops.publication_intent
-  ADD COLUMN publication_async_operation_id uuid;
-ALTER TABLE ops.publication_intent
-  ADD CONSTRAINT publication_intent_async_operation_fk
-  FOREIGN KEY (tenant_id, publication_async_operation_id)
-    REFERENCES ops.async_operation(tenant_id, async_operation_id);
+  ADD COLUMN IF NOT EXISTS publication_async_operation_id uuid;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'publication_intent_async_operation_fk'
+      AND conrelid = 'ops.publication_intent'::regclass
+  ) THEN
+    ALTER TABLE ops.publication_intent
+      ADD CONSTRAINT publication_intent_async_operation_fk
+      FOREIGN KEY (tenant_id, publication_async_operation_id)
+        REFERENCES ops.async_operation(tenant_id, async_operation_id);
+  END IF;
+END
+$$;
 ALTER TABLE ops.publication_intent
   ALTER COLUMN publication_async_operation_id SET NOT NULL;
-ALTER TABLE ops.publication_intent
-  ADD CONSTRAINT publication_intent_async_operation_unique
-  UNIQUE (tenant_id, publication_async_operation_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'publication_intent_async_operation_unique'
+      AND conrelid = 'ops.publication_intent'::regclass
+  ) THEN
+    ALTER TABLE ops.publication_intent
+      ADD CONSTRAINT publication_intent_async_operation_unique
+      UNIQUE (tenant_id, publication_async_operation_id);
+  END IF;
+END
+$$;
 
-DROP FUNCTION ops.record_publication_intent_once(
+DROP FUNCTION IF EXISTS ops.record_publication_intent_once(
   uuid, uuid, uuid, text, text, text, text, text, text, text, integer
 );
 
