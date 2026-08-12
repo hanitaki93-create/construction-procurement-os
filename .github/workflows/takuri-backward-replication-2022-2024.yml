@@ -1,0 +1,108 @@
+name: Takuri Backward Replication 2022-2024
+
+on:
+  push:
+    branches:
+      - research/isolated-eth-candlestick-v1
+    paths:
+      - '.github/workflows/takuri-backward-replication-2022-2024.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: takuri-backward-replication-2022-2024
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: self-hosted
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      MALLOC_ARENA_MAX: '2'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/isolated-eth-candlestick-v1
+          fetch-depth: 1
+          clean: false
+
+      - name: Safety preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$RUNNER_TEMP/takuri-backward-${GITHUB_RUN_ID}"
+          mkdir -p "$WORK"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
+          {
+            echo "utc=$(date -u +%FT%TZ)"
+            echo "runner_user=$(whoami)"
+            echo "host=$(hostname)"
+            uptime
+            free -m
+            df -h "$RUNNER_TEMP"
+            echo "=== procurement runtime snapshot before ==="
+            ps -eo pid,ni,comm,args --sort=pid | grep -E 'docker-proxy|/app/apps/api/dist/main.js|/app/deploy/b02-demo/serve.mjs|dockerd' | grep -v grep || true
+          } | tee "$WORK/safety_preflight.txt"
+          MEM_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+          [ "$MEM_KB" -ge 1200000 ] || { echo "ABORT_LOW_MEMORY $MEM_KB"; exit 75; }
+          AVAIL_KB=$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          [ "$AVAIL_KB" -ge 3000000 ] || { echo "ABORT_LOW_DISK $AVAIL_KB"; exit 76; }
+
+      - name: Prepare isolated Python dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$WORK/.venv"
+          PY="$WORK/.venv/bin/python"
+          echo "PY=$PY" >> "$GITHUB_ENV"
+          nice -n 19 ionice -c3 "$PY" -m pip install --quiet numpy pandas scipy tabulate TA-Lib
+          "$PY" - <<'PY'
+          import numpy,pandas,scipy,tabulate,talib
+          print('DEPENDENCIES_PASS', numpy.__version__, pandas.__version__, scipy.__version__, talib.__version__)
+          PY
+
+      - name: Run frozen 2022-2024 Takuri replication
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$GITHUB_WORKSPACE/research_tools/eth_candlestick_v1/takuri_backward_replication_2022_2024.py" "$WORK/"
+          cd "$WORK"
+          nice -n 19 ionice -c3 "$PY" takuri_backward_replication_2022_2024.py 2>&1 | tee takuri_backward_run.log
+          test -s takuri_backward_outputs/RESULTS.md
+          test -s takuri_backward_outputs/summary.csv
+          cat takuri_backward_outputs/RESULTS.md
+
+      - name: Safety postflight
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          WORK="${WORK:-$RUNNER_TEMP/takuri-backward-${GITHUB_RUN_ID}}"
+          mkdir -p "$WORK"
+          {
+            echo "utc=$(date -u +%FT%TZ)"
+            uptime
+            free -m
+            echo "=== procurement runtime snapshot after ==="
+            ps -eo pid,ni,comm,args --sort=pid | grep -E 'docker-proxy|/app/apps/api/dist/main.js|/app/deploy/b02-demo/serve.mjs|dockerd' | grep -v grep || true
+          } | tee "$WORK/safety_postflight.txt"
+
+      - name: Upload compact replication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: takuri-backward-replication-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/takuri-backward-${{ github.run_id }}/takuri_backward_outputs
+            ${{ runner.temp }}/takuri-backward-${{ github.run_id }}/takuri_backward_run.log
+            ${{ runner.temp }}/takuri-backward-${{ github.run_id }}/safety_preflight.txt
+            ${{ runner.temp }}/takuri-backward-${{ github.run_id }}/safety_postflight.txt
+          if-no-files-found: warn
+          retention-days: 14
