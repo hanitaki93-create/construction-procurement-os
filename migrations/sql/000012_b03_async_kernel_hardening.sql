@@ -2,15 +2,26 @@
 -- This remains forward-only migration history: no earlier migration is rewritten.
 
 ALTER TABLE ops.job
-  ADD COLUMN job_semantic_key text NOT NULL DEFAULT 'primary'
+  ADD COLUMN IF NOT EXISTS job_semantic_key text NOT NULL DEFAULT 'primary'
     CHECK (char_length(btrim(job_semantic_key)) BETWEEN 1 AND 400);
 ALTER TABLE ops.job ALTER COLUMN job_semantic_key DROP DEFAULT;
-ALTER TABLE ops.job DROP CONSTRAINT job_tenant_id_async_operation_id_lane_key;
-ALTER TABLE ops.job
-  ADD CONSTRAINT job_semantic_identity_unique
-  UNIQUE (tenant_id, async_operation_id, lane, job_semantic_key);
+ALTER TABLE ops.job DROP CONSTRAINT IF EXISTS job_tenant_id_async_operation_id_lane_key;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'job_semantic_identity_unique'
+      AND conrelid = 'ops.job'::regclass
+  ) THEN
+    ALTER TABLE ops.job
+      ADD CONSTRAINT job_semantic_identity_unique
+      UNIQUE (tenant_id, async_operation_id, lane, job_semantic_key);
+  END IF;
+END
+$$;
 
-CREATE TABLE ops.integration_event (
+CREATE TABLE IF NOT EXISTS ops.integration_event (
   integration_event_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   publication_intent_id uuid NOT NULL,
@@ -25,6 +36,7 @@ CREATE TABLE ops.integration_event (
   UNIQUE (tenant_id, publication_intent_id)
 );
 
+DROP TRIGGER IF EXISTS integration_event_immutable ON ops.integration_event;
 CREATE TRIGGER integration_event_immutable
 BEFORE UPDATE OR DELETE ON ops.integration_event
 FOR EACH ROW EXECUTE FUNCTION ops.reject_append_only_rewrite();
@@ -659,6 +671,7 @@ $$;
 
 ALTER TABLE ops.integration_event ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ops.integration_event FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS integration_event_tenant_select ON ops.integration_event;
 CREATE POLICY integration_event_tenant_select ON ops.integration_event
   FOR SELECT TO cpos_platform_runtime
   USING (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
