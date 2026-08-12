@@ -18,7 +18,7 @@ const contentTypes = new Map([
   ['.webp', 'image/webp'],
 ]);
 
-const proxyPrefixes = ['/health', '/meta', '/platform', '/openapi.json'];
+const proxyPrefixes = ['/health', '/meta', '/platform', '/procurement', '/openapi.json'];
 
 function shouldProxy(pathname) {
   return proxyPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -108,7 +108,7 @@ const server = createServer((req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`CPOS B02 demo dashboard listening on 0.0.0.0:${port}`);
+  console.log(`CPOS B04-B06 preview dashboard listening on 0.0.0.0:${port}`);
 });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
