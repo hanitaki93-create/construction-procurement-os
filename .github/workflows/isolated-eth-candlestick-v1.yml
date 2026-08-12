@@ -24,7 +24,6 @@ jobs:
       NUMEXPR_NUM_THREADS: "1"
       MALLOC_ARENA_MAX: "2"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
-      WORK: ${{ runner.temp }}/eth-candlestick-study-v1-${{ github.run_id }}
       SRC_ETH: /home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1/ETHUSDT_5m_2025.csv
       SRC_BTC: /home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1/BTCUSDT_5m_2025.csv
     steps:
@@ -38,7 +37,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          WORK="$RUNNER_TEMP/eth-candlestick-study-v1-${GITHUB_RUN_ID}"
           mkdir -p "$WORK"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
           {
             echo "utc=$(date -u +%FT%TZ)"
             echo "runner_user=$(whoami)"
@@ -161,6 +162,7 @@ jobs:
         shell: bash
         run: |
           set +e
+          WORK="${WORK:-$RUNNER_TEMP/eth-candlestick-study-v1-${GITHUB_RUN_ID}}"
           mkdir -p "$WORK"
           {
             echo "utc=$(date -u +%FT%TZ)"
