@@ -1,13 +1,173 @@
 name: Isolated ETH Candlestick Research V1
 
 on:
+  push:
+    branches:
+      - research/isolated-eth-candlestick-v1
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: isolated-eth-candlestick-v1
+  cancel-in-progress: false
+
 jobs:
-  paused:
+  research:
     runs-on: self-hosted
+    timeout-minutes: 35
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      MALLOC_ARENA_MAX: "2"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
-      - run: echo "Workflow staged; no research run on this commit."
+      - uses: actions/checkout@v4
+        with:
+          ref: research/isolated-eth-candlestick-v1
+          fetch-depth: 1
+
+      - name: Safety preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$RUNNER_TEMP/eth-candlestick-study-v1-${GITHUB_RUN_ID}"
+          SRC_ROOT="/home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1"
+          SRC_ETH="$SRC_ROOT/ETHUSDT_5m_2025.csv"
+          SRC_BTC="$SRC_ROOT/BTCUSDT_5m_2025.csv"
+          mkdir -p "$WORK"
+          {
+            echo "utc=$(date -u +%FT%TZ)"
+            echo "runner_user=$(whoami)"
+            echo "runner_home=$HOME"
+            echo "runner_temp=$RUNNER_TEMP"
+            echo "host=$(hostname)"
+            echo "work=$WORK"
+            echo "=== uptime ==="
+            uptime
+            echo "=== memory ==="
+            free -m
+            echo "=== source permissions ==="
+            ls -ld /home /home/ubuntu /home/ubuntu/eth-realism-simulator "$SRC_ROOT" || true
+            ls -l "$SRC_ETH" "$SRC_BTC" || true
+            echo "=== relevant processes before ==="
+            ps -eo pid,ni,comm,args --sort=pid | grep -E 'node|pm2|docker|nginx|postgres|construction|procurement' | grep -v grep | head -n 80 || true
+          } | tee "$WORK/safety_preflight.txt"
+          MEM_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+          if [ "$MEM_KB" -lt 1200000 ]; then
+            echo "ABORT_LOW_MEMORY MemAvailable_kB=$MEM_KB" | tee -a "$WORK/safety_preflight.txt"
+            exit 75
+          fi
+          test -r "$SRC_ETH"
+          test -r "$SRC_BTC"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
+          echo "SRC_ETH=$SRC_ETH" >> "$GITHUB_ENV"
+          echo "SRC_BTC=$SRC_BTC" >> "$GITHUB_ENV"
+
+      - name: Prepare isolated Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          PY_CAND="/home/ubuntu/eth-realism-audit/.venv-rtk007a-v01/bin/python"
+          if [ -x "$PY_CAND" ] && "$PY_CAND" -c 'import numpy,pandas,scipy,tabulate' >/dev/null 2>&1; then
+            PY="$PY_CAND"
+            echo "Using existing read-only research interpreter: $PY"
+          else
+            python3 -m venv "$WORK/.venv"
+            PY="$WORK/.venv/bin/python"
+            nice -n 19 ionice -c3 "$PY" -m pip install pandas numpy scipy tabulate
+          fi
+          if ! "$PY" -c 'import talib' >/dev/null 2>&1; then
+            mkdir -p "$WORK/vendor"
+            nice -n 19 ionice -c3 "$PY" -m pip install --no-deps --target "$WORK/vendor" TA-Lib
+            export PYTHONPATH="$WORK/vendor${PYTHONPATH:+:$PYTHONPATH}"
+            echo "PYTHONPATH=$PYTHONPATH" >> "$GITHUB_ENV"
+          fi
+          "$PY" - <<'PYVER' | tee "$WORK/python_versions.txt"
+          import sys, numpy, pandas, scipy, tabulate, talib
+          print('python', sys.version.replace('\n',' '))
+          print('numpy', numpy.__version__)
+          print('pandas', pandas.__version__)
+          print('scipy', scipy.__version__)
+          print('tabulate', tabulate.__version__)
+          print('talib', talib.__version__)
+          print('talib_patterns', len(talib.get_function_groups()['Pattern Recognition']))
+          PYVER
+          echo "PY=$PY" >> "$GITHUB_ENV"
+
+      - name: Materialize candle inputs in runner temp
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WORK SRC_ETH SRC_BTC
+          nice -n 19 ionice -c3 "$PY" - <<'PYBUILD'
+          import os
+          from pathlib import Path
+          import pandas as pd
+
+          work = Path(os.environ['WORK'])
+          sources = {
+              'ETHUSDT': Path(os.environ['SRC_ETH']),
+              'BTCUSDT': Path(os.environ['SRC_BTC']),
+          }
+          for symbol, source in sources.items():
+              x = pd.read_csv(source, usecols=['openTime','open','high','low','close','volume'])
+              x['timestamp'] = pd.to_datetime(x.pop('openTime'), unit='ms', utc=True)
+              for c in ['open','high','low','close','volume']:
+                  x[c] = pd.to_numeric(x[c], errors='raise')
+              x = x.drop_duplicates('timestamp').sort_values('timestamp')
+              x = x[(x['timestamp'] >= '2025-01-01') & (x['timestamp'] < '2026-01-01')]
+              if len(x) != 105120:
+                  raise SystemExit(f'{symbol}_5M_ROW_COUNT_FAIL {len(x)}')
+              x.to_csv(work / f'{symbol}_5m_2025.csv.gz', index=False, compression='gzip', float_format='%.10g')
+              y = x.set_index('timestamp').resample('1h', label='left', closed='left').agg(
+                  open=('open','first'), high=('high','max'), low=('low','min'), close=('close','last'), volume=('volume','sum')
+              ).dropna().reset_index()
+              if len(y) != 8760:
+                  raise SystemExit(f'{symbol}_1H_ROW_COUNT_FAIL {len(y)}')
+              y.to_csv(work / f'{symbol}_1h_2025.csv', index=False, float_format='%.10g')
+              print(symbol, '5m', len(x), '1h', len(y))
+          print('INPUT_MATERIALIZATION_PASS')
+          PYBUILD
+          cp "$GITHUB_WORKSPACE/research_tools/eth_candlestick_v1/candlestick_pattern_research_v1.py" "$WORK/candlestick_pattern_research_v1.py"
+          sha256sum "$WORK"/candlestick_pattern_research_v1.py "$WORK"/*.csv "$WORK"/*.csv.gz | tee "$WORK/input_sha256.txt"
+          ls -lh "$WORK" | tee "$WORK/input_listing.txt"
+
+      - name: Run frozen candlestick study at lowest priority
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$WORK"
+          nice -n 19 ionice -c3 "$PY" candlestick_pattern_research_v1.py 2>&1 | tee candlestick_run.log
+          test -s candlestick_research_outputs/RESULTS.md
+          test -s candlestick_research_outputs/candlestick_pattern_surface.csv
+          test -s candlestick_research_outputs/manifest.json
+          cat candlestick_research_outputs/manifest.json
+
+      - name: Safety postflight
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$WORK"
+          {
+            echo "utc=$(date -u +%FT%TZ)"
+            echo "=== uptime ==="
+            uptime
+            echo "=== memory ==="
+            free -m
+            echo "=== relevant processes after ==="
+            ps -eo pid,ni,comm,args --sort=pid | grep -E 'node|pm2|docker|nginx|postgres|construction|procurement' | grep -v grep | head -n 80 || true
+          } | tee "$WORK/safety_postflight.txt"
+
+      - name: Upload research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-eth-candlestick-v1-${{ github.run_id }}
+          path: ${{ runner.temp }}/eth-candlestick-study-v1-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
