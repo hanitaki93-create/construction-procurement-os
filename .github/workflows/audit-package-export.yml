@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           target='b6a3a6f76c6a8baa33dd6b4f30c26228fca511d5'
-          expected_tree='ef75470e7a66b0e23f730966a13acf22880af0a5'
+          expected_tree='ef75470da5163dfedaf315d3d7b46ba483e5c1b2'
           git cat-file -e "${target}^{commit}"
           test "$(git rev-parse "${target}^{commit}")" = "$target"
           test "$(git rev-parse "${target}^{tree}")" = "$expected_tree"
@@ -40,10 +40,8 @@ jobs:
           source_zip='CPOS_B04_B05_B06_COMPLETE_SOURCE_b6a3a6f76c6a.zip'
           package_dir='CPOS_B04_B06_INDEPENDENT_HOSTILE_AUDIT_PACKAGE'
           package_zip='CPOS_B04_B06_COMPLETE_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_b6a3a6f76c6a.zip'
-
           rm -rf "$package_dir" "$source_zip" "$package_zip"
           mkdir -p "$package_dir"
-
           git archive --format=zip --output="$source_zip" "$target"
           git ls-tree -r --name-only "$target" | LC_ALL=C sort > "$package_dir/EXPECTED_GIT_TRACKED_FILES.txt"
           unzip -Z1 "$source_zip" | sed '/\/$/d' | LC_ALL=C sort > "$package_dir/ARCHIVE_FILES.txt"
@@ -58,7 +56,7 @@ jobs:
           cat > "$package_dir/PACKAGE_STATUS.txt" <<'EOF'
           PACKAGE_STATUS=COMPLETE_SOURCE_READY_FOR_INDEPENDENT_AUDIT
           TARGET_SHA=b6a3a6f76c6a8baa33dd6b4f30c26228fca511d5
-          TARGET_TREE=ef75470e7a66b0e23f730966a13acf22880af0a5
+          TARGET_TREE=ef75470da5163dfedaf315d3d7b46ba483e5c1b2
           TECHNICAL_VERIFICATION=PASS
           TECHNICAL_RUN=31607931222
           TECHNICAL_JOB=94151564073
