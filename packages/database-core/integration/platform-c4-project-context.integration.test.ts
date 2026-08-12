@@ -34,6 +34,7 @@ const memberPrincipal = '019d7100-0000-7000-8000-000000000008';
 const ownerMembership = '019d7100-0000-7000-8000-000000000009';
 const memberMembership = '019d7100-0000-7000-8000-000000000010';
 const ownerRole = '019d7100-0000-7000-8000-000000000011';
+const subscriptionA = '019d7100-0000-7000-8000-000000000012';
 
 interface ProjectRow {
   readonly project_id: string;
@@ -188,6 +189,32 @@ beforeEach(async () => {
      ) VALUES ($1, $2, 1, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)'))`,
     [ownerRole, tenantA],
   );
+  await setupPool.query('BEGIN');
+  try {
+    await setupPool.query(
+      `INSERT INTO platform.tenant_subscription (
+         tenant_subscription_id, tenant_id, commercial_channel
+       ) VALUES ($1, $2, 'SELF_SERVICE')`,
+      [subscriptionA, tenantA],
+    );
+    await setupPool.query(
+      `INSERT INTO platform.subscription_lifecycle_occurrence (
+         tenant_id, tenant_subscription_id, sequence, occurrence_kind,
+         effective_at, actor_kind
+       ) VALUES ($1, $2, 1, 'ACTIVATED', '2026-01-01', 'SYSTEM')`,
+      [tenantA, subscriptionA],
+    );
+    await setupPool.query(
+      `UPDATE platform.tenant_entitlement_authority_guard
+       SET guard_version = guard_version + 1
+       WHERE tenant_id = $1`,
+      [tenantA],
+    );
+    await setupPool.query('COMMIT');
+  } catch (error: unknown) {
+    await setupPool.query('ROLLBACK');
+    throw error;
+  }
 });
 
 afterAll(async () => {
@@ -198,7 +225,7 @@ afterAll(async () => {
 });
 
 describe('B02 C4 governed project context', () => {
-  it('allows an active OWNER to create and read the first tenant project', async () => {
+  it('allows an active OWNER with active product access to create and read the first tenant project', async () => {
     const projectId = '019d7200-0000-7000-8000-000000000001';
     await withProjects(tenantA, ownerPrincipal, 'project-owner-create', (handle) =>
       handle.create({
@@ -238,6 +265,59 @@ describe('B02 C4 governed project context', () => {
         }),
       ),
     ).rejects.toThrow();
+  });
+
+  it('denies a new project after commercial access is suspended without hiding existing project reads', async () => {
+    const existingProject = '019d7200-0000-7000-8000-000000000006';
+    await withProjects(tenantA, ownerPrincipal, 'project-before-suspend', (handle) =>
+      handle.create({
+        projectId: existingProject,
+        tenantId: tenantA,
+        authorityContextId: authorityA,
+        projectCode: 'PRE-SUSPEND',
+        displayName: 'Existing Project',
+        effectiveAt: '2026-08-11T00:00:00.000Z',
+      }),
+    );
+
+    await setupPool.query('BEGIN');
+    try {
+      await setupPool.query(
+        `INSERT INTO platform.subscription_lifecycle_occurrence (
+           tenant_id, tenant_subscription_id, sequence, occurrence_kind,
+           effective_at, actor_kind
+         ) VALUES ($1, $2, 2, 'SUSPENDED', statement_timestamp(), 'SYSTEM')`,
+        [tenantA, subscriptionA],
+      );
+      await setupPool.query(
+        `UPDATE platform.tenant_entitlement_authority_guard
+         SET guard_version = guard_version + 1
+         WHERE tenant_id = $1`,
+        [tenantA],
+      );
+      await setupPool.query('COMMIT');
+    } catch (error: unknown) {
+      await setupPool.query('ROLLBACK');
+      throw error;
+    }
+
+    await expect(
+      withProjects(tenantA, ownerPrincipal, 'project-after-suspend', (handle) =>
+        handle.create({
+          projectId: '019d7200-0000-7000-8000-000000000007',
+          tenantId: tenantA,
+          authorityContextId: authorityA,
+          projectCode: 'POST-SUSPEND',
+          displayName: 'Blocked Project',
+          effectiveAt: '2026-08-11T00:00:00.000Z',
+        }),
+      ),
+    ).rejects.toThrow();
+
+    const rows = await withProjects(tenantA, ownerPrincipal, 'project-read-after-suspend', (handle) =>
+      handle.list('2026-08-11T12:00:00.000Z'),
+    );
+    expect(rows.some((row) => row.project_id === existingProject)).toBe(true);
   });
 
   it('fails closed on cross-tenant project or authority-context injection', async () => {
