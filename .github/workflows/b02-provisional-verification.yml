@@ -15,6 +15,7 @@ on:
       - 'packages/database-core/**'
       - 'packages/contracts/**'
       - 'packages/invariant-compiler/**'
+      - 'packages/platform-application/**'
       - 'packages/ui-foundation/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -98,6 +99,7 @@ jobs:
         run: |
           set -euo pipefail
           pnpm --filter @cpos/contracts typecheck
+          pnpm --filter @cpos/platform-application typecheck
           pnpm --filter @cpos/api typecheck
           pnpm --filter @cpos/api test
           pnpm --filter @cpos/ui-foundation build
