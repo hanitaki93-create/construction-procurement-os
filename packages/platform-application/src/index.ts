@@ -12,6 +12,7 @@ import type { DatabaseRuntime } from '@cpos/database-core';
 import {
   platformWorkspacePersistence,
   type MembershipRoleRow,
+  type PlatformWorkspacePersistenceHandle,
   type SubscriptionRow,
 } from './persistence/workspace.js';
 
@@ -90,7 +91,7 @@ export function createGovernedPlatformWorkspaceService(
   async function verifyAndUse<Result>(
     context: GovernedPlatformRequestContext,
     operationKey: string,
-    callback: Parameters<DatabaseRuntime['withExecutionContext']>[3],
+    callback: (handle: PlatformWorkspacePersistenceHandle) => Promise<Result>,
   ): Promise<Result> {
     return database.withExecutionContext(
       transactionContext(context, operationKey),
@@ -100,7 +101,7 @@ export function createGovernedPlatformWorkspaceService(
         if (!(await handle.verifyAuthenticationIdentity(context.authenticationIdentityId))) {
           throw new Error('verified authentication identity is not bound to this tenant principal');
         }
-        return callback(handle) as Promise<Result>;
+        return callback(handle);
       },
     );
   }
