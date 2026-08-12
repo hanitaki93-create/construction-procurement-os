@@ -108,7 +108,27 @@ jobs:
 
       - name: Run PostgreSQL hostile integration suite
         shell: bash
-        run: pnpm db:integration
+        run: |
+          set -o pipefail
+          LOG_FILE="${RUNNER_TEMP}/b03-db-integration.log"
+          if pnpm db:integration 2>&1 | tee "${LOG_FILE}"; then
+            exit 0
+          fi
+
+          echo "::group::B03 PostgreSQL hostile integration failure tail"
+          tail -n 120 "${LOG_FILE}" || true
+          echo "::endgroup::"
+
+          {
+            echo '### B03 PostgreSQL hostile integration failure'
+            echo '```text'
+            tail -n 120 "${LOG_FILE}" || true
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          ANNOTATION="$(tail -n 80 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))")"
+          echo "::error title=B03 PostgreSQL hostile integration failure::${ANNOTATION}"
+          exit 1
 
       - name: Rebuild committed migrations and scan catalog
         shell: bash
