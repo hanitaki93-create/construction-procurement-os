@@ -24,57 +24,67 @@ jobs:
       NUMEXPR_NUM_THREADS: "1"
       MALLOC_ARENA_MAX: "2"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      WORK: ${{ runner.temp }}/eth-candlestick-study-v1-${{ github.run_id }}
+      SRC_ETH: /home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1/ETHUSDT_5m_2025.csv
+      SRC_BTC: /home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1/BTCUSDT_5m_2025.csv
     steps:
       - uses: actions/checkout@v4
         with:
           ref: research/isolated-eth-candlestick-v1
           fetch-depth: 1
+          clean: false
 
-      - name: Safety preflight
+      - name: Safety and read-access preflight
         shell: bash
         run: |
           set -euo pipefail
-          WORK="$RUNNER_TEMP/eth-candlestick-study-v1-${GITHUB_RUN_ID}"
-          SRC_ROOT="/home/ubuntu/eth-realism-simulator/data/clean_de_baseline_v1"
-          SRC_ETH="$SRC_ROOT/ETHUSDT_5m_2025.csv"
-          SRC_BTC="$SRC_ROOT/BTCUSDT_5m_2025.csv"
           mkdir -p "$WORK"
           {
             echo "utc=$(date -u +%FT%TZ)"
             echo "runner_user=$(whoami)"
-            echo "runner_home=$HOME"
-            echo "runner_temp=$RUNNER_TEMP"
             echo "host=$(hostname)"
             echo "work=$WORK"
             echo "=== uptime ==="
             uptime
             echo "=== memory ==="
             free -m
-            echo "=== source permissions ==="
-            ls -ld /home /home/ubuntu /home/ubuntu/eth-realism-simulator "$SRC_ROOT" || true
-            ls -l "$SRC_ETH" "$SRC_BTC" || true
             echo "=== relevant processes before ==="
             ps -eo pid,ni,comm,args --sort=pid | grep -E 'node|pm2|docker|nginx|postgres|construction|procurement' | grep -v grep | head -n 80 || true
           } | tee "$WORK/safety_preflight.txt"
           MEM_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
-          if [ "$MEM_KB" -lt 1200000 ]; then
-            echo "ABORT_LOW_MEMORY MemAvailable_kB=$MEM_KB" | tee -a "$WORK/safety_preflight.txt"
-            exit 75
+          [ "$MEM_KB" -ge 1200000 ] || { echo "ABORT_LOW_MEMORY $MEM_KB"; exit 75; }
+          if [ -r "$SRC_ETH" ] && [ -r "$SRC_BTC" ]; then
+            ACCESS_MODE="direct"
+          elif sudo -n head -c 1 "$SRC_ETH" >/dev/null 2>&1 && sudo -n head -c 1 "$SRC_BTC" >/dev/null 2>&1; then
+            ACCESS_MODE="sudo_readonly"
+          else
+            echo "ABORT_NO_READ_ACCESS: runner cannot read ETH sources and has no passwordless read-only sudo path" | tee -a "$WORK/safety_preflight.txt"
+            exit 76
           fi
-          test -r "$SRC_ETH"
-          test -r "$SRC_BTC"
-          echo "WORK=$WORK" >> "$GITHUB_ENV"
-          echo "SRC_ETH=$SRC_ETH" >> "$GITHUB_ENV"
-          echo "SRC_BTC=$SRC_BTC" >> "$GITHUB_ENV"
+          echo "access_mode=$ACCESS_MODE" | tee -a "$WORK/safety_preflight.txt"
+          echo "ACCESS_MODE=$ACCESS_MODE" >> "$GITHUB_ENV"
+
+      - name: Copy only two source CSVs to runner temp
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$ACCESS_MODE" = "direct" ]; then
+            nice -n 19 ionice -c3 cat "$SRC_ETH" > "$WORK/ETHUSDT_source_5m_2025.csv"
+            nice -n 19 ionice -c3 cat "$SRC_BTC" > "$WORK/BTCUSDT_source_5m_2025.csv"
+          else
+            nice -n 19 ionice -c3 sudo -n cat "$SRC_ETH" > "$WORK/ETHUSDT_source_5m_2025.csv"
+            nice -n 19 ionice -c3 sudo -n cat "$SRC_BTC" > "$WORK/BTCUSDT_source_5m_2025.csv"
+          fi
+          chmod 600 "$WORK/ETHUSDT_source_5m_2025.csv" "$WORK/BTCUSDT_source_5m_2025.csv"
+          sha256sum "$WORK"/*_source_5m_2025.csv | tee "$WORK/source_sha256.txt"
+          ls -lh "$WORK"/*_source_5m_2025.csv
 
       - name: Prepare isolated Python environment
         shell: bash
         run: |
           set -euo pipefail
-          PY_CAND="/home/ubuntu/eth-realism-audit/.venv-rtk007a-v01/bin/python"
-          if [ -x "$PY_CAND" ] && "$PY_CAND" -c 'import numpy,pandas,scipy,tabulate' >/dev/null 2>&1; then
-            PY="$PY_CAND"
-            echo "Using existing read-only research interpreter: $PY"
+          if python3 -c 'import numpy,pandas,scipy,tabulate' >/dev/null 2>&1; then
+            PY="$(command -v python3)"
           else
             python3 -m venv "$WORK/.venv"
             PY="$WORK/.venv/bin/python"
@@ -98,11 +108,11 @@ jobs:
           PYVER
           echo "PY=$PY" >> "$GITHUB_ENV"
 
-      - name: Materialize candle inputs in runner temp
+      - name: Materialize exact 5m and 1h study inputs
         shell: bash
         run: |
           set -euo pipefail
-          export WORK SRC_ETH SRC_BTC
+          export WORK
           nice -n 19 ionice -c3 "$PY" - <<'PYBUILD'
           import os
           from pathlib import Path
@@ -110,8 +120,8 @@ jobs:
 
           work = Path(os.environ['WORK'])
           sources = {
-              'ETHUSDT': Path(os.environ['SRC_ETH']),
-              'BTCUSDT': Path(os.environ['SRC_BTC']),
+              'ETHUSDT': work / 'ETHUSDT_source_5m_2025.csv',
+              'BTCUSDT': work / 'BTCUSDT_source_5m_2025.csv',
           }
           for symbol, source in sources.items():
               x = pd.read_csv(source, usecols=['openTime','open','high','low','close','volume'])
@@ -133,8 +143,7 @@ jobs:
           print('INPUT_MATERIALIZATION_PASS')
           PYBUILD
           cp "$GITHUB_WORKSPACE/research_tools/eth_candlestick_v1/candlestick_pattern_research_v1.py" "$WORK/candlestick_pattern_research_v1.py"
-          sha256sum "$WORK"/candlestick_pattern_research_v1.py "$WORK"/*.csv "$WORK"/*.csv.gz | tee "$WORK/input_sha256.txt"
-          ls -lh "$WORK" | tee "$WORK/input_listing.txt"
+          sha256sum "$WORK"/candlestick_pattern_research_v1.py "$WORK"/ETHUSDT_5m_2025.csv.gz "$WORK"/BTCUSDT_5m_2025.csv.gz "$WORK"/ETHUSDT_1h_2025.csv "$WORK"/BTCUSDT_1h_2025.csv | tee "$WORK/input_sha256.txt"
 
       - name: Run frozen candlestick study at lowest priority
         shell: bash
