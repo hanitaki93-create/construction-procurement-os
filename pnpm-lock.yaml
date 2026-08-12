@@ -116,9 +116,15 @@ importers:
       '@cpos/contracts':
         specifier: workspace:0.0.0-b01
         version: link:../../packages/contracts
+      '@cpos/database-core':
+        specifier: workspace:0.0.0-b01
+        version: link:../../packages/database-core
       '@cpos/observability':
         specifier: workspace:0.0.0-b01
         version: link:../../packages/observability
+      '@cpos/platform-application':
+        specifier: workspace:0.0.0-b02
+        version: link:../../packages/platform-application
       fastify:
         specifier: 'catalog:'
         version: 5.10.0
@@ -326,6 +332,22 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@24.13.3)(yaml@2.9.0)
+
+  packages/platform-application:
+    dependencies:
+      '@cpos/contracts':
+        specifier: workspace:0.0.0-b01
+        version: link:../contracts
+      '@cpos/database-core':
+        specifier: workspace:0.0.0-b01
+        version: link:../database-core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/testkit:
     devDependencies:
