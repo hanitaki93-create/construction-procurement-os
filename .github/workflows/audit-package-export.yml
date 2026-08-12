@@ -1,0 +1,50 @@
+name: Audit Package Export
+
+on:
+  push:
+    branches:
+      - audit/package-9589064956
+    paths:
+      - .github/workflows/audit-package-export.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Export exact audit-prep source archive
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    steps:
+      - name: Check out packaging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify immutable audit target
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='958906495638f9983e01670c278a0fba9ad71561'
+          git cat-file -e "${target}^{commit}"
+          test "$(git rev-parse "${target}^{commit}")" = "$target"
+
+      - name: Create exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='958906495638f9983e01670c278a0fba9ad71561'
+          archive='CPOS_B02_C3_C4_B03_FULL_AUDIT_SOURCE_9589064956.zip'
+          git archive --format=zip --output="$archive" "$target"
+          unzip -l "$archive" | tee AUDIT_ARCHIVE_CONTENTS.txt
+          sha256sum "$archive" | tee AUDIT_ARCHIVE_SHA256.txt
+
+      - name: Upload exact audit source
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpos-b02-c3-c4-b03-full-audit-source-9589064956
+          path: |
+            CPOS_B02_C3_C4_B03_FULL_AUDIT_SOURCE_9589064956.zip
+            AUDIT_ARCHIVE_CONTENTS.txt
+            AUDIT_ARCHIVE_SHA256.txt
+          if-no-files-found: error
+          retention-days: 7
