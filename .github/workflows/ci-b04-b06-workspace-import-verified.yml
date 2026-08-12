@@ -25,34 +25,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import hashlib
-          import os
-          from pathlib import Path
-
-          parts = []
-          for index in range(15):
-              path = Path(f'.import-staging/chunk.{index:03d}')
-              text = path.read_text()
-              if index == 0:
-                  assert len(text) == 5999
-                  text = text[:516] + 'n' + text[516:]
-                  assert len(text) == 6000
-                  git_sha = hashlib.sha1(f'blob {len(text)}\0'.encode() + text.encode()).hexdigest()
-                  assert git_sha == '06bd1a5d7abd26a1a178f504b1e2b171c82d08de'
-              elif index == 3:
-                  assert len(text) == 5999
-                  text = text[:3609] + 't' + text[3609:]
-                  assert len(text) == 6000
-                  git_sha = hashlib.sha1(f'blob {len(text)}\0'.encode() + text.encode()).hexdigest()
-                  assert git_sha == '49a5f9c5d8f43209301fd3363d79a6d9405b720a'
-              else:
-                  expected = 6000 if index < 14 else 2276
-                  assert len(text) == expected
-              parts.append(text)
-
-          Path(os.environ['RUNNER_TEMP'], 'payload.b64').write_text(''.join(parts))
-          PY
+          {
+            head -c 516 .import-staging/chunk.000
+            printf 'n'
+            tail -c +517 .import-staging/chunk.000
+          } > "${RUNNER_TEMP}/chunk.000.repaired"
+          {
+            head -c 3609 .import-staging/chunk.003
+            printf 't'
+            tail -c +3610 .import-staging/chunk.003
+          } > "${RUNNER_TEMP}/chunk.003.repaired"
+          test "$(wc -c < "${RUNNER_TEMP}/chunk.000.repaired")" -eq 6000
+          test "$(wc -c < "${RUNNER_TEMP}/chunk.003.repaired")" -eq 6000
+          echo 'dc2b98db43049e5765c25feb94c42647be8b9fcfbd673d260f59f8339df28800  '${RUNNER_TEMP}'/chunk.000.repaired' | sha256sum -c -
+          echo '9bcf109156f4b50952536b3234e42f4b3c054bd9f93ae8ad8d35dd60ef225818  '${RUNNER_TEMP}'/chunk.003.repaired' | sha256sum -c -
+          : > "${RUNNER_TEMP}/payload.b64"
+          for index in $(seq -w 0 14); do
+            case "$index" in
+              00) cat "${RUNNER_TEMP}/chunk.000.repaired" >> "${RUNNER_TEMP}/payload.b64" ;;
+              03) cat "${RUNNER_TEMP}/chunk.003.repaired" >> "${RUNNER_TEMP}/payload.b64" ;;
+              *) cat ".import-staging/chunk.0${index}" >> "${RUNNER_TEMP}/payload.b64" ;;
+            esac
+          done
           tr -d '\r\n' < "${RUNNER_TEMP}/payload.b64" > "${RUNNER_TEMP}/payload.clean.b64"
           base64 -d "${RUNNER_TEMP}/payload.clean.b64" > "${RUNNER_TEMP}/payload.tar.gz"
           echo '34aa2f9cc0713566b05e378a5500d63f833165751619ea7ca9d0ba621aade4a5  '${RUNNER_TEMP}'/payload.tar.gz' | sha256sum -c -
