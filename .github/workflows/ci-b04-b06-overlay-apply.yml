@@ -39,6 +39,8 @@ jobs:
             .overlay-b04b06/chunk.rem01
             .overlay-b04b06/chunk.02
             .overlay-b04b06/tail.b64
+            .overlay-b04b06/chunk.rem04
+            .overlay-b04b06/chunk.rem05
           )
           for part in "${PARTS[@]}"; do
             tmp="${RUNNER_TEMP}/$(basename "${part}").part"
