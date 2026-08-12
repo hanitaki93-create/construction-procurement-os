@@ -375,58 +375,58 @@ export function buildApi({
   });
 
   app.post('/procurement/evidence/uploads', async (request,reply)=>procurementCommand(request,reply,'EVIDENCE_CAPTURE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.projectId!=='string'||typeof b.authorityContextId!=='string'||typeof b.evidenceClass!=='string'||typeof b.intendedUse!=='string'||typeof b.fileName!=='string'||typeof b.mimeType!=='string'||typeof b.contentBase64!=='string') throw new Error('evidence upload request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['projectId']!=='string'||typeof b['authorityContextId']!=='string'||typeof b['evidenceClass']!=='string'||typeof b['intendedUse']!=='string'||typeof b['fileName']!=='string'||typeof b['mimeType']!=='string'||typeof b['contentBase64']!=='string') throw new Error('evidence upload request is invalid');
     return procurementWorkspaceService!.captureEvidence(context,b as unknown as CreateEvidenceUploadRequest);
   }));
 
   app.post('/procurement/requirements', async (request,reply)=>procurementCommand(request,reply,'REQUIREMENT_CREATE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.projectId!=='string'||typeof b.authorityContextId!=='string'||typeof b.sourceKind!=='string'||typeof b.sourceReference!=='string'||typeof b.description!=='string'||typeof b.authorizedQuantity!=='string'||typeof b.uomKey!=='string') throw new Error('requirement request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['projectId']!=='string'||typeof b['authorityContextId']!=='string'||typeof b['sourceKind']!=='string'||typeof b['sourceReference']!=='string'||typeof b['description']!=='string'||typeof b['authorizedQuantity']!=='string'||typeof b['uomKey']!=='string') throw new Error('requirement request is invalid');
     return procurementWorkspaceService!.createRequirement(context,b as unknown as CreateAuthorizedRequirementRequest);
   }));
 
   app.post('/procurement/allocations', async (request,reply)=>procurementCommand(request,reply,'ALLOCATION_CREATE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.projectId!=='string'||typeof b.authorizedRequirementSourceId!=='string'||typeof b.quantity!=='string'||typeof b.uomKey!=='string'||typeof b.purpose!=='string') throw new Error('allocation request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['projectId']!=='string'||typeof b['authorizedRequirementSourceId']!=='string'||typeof b['quantity']!=='string'||typeof b['uomKey']!=='string'||typeof b['purpose']!=='string') throw new Error('allocation request is invalid');
     return procurementWorkspaceService!.allocateRequirement(context,b as unknown as CreateRequirementAllocationRequest);
   }));
 
   app.post('/procurement/packages', async (request,reply)=>procurementCommand(request,reply,'PACKAGE_CREATE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.projectId!=='string'||typeof b.authorityContextId!=='string'||typeof b.packageCode!=='string'||typeof b.displayName!=='string') throw new Error('package request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['projectId']!=='string'||typeof b['authorityContextId']!=='string'||typeof b['packageCode']!=='string'||typeof b['displayName']!=='string') throw new Error('package request is invalid');
     return procurementWorkspaceService!.createPackage(context,b as unknown as CreateProcurementPackageRequest);
   }));
 
   app.post('/procurement/suppliers', async (request,reply)=>procurementCommand(request,reply,'SUPPLIER_CREATE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.supplierName!=='string'||typeof b.contactName!=='string'||typeof b.emailAddress!=='string'||typeof b.mailboxKind!=='string') throw new Error('supplier request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['supplierName']!=='string'||typeof b['contactName']!=='string'||typeof b['emailAddress']!=='string'||typeof b['mailboxKind']!=='string') throw new Error('supplier request is invalid');
     return procurementWorkspaceService!.createSupplier(context,b as unknown as CreateSupplierRequest);
   }));
 
   app.post('/procurement/suppliers/:relationshipId/contacts', async (request,reply)=>procurementCommand(request,reply,'SUPPLIER_CONTACT_CREATE_REJECTED',async(context)=>{
-    const p=request.params as {relationshipId?:unknown}; const b=bodyObject(request); if(typeof p.relationshipId!=='string'||!b||typeof b.contactName!=='string'||typeof b.emailAddress!=='string'||typeof b.mailboxKind!=='string') throw new Error('supplier contact request is invalid');
-    return procurementWorkspaceService!.addSupplierContact(context,{supplierRelationshipId:p.relationshipId,contactName:b.contactName,emailAddress:b.emailAddress,mailboxKind:b.mailboxKind} as CreateSupplierContactRequest);
+    const p=request.params as {relationshipId?:unknown}; const b=bodyObject(request); if(typeof p.relationshipId!=='string'||!b||typeof b['contactName']!=='string'||typeof b['emailAddress']!=='string'||typeof b['mailboxKind']!=='string') throw new Error('supplier contact request is invalid');
+    return procurementWorkspaceService!.addSupplierContact(context,{supplierRelationshipId:p.relationshipId,contactName:b['contactName'],emailAddress:b['emailAddress'],mailboxKind:b['mailboxKind']} as CreateSupplierContactRequest);
   }));
 
   app.post('/procurement/rfqs', async (request,reply)=>procurementCommand(request,reply,'RFQ_DRAFT_CREATE_REJECTED',async(context)=>{
-    const b=bodyObject(request); if(!b||typeof b.projectId!=='string'||typeof b.authorityContextId!=='string'||typeof b.eventNumber!=='string'||typeof b.title!=='string'||typeof b.responseDueAt!=='string'||!Array.isArray(b.responseFieldKeys)||!Array.isArray(b.supplierContactIds)) throw new Error('RFQ draft request is invalid');
+    const b=bodyObject(request); if(!b||typeof b['projectId']!=='string'||typeof b['authorityContextId']!=='string'||typeof b['eventNumber']!=='string'||typeof b['title']!=='string'||typeof b['responseDueAt']!=='string'||!Array.isArray(b['responseFieldKeys'])||!Array.isArray(b['supplierContactIds'])) throw new Error('RFQ draft request is invalid');
     return procurementWorkspaceService!.createRfqDraft(context,b as unknown as CreateRfqDraftRequest);
   }));
 
   app.post('/procurement/rfqs/:eventId/issue', async (request,reply)=>procurementCommand(request,reply,'RFQ_ISSUE_REJECTED',async(context)=>{
-    const p=request.params as {eventId?:unknown}; const b=bodyObject(request); if(typeof p.eventId!=='string'||!b||typeof b.projectId!=='string'||typeof b.expectedDraftVersion!=='string') throw new Error('RFQ issue request is invalid');
-    return procurementWorkspaceService!.issueRfq(context,{projectId:b.projectId,sourcingEventId:p.eventId,expectedDraftVersion:b.expectedDraftVersion});
+    const p=request.params as {eventId?:unknown}; const b=bodyObject(request); if(typeof p.eventId!=='string'||!b||typeof b['projectId']!=='string'||typeof b['expectedDraftVersion']!=='string') throw new Error('RFQ issue request is invalid');
+    return procurementWorkspaceService!.issueRfq(context,{projectId:b['projectId'],sourcingEventId:p.eventId,expectedDraftVersion:b['expectedDraftVersion']});
   }));
 
   app.post('/procurement/rfqs/:eventId/addenda', async (request,reply)=>procurementCommand(request,reply,'RFQ_ADDENDUM_REJECTED',async(context)=>{
-    const p=request.params as {eventId?:unknown}; const b=bodyObject(request); if(typeof p.eventId!=='string'||!b||typeof b.projectId!=='string'||typeof b.expectedIssuedVersion!=='string'||typeof b.responseDueAt!=='string'||typeof b.reason!=='string') throw new Error('RFQ addendum request is invalid');
-    return procurementWorkspaceService!.createRfqAddendum(context,{projectId:b.projectId,sourcingEventId:p.eventId,expectedIssuedVersion:b.expectedIssuedVersion,responseDueAt:b.responseDueAt,reason:b.reason});
+    const p=request.params as {eventId?:unknown}; const b=bodyObject(request); if(typeof p.eventId!=='string'||!b||typeof b['projectId']!=='string'||typeof b['expectedIssuedVersion']!=='string'||typeof b['responseDueAt']!=='string'||typeof b['reason']!=='string') throw new Error('RFQ addendum request is invalid');
+    return procurementWorkspaceService!.createRfqAddendum(context,{projectId:b['projectId'],sourcingEventId:p.eventId,expectedIssuedVersion:b['expectedIssuedVersion'],responseDueAt:b['responseDueAt'],reason:b['reason']});
   }));
 
   app.post('/procurement/grants/:grantId/revoke', async (request,reply)=>procurementCommand(request,reply,'GRANT_REVOKE_REJECTED',async(context)=>{
-    const p=request.params as {grantId?:unknown}; const b=bodyObject(request); if(typeof p.grantId!=='string'||!b||typeof b.projectId!=='string'||typeof b.reason!=='string') throw new Error('grant revoke request is invalid');
-    return procurementWorkspaceService!.revokeExternalTaskGrant(context,{projectId:b.projectId,externalTaskGrantId:p.grantId,reason:b.reason});
+    const p=request.params as {grantId?:unknown}; const b=bodyObject(request); if(typeof p.grantId!=='string'||!b||typeof b['projectId']!=='string'||typeof b['reason']!=='string') throw new Error('grant revoke request is invalid');
+    return procurementWorkspaceService!.revokeExternalTaskGrant(context,{projectId:b['projectId'],externalTaskGrantId:p.grantId,reason:b['reason']});
   },200));
 
   app.post('/procurement/grants/:grantId/transfer', async (request,reply)=>procurementCommand(request,reply,'GRANT_TRANSFER_REJECTED',async(context)=>{
-    const p=request.params as {grantId?:unknown}; const b=bodyObject(request); if(typeof p.grantId!=='string'||!b||typeof b.projectId!=='string'||typeof b.replacementSupplierContactId!=='string'||typeof b.reason!=='string') throw new Error('grant transfer request is invalid');
-    return procurementWorkspaceService!.transferExternalTaskGrant(context,{projectId:b.projectId,externalTaskGrantId:p.grantId,replacementSupplierContactId:b.replacementSupplierContactId,reason:b.reason});
+    const p=request.params as {grantId?:unknown}; const b=bodyObject(request); if(typeof p.grantId!=='string'||!b||typeof b['projectId']!=='string'||typeof b['replacementSupplierContactId']!=='string'||typeof b['reason']!=='string') throw new Error('grant transfer request is invalid');
+    return procurementWorkspaceService!.transferExternalTaskGrant(context,{projectId:b['projectId'],externalTaskGrantId:p.grantId,replacementSupplierContactId:b['replacementSupplierContactId'],reason:b['reason']});
   }));
 
   return app;
