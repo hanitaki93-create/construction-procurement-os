@@ -1,11 +1,17 @@
 # B02 SSV-1 Practitioner Exercise Packet v1.0
 
-**Status:** READY FOR REAL PRACTITIONER EXECUTION — NOT YET SATISFIED  
-**Purpose:** collect the mandatory CHG-SSS-001 B02 self-service validation evidence from at least three non-builder construction practitioners.
+**Status:** DEFERRED TO OPERATIONAL-MVP VALIDATION UNDER CHG-0008 — DO NOT EXECUTE AGAINST CURRENT SHELL  
+**Purpose:** preserve the mandatory practitioner-validation exercise for execution once CPOS exposes a genuinely representative procurement operating surface.
+
+## Why execution is deferred
+
+Owner review of the deployed B02 dashboard confirmed that the current shell does not yet provide enough meaningful user states/actions for a valid practitioner exercise. Project creation is functional, but role/state differentiation and procurement-domain workflows are not yet representative enough to produce useful independent usability/comprehension evidence.
+
+Accordingly, CHG-0008 moves SSV-1 from an immediate B02 blocker to the first operational-MVP/user-validation stage. The requirement is deferred, not waived.
 
 ## Participant eligibility
 
-Each participant must be a real non-builder construction practitioner familiar enough with contractor procurement/commercial work to judge whether the surface is understandable without builder coaching.
+When the exercise is activated, each participant must be a real non-builder construction practitioner familiar enough with contractor procurement/commercial work to judge whether the surface is understandable without builder coaching.
 
 Record for each participant:
 
@@ -15,13 +21,23 @@ Record for each participant:
 - confirmation they did not build CPOS;
 - date of exercise.
 
-## Test surface
+## Activation criteria for the test surface
 
-Use the current CPOS internal dashboard/product shell. The public demo may be used for comprehension testing, but note that its data is non-production demo state.
+Do not run SSV-1 until the product surface supports a meaningful subset of real procurement operation, including enough of the following to test comprehension rather than placeholders:
 
-Participants should receive only the normal product surface and the short task statements below. Do not explain where controls are located before the attempt.
+- usable identity/session entry;
+- meaningful role/authority differentiation;
+- project/workspace context;
+- subscription/access restriction states where relevant;
+- real procurement-domain actions and navigation;
+- visible business-approval/authority behavior distinct from product entitlement;
+- sufficient end-to-end workflow to let a practitioner form a realistic opinion of CPOS.
 
-## Tasks
+The exact task list should be refreshed against the then-current MVP before participants execute it.
+
+## Preserved baseline tasks
+
+These tasks remain a useful baseline but are **not the final operational-MVP script yet**:
 
 1. Identify the active company/tenant and the current user context.
 2. Identify whether the account currently has full command access or restricted read/export access.
@@ -43,18 +59,16 @@ Record:
 - exact assistance given, if any;
 - proposed UI wording/placement fix for any repeated confusion.
 
-## B02 SSV-1 disposition
+## Future SSV-1 disposition
 
-Do not mark SSV-1 PASS until at least three eligible practitioners have completed the exercise and the evidence supports the frozen acceptance standard.
-
-Final record should include:
+Do not mark SSV-1 PASS until at least three eligible practitioners have completed the refreshed operational-MVP exercise and the evidence supports the acceptance standard.
 
 | Participant | Eligible | Tasks passed without builder coaching | Material confusion | Disposition |
 |---|---|---|---|---|
-| P1 | PENDING | PENDING | PENDING | PENDING |
-| P2 | PENDING | PENDING | PENDING | PENDING |
-| P3 | PENDING | PENDING | PENDING | PENDING |
+| P1 | DEFERRED | DEFERRED | DEFERRED | DEFERRED |
+| P2 | DEFERRED | DEFERRED | DEFERRED | DEFERRED |
+| P3 | DEFERRED | DEFERRED | DEFERRED | DEFERRED |
 
-**Current disposition:** `SSV-1 PENDING — practitioner execution required.`
+**Current disposition:** `SSV-1 DEFERRED — activate at first genuinely operational procurement MVP under CHG-0008.`
 
-This pending external validation is a formal B02 completion gate. It is not a reason to fabricate evidence or reopen technically green C1-C4 semantics.
+The owner is expected to perform intensive alpha/product acceptance throughout development. Owner testing is valuable but does not replace the later independent practitioner cohort because the owner materially shaped CPOS requirements and product decisions.
