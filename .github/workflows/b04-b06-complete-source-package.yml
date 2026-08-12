@@ -1,0 +1,176 @@
+name: B04-B06 Complete-Source Independent Audit Package
+
+on:
+  push:
+    branches: [audit/b04-b06-complete-source-20260812]
+    paths:
+      - '.github/workflows/b04-b06-complete-source-package.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: b6a3a6f76c6a8baa33dd6b4f30c26228fca511d5
+      TARGET_TREE: ef75470e7a66b0e23f730966a13acf22880af0a5
+      TECHNICAL_RUN: '31607931222'
+      TECHNICAL_JOB: '94151564073'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: audit/b04-b06-complete-source-20260812
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Build and verify complete target source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse "${TARGET_SHA}^{tree}")" = "${TARGET_TREE}"
+          rm -rf _source audit_package
+          mkdir -p _source audit_package
+
+          git archive --format=tar "${TARGET_SHA}" > audit_package/B04_B06_COMPLETE_SOURCE.tar
+          gzip -n -c audit_package/B04_B06_COMPLETE_SOURCE.tar > audit_package/B04_B06_COMPLETE_SOURCE.tar.gz
+          sha256sum audit_package/B04_B06_COMPLETE_SOURCE.tar audit_package/B04_B06_COMPLETE_SOURCE.tar.gz > audit_package/ARCHIVE_SHA256.txt
+
+          git ls-tree -r --name-only "${TARGET_SHA}" | LC_ALL=C sort > audit_package/EXPECTED_GIT_TRACKED_FILES.txt
+          tar -tf audit_package/B04_B06_COMPLETE_SOURCE.tar | sed '/\/$/d' | LC_ALL=C sort > audit_package/ARCHIVE_FILES.txt
+          diff -u audit_package/EXPECTED_GIT_TRACKED_FILES.txt audit_package/ARCHIVE_FILES.txt
+          test "$(wc -l < audit_package/EXPECTED_GIT_TRACKED_FILES.txt)" -eq "$(wc -l < audit_package/ARCHIVE_FILES.txt)"
+
+          tar -xf audit_package/B04_B06_COMPLETE_SOURCE.tar -C _source
+          git ls-tree -r "${TARGET_SHA}" > audit_package/TARGET_GIT_TREE.txt
+          find _source -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > audit_package/EXTRACTED_REGULAR_FILE_SHA256.txt
+
+          cat > audit_package/AUDIT_TARGET.md <<EOF
+          # B04-B06 Combined Independent Hostile Audit Target
+
+          - Repository: hanitaki93-create/construction-procurement-os
+          - Exact technically verified target commit: \`${TARGET_SHA}\`
+          - Exact target tree: \`${TARGET_TREE}\`
+          - Focused verification run: \`${TECHNICAL_RUN}\`
+          - Verification job: \`${TECHNICAL_JOB}\`
+          - Runner: \`eth-sim-cpos-ci-01\`
+          - Technical result: PASS — compiler/typecheck, architecture, contracts/tests, application/API/dashboard, full PostgreSQL hostile integration, migrations/status/catalog scan.
+          - B01/B02/B03 predecessor lineage: frozen canonical predecessor; already independently hostile-audited PASS and owner-accepted before this wave.
+          - B07: OUT OF SCOPE. Do not inspect or authorize B07 build work.
+          - SSV-1: DEFERRED, NOT WAIVED.
+
+          ## Complete-source guarantee
+
+          \`B04_B06_COMPLETE_SOURCE.tar\` was produced directly by \`git archive ${TARGET_SHA}\`.
+          Its non-directory archive inventory is required to match \`git ls-tree -r --name-only ${TARGET_SHA}\` exactly; package construction fails on any missing or extra tracked path.
+          \`_source/\` is the extracted complete archive. \`TARGET_GIT_TREE.txt\` records every tracked Git blob/mode/path, and SHA-256 manifests cover the source archives and extracted regular files.
+          EOF
+
+          cat > audit_package/INDEPENDENT_HOSTILE_AUDIT_PROMPT.md <<'EOF'
+          # Independent hostile audit — B04/B05/B06 combined successor wave
+
+          You are the independent hostile auditor. Audit the complete source under `_source/` as the exact target identified in `AUDIT_TARGET.md`. Do not trust summaries, green CI, prior author claims, or intended behavior where source proves otherwise. Treat the full source package as available evidence and inspect the implementation directly.
+
+          ## Non-negotiable boundaries
+
+          1. B01/B02/B03 semantics are frozen predecessor semantics. They were previously independently hostile-audited PASS and owner-accepted. B04/B05/B06 may depend on them but may not weaken, reinterpret, bypass, or silently fork them.
+          2. Audit B04, B05 and B06 as one combined successor wave, including cross-block interactions.
+          3. B07 is out of scope. Do not recommend starting B07 as a remedy.
+          4. SSV-1 remains deferred, not waived. Do not convert the deferral into an implicit acceptance or deletion of the obligation.
+          5. Missing source required to substantiate a claim means BLOCKED / AUDIT NOT RUN for that claim, never PASS. This package is intentionally complete-source; identify any material source omission if you can prove one.
+          6. Do not weaken a frozen invariant merely to align tests or current implementation.
+
+          ## Required source surfaces
+
+          Inspect all relevant tracked source, not only changed files. At minimum include:
+          - migrations, especially B04/B05/B06 migrations 000014–000016 and predecessor migrations/triggers they rely on;
+          - contracts and public exports;
+          - database-core runtime, integration tests and shared fixtures;
+          - object-store and platform/procurement application layers;
+          - API routes, authorization/context adapters, error mapping and tests;
+          - internal dashboard UI and its API assumptions;
+          - configuration, TypeScript/workspace settings, scripts, migration/catalog checks and focused verification workflow;
+          - package manifests/lockfile where dependency/toolchain behavior affects correctness.
+
+          ## Hostile attack areas
+
+          Attempt to falsify the implementation, including but not limited to:
+          - tenant isolation and execution-context confusion; principal/authority scope leakage; cross-tenant identifiers;
+          - role/authority escalation, owner/procurement-manager boundaries and frozen predecessor guards;
+          - version/effective-period overlap, mutable-history or snapshot/reference corruption;
+          - B04 evidence/files: upload/finalization lifecycle, object/SHA linkage, acceptance/rejection transitions, immutability, duplicate/idempotent behavior, race/concurrency behavior, communication/evidence provenance;
+          - B05 requirements/allocation: requirement identity/versioning, package relationships, authorized/allocated/available arithmetic, over-allocation/underflow, concurrent allocation, wrong-tenant/package allocation, status/lifecycle bypass;
+          - B06 sourcing/RFQ: sourcing/RFQ identity, invite/grant issue, addenda/version semantics, revoke/transfer behavior, stale grants, recipient/authority confusion, issue-state monotonicity, idempotency and concurrent issue/transfer/revoke attempts;
+          - database constraints/triggers/functions versus application-only assumptions; ways direct SQL could violate claimed invariants;
+          - transaction boundaries, lost updates, write skew, race windows and retry/idempotency semantics;
+          - API request parsing, exact-optional behavior, validation omissions, authorization context propagation and response-state mismatch;
+          - dashboard claims/actions that are not actually backed by proven API/database behavior, or omitted proven functionality that makes the product surface materially misleading;
+          - migration ordering/replay/catalog drift and any change that weakens B01–B03 invariants.
+
+          ## Evidence standard
+
+          For every blocker or material concern, cite concrete file paths and line ranges/functions, explain the exploit/failure path, expected invariant, demonstrated violation, and the smallest safe remediation. Distinguish a proven blocker from a suggestion or unproven concern.
+
+          Review hostile tests critically: a passing test is evidence only if it actually exercises the claimed invariant. Identify vacuous tests, false positives, shared-fixture masking, or tests that merely mirror implementation.
+
+          ## Verdict contract
+
+          End with exactly one overall verdict:
+          - `PASS` only if B04+B05+B06 are technically and semantically acceptable as a combined successor wave with no unresolved audit blocker; or
+          - `FAIL` if one or more demonstrated blockers exist; or
+          - `BLOCKED` if independent substantiation cannot be completed because material required evidence/source is unavailable.
+
+          A partial pass is not an overall PASS. Do not authorize deployment or B07 in a FAIL/BLOCKED verdict.
+
+          Required final sections:
+          1. Overall verdict
+          2. Blocking findings (or `None`)
+          3. Non-blocking observations
+          4. Frozen-predecessor regression assessment
+          5. B04 assessment
+          6. B05 assessment
+          7. B06 assessment
+          8. Cross-block/concurrency assessment
+          9. Dashboard/API consistency assessment
+          10. Source-completeness assessment
+          11. SSV-1 statement: `deferred, not waived`
+          EOF
+
+          cat > audit_package/TECHNICAL_VERIFICATION_EVIDENCE.md <<EOF
+          # Technical verification evidence
+
+          The exact target \`${TARGET_SHA}\` passed the focused B04-B06 verification workflow on the self-hosted \`eth-sim-cpos-ci-01\` runner.
+
+          - Workflow run: ${TECHNICAL_RUN}
+          - Job: ${TECHNICAL_JOB}
+          - Result: SUCCESS
+          - Exact toolchain: Node 24.18.0, pnpm 10.34.0, frozen lockfile, PostgreSQL 18.4.
+          - Gates passed: database-core typecheck; architecture boundary scan; database public-surface scan; contracts typecheck/tests; object-store typecheck/tests; platform application typecheck; procurement application typecheck; API typecheck/tests; UI foundation build; internal dashboard typecheck/build; full PostgreSQL hostile integration; committed migration rebuild/status/catalog scan.
+
+          This evidence is not a substitute for the independent hostile audit and must not bias the auditor toward PASS.
+          EOF
+
+          cat > audit_package/PACKAGE_STATUS.txt <<EOF
+          PACKAGE_STATUS=COMPLETE_SOURCE_READY_FOR_INDEPENDENT_AUDIT
+          TARGET_SHA=${TARGET_SHA}
+          TARGET_TREE=${TARGET_TREE}
+          TECHNICAL_VERIFICATION=PASS
+          TECHNICAL_RUN=${TECHNICAL_RUN}
+          INDEPENDENT_AUDIT=NOT_YET_RUN
+          B07=OUT_OF_SCOPE
+          SSV_1=DEFERRED_NOT_WAIVED
+          EOF
+
+          git diff --check -- audit_package _source
+          echo "tracked_source_files=$(wc -l < audit_package/EXPECTED_GIT_TRACKED_FILES.txt)"
+          echo "archive_sha256=$(cut -d' ' -f1 audit_package/ARCHIVE_SHA256.txt | head -n1)"
+      - name: Commit complete-source package only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'cpos-audit-package'
+          git config user.email 'cpos-audit-package@users.noreply.github.com'
+          git add audit_package _source
+          git diff --cached --check
+          git commit -m 'audit: build complete-source B04-B06 independent hostile package'
+          git push origin HEAD:audit/b04-b06-complete-source-20260812
