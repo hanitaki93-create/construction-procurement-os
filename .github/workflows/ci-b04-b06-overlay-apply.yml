@@ -33,11 +33,28 @@ jobs:
           TMP_B64="${RUNNER_TEMP}/b04-b06-overlay.b64"
           TMP_TGZ="${RUNNER_TEMP}/b04-b06-overlay.tar.gz"
           : > "${TMP_B64}"
-          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.00 >> "${TMP_B64}"
-          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.01 >> "${TMP_B64}"
-          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.rem01 >> "${TMP_B64}"
-          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.02 >> "${TMP_B64}"
-          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/tail.b64 >> "${TMP_B64}"
+          PARTS=(
+            .overlay-b04b06/chunk.00
+            .overlay-b04b06/chunk.01
+            .overlay-b04b06/chunk.rem01
+            .overlay-b04b06/chunk.02
+            .overlay-b04b06/tail.b64
+          )
+          for part in "${PARTS[@]}"; do
+            tmp="${RUNNER_TEMP}/$(basename "${part}").part"
+            git show "origin/ci/b04-b06-overlay-apply:${part}" > "${tmp}"
+            echo "${part}: bytes=$(wc -c < "${tmp}" | tr -d ' ')"
+            if LC_ALL=C grep -n '[^A-Za-z0-9+/=]' "${tmp}"; then
+              echo "::error title=Invalid Base64 staging blob::${part} contains non-Base64 characters"
+              exit 1
+            fi
+            base64 -d "${tmp}" >/dev/null || {
+              echo "::error title=Invalid Base64 staging blob::${part} cannot decode independently"
+              exit 1
+            }
+            cat "${tmp}" >> "${TMP_B64}"
+          done
+          echo "combined-base64-bytes=$(wc -c < "${TMP_B64}" | tr -d ' ')"
           base64 -d "${TMP_B64}" > "${TMP_TGZ}"
           echo '1614295a5f7235d75af49b5b0467b7b6bb1f9e579f20c584e465f434254ba64d  '"${TMP_TGZ}" | sha256sum -c -
           tar -xzf "${TMP_TGZ}" -C .
