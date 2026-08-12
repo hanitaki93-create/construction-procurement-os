@@ -1,0 +1,62 @@
+name: B04-B06 Surgical Test Runtime Options Fix
+
+on:
+  push:
+    branches: [build/b04-b06-procurement-wave]
+    paths:
+      - '.github/workflows/ci-b04-b06-fix-runtime-options.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b04-b06-procurement-wave
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - name: Align hostile-test runtimes with the established pool contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const fixes = [
+            {
+              path: 'packages/database-core/integration/platform-b04-evidence-files.integration.test.ts',
+              from: "const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), applicationName: 'cpos-b04-evidence-runtime' });",
+              to: `const runtime = createDatabaseRuntime({\n  connectionString: requiredDatabaseUrl(),\n  maximumConnections: 12,\n  idleTimeoutMs: 1_000,\n  connectionTimeoutMs: 5_000,\n  statementTimeoutMs: 20_000,\n  applicationName: 'cpos-b04-evidence-runtime',\n});`,
+            },
+            {
+              path: 'packages/database-core/integration/platform-b05-requirements-allocation.integration.test.ts',
+              from: "const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), maximumConnections: 12, applicationName: 'cpos-b05-requirements-runtime' });",
+              to: `const runtime = createDatabaseRuntime({\n  connectionString: requiredDatabaseUrl(),\n  maximumConnections: 12,\n  idleTimeoutMs: 1_000,\n  connectionTimeoutMs: 5_000,\n  statementTimeoutMs: 20_000,\n  applicationName: 'cpos-b05-requirements-runtime',\n});`,
+            },
+            {
+              path: 'packages/database-core/integration/platform-b06-sourcing-rfq.integration.test.ts',
+              from: "const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), maximumConnections: 12, applicationName: 'cpos-b06-sourcing-runtime' });",
+              to: `const runtime = createDatabaseRuntime({\n  connectionString: requiredDatabaseUrl(),\n  maximumConnections: 12,\n  idleTimeoutMs: 1_000,\n  connectionTimeoutMs: 5_000,\n  statementTimeoutMs: 20_000,\n  applicationName: 'cpos-b06-sourcing-runtime',\n});`,
+            },
+          ];
+          for (const fix of fixes) {
+            const before = fs.readFileSync(fix.path, 'utf8');
+            const count = before.split(fix.from).length - 1;
+            if (count !== 1) throw new Error(`${fix.path}: expected one exact runtime call, found ${count}`);
+            fs.writeFileSync(fix.path, before.replace(fix.from, fix.to));
+          }
+          NODE
+          git diff --check
+          git diff -- packages/database-core/integration/platform-b04-evidence-files.integration.test.ts packages/database-core/integration/platform-b05-requirements-allocation.integration.test.ts packages/database-core/integration/platform-b06-sourcing-rfq.integration.test.ts
+          git config user.name 'cpos-ci-remediation'
+          git config user.email 'cpos-ci-remediation@users.noreply.github.com'
+          git add packages/database-core/integration/platform-b04-evidence-files.integration.test.ts packages/database-core/integration/platform-b05-requirements-allocation.integration.test.ts packages/database-core/integration/platform-b06-sourcing-rfq.integration.test.ts
+          git commit -m 'test: align B04-B06 database runtimes with pool contract'
+          git push origin HEAD:build/b04-b06-procurement-wave
