@@ -222,17 +222,23 @@ describe('B03 async/event/publication/reconciliation kernel', () => {
     );
     expect(await currentPosition(source.accepted_async_operation_id)).toBe('DOMAIN_EFFECT_ESTABLISHED');
 
-    const publication = await pool.query<{ publication_intent_id: string; publication_async_operation_id: string }>(
-      `WITH created AS (
-         SELECT ops.record_publication_intent_once(
-           $1, $2, $3, 'publication-1', $4, 'map-v1', 'event-v1',
-           'disclosure-v1', $5, 'sha256:published-content', 'retry-v1', 4
-         ) AS publication_intent_id
-       )
-       SELECT p.publication_intent_id::text, p.publication_async_operation_id::text
-       FROM created c
-       JOIN ops.publication_intent p ON p.publication_intent_id = c.publication_intent_id`,
+    const createdPublication = await pool.query<{ publication_intent_id: string }>(
+      `SELECT ops.record_publication_intent_once(
+         $1, $2, $3, 'publication-1', $4, 'map-v1', 'event-v1',
+         'disclosure-v1', $5, 'sha256:published-content', 'retry-v1', 4
+       )::text AS publication_intent_id`,
       [randomUUID(), tenantA, eventId, fpB, fpC],
+    );
+    const publicationId = createdPublication.rows[0]?.publication_intent_id;
+    if (!publicationId) throw new Error('publication intent id missing');
+    const publication = await pool.query<{
+      publication_intent_id: string;
+      publication_async_operation_id: string;
+    }>(
+      `SELECT publication_intent_id::text, publication_async_operation_id::text
+       FROM ops.publication_intent
+       WHERE publication_intent_id = $1`,
+      [publicationId],
     );
     const publicationRow = publication.rows[0];
     if (!publicationRow) throw new Error('publication intent missing');
