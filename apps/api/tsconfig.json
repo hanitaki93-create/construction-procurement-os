@@ -11,6 +11,8 @@
   "references": [
     { "path": "../../packages/config" },
     { "path": "../../packages/contracts" },
-    { "path": "../../packages/observability" }
+    { "path": "../../packages/database-core" },
+    { "path": "../../packages/observability" },
+    { "path": "../../packages/platform-application" }
   ]
 }

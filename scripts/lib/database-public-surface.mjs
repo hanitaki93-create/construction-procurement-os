@@ -7,13 +7,26 @@ const APPROVED_EXPORTS = new Map([
   ['AppliedMigration', 'type-reexport'],
   ['CatalogFinding', 'type-reexport'],
   ['CatalogFindingKind', 'type-reexport'],
+  ['DatabaseExecutionContext', 'type-reexport'],
+  ['DatabaseExecutionTransactionOptions', 'type-reexport'],
   ['DatabaseHealth', 'type-alias'],
   ['DatabaseRuntime', 'interface'],
   ['DatabaseRuntimeOptions', 'type-alias'],
+  ['ExecutionIsolation', 'type-reexport'],
   ['MigrationFile', 'type-reexport'],
   ['MigrationResult', 'type-reexport'],
   ['MigrationStatus', 'type-reexport'],
+  ['PersistenceAdapterToken', 'type-reexport'],
   ['createDatabaseRuntime', 'function'],
+]);
+
+const APPROVED_PERSISTENCE_EXPORTS = new Map([
+  ['PersistenceAdapterToken', 'interface'],
+  ['SqlBindable', 'type-alias'],
+  ['SqlExecutor', 'interface'],
+  ['SqlStatement', 'interface'],
+  ['definePersistenceAdapter', 'function'],
+  ['sql', 'function'],
 ]);
 
 const FORBIDDEN_TYPE_NAMES = new Set([
@@ -34,22 +47,22 @@ function normalizeFileName(fileName) {
   return fileName.split(path.sep).join('/');
 }
 
-function declarationKind(declaration, publicPath) {
+function declarationKind(declaration, sourcePath) {
   if (
     ts.isFunctionDeclaration(declaration) &&
-    declaration.getSourceFile().fileName === publicPath
+    declaration.getSourceFile().fileName === sourcePath
   ) {
     return 'function';
   }
   if (
     ts.isInterfaceDeclaration(declaration) &&
-    declaration.getSourceFile().fileName === publicPath
+    declaration.getSourceFile().fileName === sourcePath
   ) {
     return 'interface';
   }
   if (
     ts.isTypeAliasDeclaration(declaration) &&
-    declaration.getSourceFile().fileName === publicPath
+    declaration.getSourceFile().fileName === sourcePath
   ) {
     return 'type-alias';
   }
@@ -151,25 +164,19 @@ function inspectTypeGraph(checker, rootType, exportName, repositoryRoot) {
   return [...new Set(errors)];
 }
 
-function createProgramWithPublicOverride(parsedConfig, publicPath, publicSourceOverride) {
+function createProgramWithOverride(parsedConfig, sourcePath, sourceOverride) {
   const host = ts.createCompilerHost(parsedConfig.options, true);
-  if (publicSourceOverride === undefined) {
+  if (sourceOverride === undefined) {
     return ts.createProgram(parsedConfig.fileNames, parsedConfig.options, host);
   }
 
   const originalReadFile = host.readFile.bind(host);
   const originalGetSourceFile = host.getSourceFile.bind(host);
   host.readFile = (fileName) =>
-    path.resolve(fileName) === publicPath ? publicSourceOverride : originalReadFile(fileName);
+    path.resolve(fileName) === sourcePath ? sourceOverride : originalReadFile(fileName);
   host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) => {
-    if (path.resolve(fileName) === publicPath) {
-      return ts.createSourceFile(
-        fileName,
-        publicSourceOverride,
-        languageVersion,
-        true,
-        ts.ScriptKind.TS,
-      );
+    if (path.resolve(fileName) === sourcePath) {
+      return ts.createSourceFile(fileName, sourceOverride, languageVersion, true, ts.ScriptKind.TS);
     }
     return originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
   };
@@ -177,66 +184,43 @@ function createProgramWithPublicOverride(parsedConfig, publicPath, publicSourceO
   return ts.createProgram(parsedConfig.fileNames, parsedConfig.options, host);
 }
 
-export async function inspectDatabasePublicSurface({ repositoryRoot, publicSourceOverride }) {
+function inspectApprovedSource({
+  parsedConfig,
+  sourcePath,
+  sourceOverride,
+  approvedExports,
+  repositoryRoot,
+  surfaceName,
+  rejectQueryMethod,
+}) {
   const errors = [];
-  const packageJson = JSON.parse(
-    await readFile(path.join(repositoryRoot, 'packages/database-core/package.json'), 'utf8'),
-  );
-  const exportsMap = packageJson.exports ?? {};
-
-  if (Object.keys(exportsMap).join(',') !== '.') {
-    errors.push('database-core must expose exactly one public package entry point');
-  }
-  if (exportsMap['.']?.default !== './dist/public.js') {
-    errors.push('database-core default export must resolve to dist/public.js');
-  }
-  if (exportsMap['.']?.types !== './dist/public.d.ts') {
-    errors.push('database-core type export must resolve to dist/public.d.ts');
-  }
-
-  const configPath = path.join(repositoryRoot, 'packages/database-core/tsconfig.json');
-  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (configFile.error !== undefined) {
-    errors.push(ts.flattenDiagnosticMessageText(configFile.error.messageText, '\n'));
-    return errors;
-  }
-  const parsedConfig = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    path.dirname(configPath),
-  );
-  const publicPath = path.resolve(repositoryRoot, 'packages/database-core/src/public.ts');
-  const program = createProgramWithPublicOverride(parsedConfig, publicPath, publicSourceOverride);
-  const sourceFile = program.getSourceFile(publicPath);
+  const program = createProgramWithOverride(parsedConfig, sourcePath, sourceOverride);
+  const sourceFile = program.getSourceFile(sourcePath);
   if (sourceFile === undefined) {
-    errors.push('database-core public source was not included in the TypeScript program');
-    return errors;
+    return [`${surfaceName} source was not included in the TypeScript program`];
   }
 
-  const sourceText = publicSourceOverride ?? sourceFile.getFullText();
-  if (/(?:readonly\s+)?query\s*\(/u.test(sourceText)) {
-    errors.push('database-core public runtime exposes an unrestricted query method');
+  const sourceText = sourceOverride ?? sourceFile.getFullText();
+  if (rejectQueryMethod && /(?:readonly\s+)?query\s*\(/u.test(sourceText)) {
+    errors.push(`${surfaceName} exposes an unrestricted query method`);
   }
 
   const checker = program.getTypeChecker();
   const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
-  if (moduleSymbol === undefined) {
-    errors.push('database-core public source has no module symbol');
-    return errors;
-  }
+  if (moduleSymbol === undefined) return [`${surfaceName} source has no module symbol`];
 
   const exportedSymbols = checker.getExportsOfModule(moduleSymbol);
   const actualNames = exportedSymbols.map((symbol) => symbol.getName()).sort();
-  const approvedNames = [...APPROVED_EXPORTS.keys()].sort();
+  const approvedNames = [...approvedExports.keys()].sort();
   if (actualNames.join('\n') !== approvedNames.join('\n')) {
     errors.push(
-      `database-core public exports must equal the approved set; expected [${approvedNames.join(', ')}], received [${actualNames.join(', ')}]`,
+      `${surfaceName} exports must equal the approved set; expected [${approvedNames.join(', ')}], received [${actualNames.join(', ')}]`,
     );
   }
 
   for (const exportedSymbol of exportedSymbols) {
     const exportName = exportedSymbol.getName();
-    const expectedKind = APPROVED_EXPORTS.get(exportName);
+    const expectedKind = approvedExports.get(exportName);
     if (expectedKind === undefined) continue;
 
     const exportDeclaration = exportedSymbol.declarations?.[0];
@@ -244,7 +228,7 @@ export async function inspectDatabasePublicSurface({ repositoryRoot, publicSourc
       errors.push(`approved export ${exportName} has no declaration`);
       continue;
     }
-    const actualKind = declarationKind(exportDeclaration, publicPath);
+    const actualKind = declarationKind(exportDeclaration, sourcePath);
     if (actualKind !== expectedKind) {
       errors.push(
         `approved export ${exportName} must remain a ${expectedKind}; received ${actualKind}`,
@@ -264,7 +248,78 @@ export async function inspectDatabasePublicSurface({ repositoryRoot, publicSourc
     errors.push(...inspectTypeGraph(checker, targetType, exportName, repositoryRoot));
   }
 
+  return errors;
+}
+
+export async function inspectDatabasePublicSurface({
+  repositoryRoot,
+  publicSourceOverride,
+  persistenceSourceOverride,
+}) {
+  const errors = [];
+  const packageJson = JSON.parse(
+    await readFile(path.join(repositoryRoot, 'packages/database-core/package.json'), 'utf8'),
+  );
+  const exportsMap = packageJson.exports ?? {};
+  const exportKeys = Object.keys(exportsMap).sort();
+  if (exportKeys.join(',') !== '.,./persistence') {
+    errors.push('database-core must expose exactly root and ./persistence package entry points');
+  }
+  if (exportsMap['.']?.default !== './dist/public.js') {
+    errors.push('database-core root default export must resolve to dist/public.js');
+  }
+  if (exportsMap['.']?.types !== './dist/public.d.ts') {
+    errors.push('database-core root type export must resolve to dist/public.d.ts');
+  }
+  if (exportsMap['./persistence']?.default !== './dist/persistence.js') {
+    errors.push('database-core persistence default export must resolve to dist/persistence.js');
+  }
+  if (exportsMap['./persistence']?.types !== './dist/persistence.d.ts') {
+    errors.push('database-core persistence type export must resolve to dist/persistence.d.ts');
+  }
+
+  const configPath = path.join(repositoryRoot, 'packages/database-core/tsconfig.json');
+  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (configFile.error !== undefined) {
+    errors.push(ts.flattenDiagnosticMessageText(configFile.error.messageText, '\n'));
+    return errors;
+  }
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    path.dirname(configPath),
+  );
+
+  const publicPath = path.resolve(repositoryRoot, 'packages/database-core/src/public.ts');
+  errors.push(
+    ...inspectApprovedSource({
+      parsedConfig,
+      sourcePath: publicPath,
+      sourceOverride: publicSourceOverride,
+      approvedExports: APPROVED_EXPORTS,
+      repositoryRoot,
+      surfaceName: 'database-core root public surface',
+      rejectQueryMethod: true,
+    }),
+  );
+
+  const persistencePath = path.resolve(repositoryRoot, 'packages/database-core/src/persistence.ts');
+  errors.push(
+    ...inspectApprovedSource({
+      parsedConfig,
+      sourcePath: persistencePath,
+      sourceOverride: persistenceSourceOverride,
+      approvedExports: APPROVED_PERSISTENCE_EXPORTS,
+      repositoryRoot,
+      surfaceName: 'database-core restricted persistence surface',
+      rejectQueryMethod: true,
+    }),
+  );
+
   return [...new Set(errors)];
 }
 
 export const approvedDatabasePublicExports = Object.freeze([...APPROVED_EXPORTS.keys()].sort());
+export const approvedDatabasePersistenceExports = Object.freeze(
+  [...APPROVED_PERSISTENCE_EXPORTS.keys()].sort(),
+);

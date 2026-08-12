@@ -50,6 +50,8 @@ function classify(repositoryRoot, file) {
       relative.startsWith('packages/ui-foundation/'),
     isDatabaseCore: relative.startsWith('packages/database-core/'),
     isExternalWeb: relative.startsWith('apps/web-external/'),
+    isModulePersistenceSource:
+      relative.startsWith('packages/') && relative.includes('/src/persistence/'),
     isPrivateTestGraph:
       relative.includes('/integration/') ||
       relative.includes('/tests/') ||
@@ -100,6 +102,15 @@ export function inspectSpecifier({ repositoryRoot, file, specifier }) {
       specifier.startsWith('@cpos/object-store/server'))
   ) {
     report('browser code cannot import database or server object-store capabilities');
+  }
+
+  if (
+    specifier.startsWith('@cpos/database-core/persistence') &&
+    !kind.isDatabaseCore &&
+    !kind.isPrivateTestGraph &&
+    !kind.isModulePersistenceSource
+  ) {
+    report('database persistence capability is private to module src/persistence/ and test graphs');
   }
 
   if (

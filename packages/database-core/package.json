@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/public.d.ts",
       "default": "./dist/public.js"
+    },
+    "./persistence": {
+      "types": "./dist/persistence.d.ts",
+      "default": "./dist/persistence.js"
     }
   },
   "files": [

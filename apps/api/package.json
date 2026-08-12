@@ -12,7 +12,9 @@
   "dependencies": {
     "@cpos/config": "workspace:0.0.0-b01",
     "@cpos/contracts": "workspace:0.0.0-b01",
+    "@cpos/database-core": "workspace:0.0.0-b01",
     "@cpos/observability": "workspace:0.0.0-b01",
+    "@cpos/platform-application": "workspace:0.0.0-b02",
     "fastify": "catalog:"
   },
   "devDependencies": {
