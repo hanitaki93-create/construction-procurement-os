@@ -119,12 +119,18 @@ importers:
       '@cpos/database-core':
         specifier: workspace:0.0.0-b01
         version: link:../../packages/database-core
+      '@cpos/object-store':
+        specifier: workspace:0.0.0-b01
+        version: link:../../packages/object-store
       '@cpos/observability':
         specifier: workspace:0.0.0-b01
         version: link:../../packages/observability
       '@cpos/platform-application':
         specifier: workspace:0.0.0-b02
         version: link:../../packages/platform-application
+      '@cpos/procurement-application':
+        specifier: workspace:0.0.0-b04-b06
+        version: link:../../packages/procurement-application
       fastify:
         specifier: 'catalog:'
         version: 5.10.0
@@ -341,6 +347,25 @@ importers:
       '@cpos/database-core':
         specifier: workspace:0.0.0-b01
         version: link:../database-core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/procurement-application:
+    dependencies:
+      '@cpos/contracts':
+        specifier: workspace:0.0.0-b01
+        version: link:../contracts
+      '@cpos/database-core':
+        specifier: workspace:0.0.0-b01
+        version: link:../database-core
+      '@cpos/object-store':
+        specifier: workspace:0.0.0-b01
+        version: link:../object-store
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
