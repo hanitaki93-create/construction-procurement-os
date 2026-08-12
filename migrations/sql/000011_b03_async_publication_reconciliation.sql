@@ -16,7 +16,7 @@ CREATE SCHEMA IF NOT EXISTS ops;
 REVOKE ALL ON SCHEMA ops FROM PUBLIC;
 GRANT USAGE ON SCHEMA ops TO cpos_platform_runtime, cpos_async_worker_runtime;
 
-CREATE TABLE ops.worker_lane_policy (
+CREATE TABLE IF NOT EXISTS ops.worker_lane_policy (
   lane text PRIMARY KEY CHECK (lane IN (
     'interactive-nearline', 'routine-domain', 'evidence', 'connector-email',
     'reconciliation', 'report-export', 'search'
@@ -40,7 +40,7 @@ INSERT INTO ops.worker_lane_policy (
   ('search', 4, 32, 600, 1)
 ON CONFLICT (lane) DO NOTHING;
 
-CREATE TABLE ops.tenant_lane_quota (
+CREATE TABLE IF NOT EXISTS ops.tenant_lane_quota (
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   lane text NOT NULL REFERENCES ops.worker_lane_policy(lane),
   max_inflight integer NOT NULL CHECK (max_inflight BETWEEN 1 AND 1024),
@@ -49,7 +49,7 @@ CREATE TABLE ops.tenant_lane_quota (
   PRIMARY KEY (tenant_id, lane)
 );
 
-CREATE TABLE ops.async_operation (
+CREATE TABLE IF NOT EXISTS ops.async_operation (
   async_operation_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   principal_id uuid NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE ops.async_operation (
 COMMENT ON TABLE ops.async_operation IS
   'Immutable accepted async operation and frozen input semantic fingerprint. Acceptance/queueing is not business completion.';
 
-CREATE TABLE ops.effect_position_occurrence (
+CREATE TABLE IF NOT EXISTS ops.effect_position_occurrence (
   effect_position_occurrence_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   async_operation_id uuid NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE ops.effect_position_occurrence (
 COMMENT ON TABLE ops.effect_position_occurrence IS
   'Append-only seven-stage effect position history. Queue status is a separate operational fact.';
 
-CREATE TABLE ops.async_operation_result (
+CREATE TABLE IF NOT EXISTS ops.async_operation_result (
   async_operation_id uuid PRIMARY KEY,
   tenant_id uuid NOT NULL,
   result_kind text NOT NULL CHECK (result_kind IN (
@@ -113,7 +113,7 @@ CREATE TABLE ops.async_operation_result (
     REFERENCES ops.async_operation(tenant_id, async_operation_id)
 );
 
-CREATE TABLE ops.domain_event (
+CREATE TABLE IF NOT EXISTS ops.domain_event (
   domain_event_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   source_async_operation_id uuid NOT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE ops.domain_event (
   UNIQUE (tenant_id, source_async_operation_id, event_family, event_semantic_key)
 );
 
-CREATE TABLE ops.publication_intent (
+CREATE TABLE IF NOT EXISTS ops.publication_intent (
   publication_intent_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   source_domain_event_id uuid NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE ops.publication_intent (
   UNIQUE (tenant_id, publication_identity)
 );
 
-CREATE TABLE ops.transport_attempt (
+CREATE TABLE IF NOT EXISTS ops.transport_attempt (
   transport_attempt_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   publication_intent_id uuid NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE ops.transport_attempt (
   UNIQUE (tenant_id, publication_intent_id, attempt_number)
 );
 
-CREATE TABLE ops.external_observation (
+CREATE TABLE IF NOT EXISTS ops.external_observation (
   external_observation_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   provider_profile_key text NOT NULL CHECK (char_length(btrim(provider_profile_key)) BETWEEN 1 AND 240),
@@ -188,7 +188,7 @@ CREATE TABLE ops.external_observation (
     REFERENCES ops.async_operation(tenant_id, async_operation_id)
 );
 
-CREATE TABLE ops.job (
+CREATE TABLE IF NOT EXISTS ops.job (
   job_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   async_operation_id uuid NOT NULL,
@@ -218,10 +218,10 @@ CREATE TABLE ops.job (
   )
 );
 
-CREATE INDEX job_claim_idx
+CREATE INDEX IF NOT EXISTS job_claim_idx
   ON ops.job (lane, operational_status, available_at, priority DESC, tenant_id, job_id);
 
-CREATE TABLE ops.job_attempt (
+CREATE TABLE IF NOT EXISTS ops.job_attempt (
   job_attempt_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   job_id uuid NOT NULL,
@@ -247,7 +247,7 @@ CREATE TABLE ops.job_attempt (
   UNIQUE (tenant_id, job_id, fencing_token)
 );
 
-CREATE TABLE ops.outbox_entry (
+CREATE TABLE IF NOT EXISTS ops.outbox_entry (
   outbox_entry_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   publication_intent_id uuid NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE ops.outbox_entry (
   UNIQUE (tenant_id, outbox_entry_id)
 );
 
-CREATE TABLE ops.reconciliation_obligation (
+CREATE TABLE IF NOT EXISTS ops.reconciliation_obligation (
   reconciliation_obligation_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   async_operation_id uuid NOT NULL,
@@ -276,7 +276,7 @@ CREATE TABLE ops.reconciliation_obligation (
   UNIQUE NULLS NOT DISTINCT (tenant_id, async_operation_id, job_id)
 );
 
-CREATE TABLE ops.reconciliation_occurrence (
+CREATE TABLE IF NOT EXISTS ops.reconciliation_occurrence (
   reconciliation_occurrence_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL,
   reconciliation_obligation_id uuid NOT NULL,
@@ -315,6 +315,7 @@ BEGIN
     'outbox_entry', 'reconciliation_obligation', 'reconciliation_occurrence'
   ]
   LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS %I ON ops.%I', target_table || '_immutable', target_table);
     EXECUTE format('CREATE TRIGGER %I BEFORE UPDATE OR DELETE ON ops.%I FOR EACH ROW EXECUTE FUNCTION ops.reject_append_only_rewrite()',
       target_table || '_immutable', target_table);
   END LOOP;
@@ -390,6 +391,8 @@ BEGIN
 END
 $$;
 
+DROP TRIGGER IF EXISTS effect_position_transition_guard
+  ON ops.effect_position_occurrence;
 CREATE TRIGGER effect_position_transition_guard
 BEFORE INSERT ON ops.effect_position_occurrence
 FOR EACH ROW EXECUTE FUNCTION ops.validate_effect_position_insert();
@@ -1305,6 +1308,7 @@ BEGIN
   LOOP
     EXECUTE format('ALTER TABLE ops.%I ENABLE ROW LEVEL SECURITY', target_table);
     EXECUTE format('ALTER TABLE ops.%I FORCE ROW LEVEL SECURITY', target_table);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON ops.%I', target_table || '_tenant_select', target_table);
     EXECUTE format(
       'CREATE POLICY %I ON ops.%I FOR SELECT TO cpos_platform_runtime USING (tenant_id::text = nullif(current_setting(''cpos.tenant_id'', true), ''''))',
       target_table || '_tenant_select', target_table
