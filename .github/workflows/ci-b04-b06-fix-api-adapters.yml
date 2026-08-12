@@ -1,0 +1,87 @@
+name: B04-B06 Surgical API Adapter Fix
+
+on:
+  push:
+    branches: [build/b04-b06-procurement-wave]
+    paths:
+      - '.github/workflows/ci-b04-b06-fix-api-adapters.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b04-b06-procurement-wave
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - name: Align strict API adapter typing without changing runtime semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          {
+            const path = 'apps/api/src/app.ts';
+            let source = fs.readFileSync(path, 'utf8');
+            const startMarker = "  app.post('/procurement/evidence/uploads'";
+            const endMarker = '\n\n  return app;';
+            const start = source.indexOf(startMarker);
+            const end = source.indexOf(endMarker, start);
+            if (start < 0 || end < 0) throw new Error('procurement route block not found');
+            let block = source.slice(start, end);
+            const matches = [...block.matchAll(/\bb\.([A-Za-z_][A-Za-z0-9_]*)/g)];
+            if (matches.length !== 62) throw new Error(`expected 62 strict index-signature accesses, found ${matches.length}`);
+            block = block.replace(/\bb\.([A-Za-z_][A-Za-z0-9_]*)/g, (_m, key) => `b['${key}']`);
+            source = source.slice(0, start) + block + source.slice(end);
+            fs.writeFileSync(path, source);
+          }
+
+          {
+            const path = 'apps/api/src/development-platform.ts';
+            let source = fs.readFileSync(path, 'utf8');
+            const replacements = [
+              ["const owner=current.roles.includes('OWNER');const command=owner||current.roles.includes('PROCUREMENT_MANAGER');", "const owner=current.roles.some((role)=>role==='OWNER');const command=owner||current.roles.some((role)=>role==='PROCUREMENT_MANAGER');"],
+              ["if(!current.roles.includes('OWNER'))", "if(!current.roles.some((role)=>role==='OWNER'))"],
+              ["return Object.freeze({async readWorkspace(context){return snapshot(context);},async createProject(context,request){", "return Object.freeze({async readWorkspace(context){return snapshot(context);},async createProject(context,request){"],
+              ["return{project};}});", "return{project};}} satisfies PlatformWorkspaceService);"],
+            ];
+            for (const [from, to] of replacements) {
+              const count = source.split(from).length - 1;
+              if (count !== 1) throw new Error(`${path}: expected one exact match for ${from.slice(0, 48)}, found ${count}`);
+              source = source.replace(from, to);
+            }
+            fs.writeFileSync(path, source);
+          }
+
+          {
+            const path = 'apps/api/src/development-procurement.ts';
+            let source = fs.readFileSync(path, 'utf8');
+            const from = '\n  });\n}\n\nexport const developmentProcurementProjectId';
+            const to = '\n  } satisfies ProcurementWorkspaceService);\n}\n\nexport const developmentProcurementProjectId';
+            const count = source.split(from).length - 1;
+            if (count !== 1) throw new Error(`${path}: expected one service terminator, found ${count}`);
+            source = source.replace(from, to);
+            fs.writeFileSync(path, source);
+          }
+          NODE
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @cpos/api typecheck
+          git diff --check
+          git diff -- apps/api/src/app.ts apps/api/src/development-platform.ts apps/api/src/development-procurement.ts
+          git config user.name 'cpos-ci-remediation'
+          git config user.email 'cpos-ci-remediation@users.noreply.github.com'
+          git add apps/api/src/app.ts apps/api/src/development-platform.ts apps/api/src/development-procurement.ts
+          git commit -m 'fix: align B04-B06 API adapters with strict contracts'
+          git push origin HEAD:build/b04-b06-procurement-wave
