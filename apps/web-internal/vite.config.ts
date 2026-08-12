@@ -13,6 +13,7 @@ export default defineConfig({
       '/health': apiOrigin,
       '/meta': apiOrigin,
       '/platform': apiOrigin,
+      '/procurement': apiOrigin,
       '/openapi.json': apiOrigin,
     },
   },
