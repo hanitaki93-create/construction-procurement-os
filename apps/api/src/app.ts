@@ -35,9 +35,17 @@ function singleHeader(request: FastifyRequest, name: string): string | undefined
   return value;
 }
 
-export interface PlatformRequestContext {
+export interface VerifiedAuthenticationSession {
+  readonly authenticationIdentityId: string;
   readonly tenantId: string;
   readonly principalId: string;
+}
+
+export interface AuthenticationSessionResolver {
+  resolve(request: FastifyRequest): Promise<VerifiedAuthenticationSession | undefined>;
+}
+
+export interface PlatformRequestContext extends VerifiedAuthenticationSession {
   readonly invocationId: string;
   readonly serviceIdentity: string;
 }
@@ -59,11 +67,13 @@ function developmentContext(
 
   const tenantId = singleHeader(request, 'x-cpos-tenant-id')?.trim();
   const principalId = singleHeader(request, 'x-cpos-principal-id')?.trim();
+  const suppliedIdentity = singleHeader(request, 'x-cpos-authentication-identity-id')?.trim();
   if (!tenantId || !principalId || !uuidPattern.test(tenantId) || !uuidPattern.test(principalId)) {
     return undefined;
   }
 
   return {
+    authenticationIdentityId: suppliedIdentity || `development:${principalId}`,
     tenantId,
     principalId,
     invocationId: request.id,
@@ -71,16 +81,46 @@ function developmentContext(
   };
 }
 
-function productErrorStatus(error: unknown): 400 | 403 | 409 | 500 {
+async function resolvedContext(
+  request: FastifyRequest,
+  environment: string,
+  resolver: AuthenticationSessionResolver | undefined,
+): Promise<PlatformRequestContext | undefined> {
+  if (resolver !== undefined) {
+    const verified = await resolver.resolve(request);
+    if (verified === undefined) return undefined;
+    if (!uuidPattern.test(verified.tenantId) || !uuidPattern.test(verified.principalId)) return undefined;
+    if (!verified.authenticationIdentityId.trim() || verified.authenticationIdentityId.length > 512) {
+      return undefined;
+    }
+    return {
+      ...verified,
+      invocationId: request.id,
+      serviceIdentity: 'cpos-api',
+    };
+  }
+  return developmentContext(request, environment);
+}
+
+function productErrorStatus(error: unknown): 400 | 401 | 403 | 409 | 500 {
   const message = normalizeThrown(error).message.toLowerCase();
   if (
     message.includes('projectcode') ||
     message.includes('displayname') ||
-    message.includes('project code')
+    message.includes('project code') ||
+    message.includes('authority context')
   ) {
     return 400;
   }
-  if (message.includes('not authorized') || message.includes('permission denied')) return 403;
+  if (message.includes('authentication identity') || message.includes('session')) return 401;
+  if (
+    message.includes('not authorized') ||
+    message.includes('permission denied') ||
+    message.includes('product access') ||
+    message.includes('row-level security')
+  ) {
+    return 403;
+  }
   if (message.includes('already exists') || message.includes('conflict')) return 409;
   return 500;
 }
@@ -90,6 +130,7 @@ export interface BuildApiOptions {
   readonly logger: TechnicalLogger;
   readonly now?: () => Date;
   readonly platformWorkspaceService?: PlatformWorkspaceService;
+  readonly authenticationSessionResolver?: AuthenticationSessionResolver;
 }
 
 export function buildApi({
@@ -97,6 +138,7 @@ export function buildApi({
   logger,
   now = () => new Date(),
   platformWorkspaceService,
+  authenticationSessionResolver,
 }: BuildApiOptions): FastifyInstance {
   const app = Fastify({
     bodyLimit: config.bodyLimitBytes,
@@ -152,8 +194,8 @@ export function buildApi({
         state: 'ok',
         checkedAt,
         detail: platformWorkspaceService
-          ? 'B02 development product runtime is configured.'
-          : 'Technical runtime is ready; the B02 development product runtime is disabled.',
+          ? 'B02 platform workspace runtime is configured.'
+          : 'Technical runtime is ready; the B02 platform workspace runtime is disabled.',
       },
     ];
     return { status: 'ok', checkedAt, components };
@@ -162,21 +204,39 @@ export function buildApi({
   app.get('/meta/build', async () => config.build);
   app.get('/openapi.json', async () => technicalOpenApiDocument);
 
+  app.get('/auth/sign-in', async (_request, reply) =>
+    reply.status(501).send({
+      code: 'AUTH_PROVIDER_NOT_CONFIGURED',
+      message: 'Use a configured verified authentication provider for this deployment.',
+    }),
+  );
+
+  app.get('/auth/callback', async (_request, reply) =>
+    reply.status(501).send({
+      code: 'AUTH_PROVIDER_NOT_CONFIGURED',
+      message: 'Authentication callback ownership is provider-neutral and not configured here.',
+    }),
+  );
+
   app.get('/platform/workspace', async (request, reply) => {
     if (!platformWorkspaceService) {
       return reply.status(503).send({
         code: 'PRODUCT_RUNTIME_UNAVAILABLE',
-        message: 'The development product runtime is not enabled for this API process.',
+        message: 'The platform workspace runtime is not enabled for this API process.',
       });
     }
-    const context = developmentContext(request, config.build.environment);
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
         message:
           config.build.environment === 'production'
             ? 'A verified production authentication provider is not configured.'
-            : 'Provide a development session with tenant and principal context.',
+            : 'Provide a verified or development session with tenant and principal context.',
       });
     }
 
@@ -193,17 +253,21 @@ export function buildApi({
     if (!platformWorkspaceService) {
       return reply.status(503).send({
         code: 'PRODUCT_RUNTIME_UNAVAILABLE',
-        message: 'The development product runtime is not enabled for this API process.',
+        message: 'The platform workspace runtime is not enabled for this API process.',
       });
     }
-    const context = developmentContext(request, config.build.environment);
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
         message:
           config.build.environment === 'production'
             ? 'A verified production authentication provider is not configured.'
-            : 'Provide a development session with tenant and principal context.',
+            : 'Provide a verified or development session with tenant and principal context.',
       });
     }
 
