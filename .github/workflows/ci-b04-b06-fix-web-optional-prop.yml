@@ -40,6 +40,8 @@ jobs:
           corepack enable
           corepack prepare pnpm@10.34.0 --activate
           pnpm install --frozen-lockfile
+          pnpm --filter @cpos/contracts build
+          pnpm --filter @cpos/ui-foundation build
           pnpm --filter @cpos/web-internal typecheck
           pnpm --filter @cpos/web-internal build
           git diff --check
