@@ -13,6 +13,9 @@ jobs:
   probe:
     runs-on: [self-hosted, Linux, X64, cpos-ci]
     timeout-minutes: 5
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -23,6 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "runner=${RUNNER_NAME}"
+          if command -v curl >/dev/null 2>&1; then echo 'curl=present'; else echo 'curl=absent'; fi
           for command in claude anthropic; do
             if command -v "$command" >/dev/null 2>&1; then
               echo "$command=present"
