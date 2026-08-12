@@ -1,0 +1,57 @@
+name: CI only - apply recovered B04-B06 overlay
+
+on:
+  push:
+    branches:
+      - ci/b04-b06-overlay-apply
+    paths:
+      - '.overlay-b04b06/**'
+      - '.github/workflows/ci-b04-b06-overlay-apply.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    name: Reconstruct and publish recovered B04-B06 implementation
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Check out target procurement wave branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/b04-b06-procurement-wave
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reconstruct exact recovered overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin ci/b04-b06-overlay-apply
+          TMP_B64="${RUNNER_TEMP}/b04-b06-overlay.b64"
+          TMP_TGZ="${RUNNER_TEMP}/b04-b06-overlay.tar.gz"
+          : > "${TMP_B64}"
+          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.00 >> "${TMP_B64}"
+          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.01 >> "${TMP_B64}"
+          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.rem01 >> "${TMP_B64}"
+          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.02 >> "${TMP_B64}"
+          git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/tail.b64 >> "${TMP_B64}"
+          test "$(wc -c < "${TMP_B64}" | tr -d ' ')" = "92708"
+          base64 -d "${TMP_B64}" > "${TMP_TGZ}"
+          echo '1614295a5f7235d75af49b5b0467b7b6bb1f9e579f20c584e465f434254ba64d  '"${TMP_TGZ}" | sha256sum -c -
+          tar -xzf "${TMP_TGZ}" -C .
+          rm -rf .build-staging/b04-b06
+
+      - name: Commit real implementation to target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'cpos-ci-bot'
+          git config user.email 'cpos-ci-bot@users.noreply.github.com'
+          git add -A
+          git status --short
+          git diff --cached --quiet && { echo 'No recovered changes to publish'; exit 1; }
+          git commit -m 'build: implement B04-B06 focused procurement wave'
+          git push origin HEAD:build/b04-b06-procurement-wave
