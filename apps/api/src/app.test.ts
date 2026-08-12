@@ -5,6 +5,7 @@ import { createTechnicalLogger } from '@cpos/observability';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
+import { createDevelopmentProcurementWorkspaceService, developmentProcurementProjectId } from './development-procurement.js';
 
 const apps: ReturnType<typeof buildApi>[] = [];
 const sessionHeaders = {
@@ -29,7 +30,7 @@ function createApp(productRuntime = false) {
     logger,
     now: () => new Date('2026-08-11T00:00:00.000Z'),
     ...(productRuntime
-      ? { platformWorkspaceService: createDevelopmentPlatformWorkspaceService() }
+      ? { platformWorkspaceService: createDevelopmentPlatformWorkspaceService(), procurementWorkspaceService: createDevelopmentProcurementWorkspaceService() }
       : {}),
   });
   apps.push(app);
@@ -105,6 +106,23 @@ describe('B02 platform API shell', () => {
       headers: sessionHeaders,
     });
     expect(after.json().projects).toHaveLength(3);
+  });
+
+  it('exposes the B04-B06 procurement workspace and enforces role-aware command capability', async () => {
+    const app=createApp(true);
+    const read=await app.inject({method:'GET',url:`/procurement/workspace?projectId=${developmentProcurementProjectId}`,headers:sessionHeaders});
+    expect(read.statusCode).toBe(200);
+    expect(read.json().requirements.length).toBeGreaterThan(0);
+    expect(read.json().rfqs.length).toBeGreaterThan(0);
+    expect(read.json().externalTaskGrants.length).toBeGreaterThan(0);
+
+    const managerHeaders={...sessionHeaders,'x-cpos-principal-id':'019d3333-3333-7333-8333-333333333334','content-type':'application/json'};
+    const create=await app.inject({method:'POST',url:'/procurement/requirements',headers:managerHeaders,payload:{projectId:developmentProcurementProjectId,authorityContextId:'019d5555-5555-7555-8555-555555555551',sourceKind:'MANUAL_AUTHORIZED_REQUIREMENT',sourceReference:'TEST-001',description:'Test requirement',authorizedQuantity:'10',uomKey:'EA'}});
+    expect(create.statusCode).toBe(201);
+
+    const reviewerHeaders={...sessionHeaders,'x-cpos-principal-id':'019d3333-3333-7333-8333-333333333335','content-type':'application/json'};
+    const denied=await app.inject({method:'POST',url:'/procurement/packages',headers:reviewerHeaders,payload:{projectId:developmentProcurementProjectId,authorityContextId:'019d5555-5555-7555-8555-555555555551',packageCode:'PKG-X',displayName:'Reviewer cannot create'}});
+    expect(denied.statusCode).toBe(403);
   });
 
   it('rejects a development session that does not belong to the demo tenant/principal', async () => {

@@ -15,7 +15,9 @@
     "@cpos/database-core": "workspace:0.0.0-b01",
     "@cpos/observability": "workspace:0.0.0-b01",
     "@cpos/platform-application": "workspace:0.0.0-b02",
-    "fastify": "catalog:"
+    "fastify": "catalog:",
+    "@cpos/procurement-application": "workspace:0.0.0-b04-b06",
+    "@cpos/object-store": "workspace:0.0.0-b01"
   },
   "devDependencies": {
     "@types/node": "catalog:",

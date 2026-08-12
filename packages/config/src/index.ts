@@ -95,7 +95,7 @@ export function loadRuntimeConfig(
     serviceName,
     host: boundedText(env, 'HOST', '127.0.0.1', 255),
     port: integer(env, 'PORT', serviceName === 'api' ? 3001 : 3002, 1, 65_535),
-    bodyLimitBytes: integer(env, 'BODY_LIMIT_BYTES', 1_048_576, 1_024, 10_485_760),
+    bodyLimitBytes: integer(env, 'BODY_LIMIT_BYTES', 1_048_576, 1_024, 41_943_040),
     requestTimeoutMs: integer(env, 'REQUEST_TIMEOUT_MS', 15_000, 100, 120_000),
     trustProxy: boolean(env, 'TRUST_PROXY', false),
     logLevel: logLevel(env),

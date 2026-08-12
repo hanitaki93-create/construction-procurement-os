@@ -1,16 +1,47 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/contracts" },
-    { "path": "./packages/config" },
-    { "path": "./packages/database-core" },
-    { "path": "./packages/invariant-compiler" },
-    { "path": "./packages/object-store" },
-    { "path": "./packages/observability" },
-    { "path": "./packages/testkit" },
-    { "path": "./packages/tooling-config" },
-    { "path": "./packages/ui-foundation" },
-    { "path": "./apps/api" },
-    { "path": "./apps/worker" }
+    {
+      "path": "./packages/contracts"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/database-core"
+    },
+    {
+      "path": "./packages/invariant-compiler"
+    },
+    {
+      "path": "./packages/object-store"
+    },
+    {
+      "path": "./packages/observability"
+    },
+    {
+      "path": "./packages/testkit"
+    },
+    {
+      "path": "./packages/tooling-config"
+    },
+    {
+      "path": "./packages/ui-foundation"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/worker"
+    },
+    {
+      "path": "./packages/platform-application"
+    },
+    {
+      "path": "./packages/procurement-application"
+    },
+    {
+      "path": "./apps/web-internal"
+    }
   ]
 }
