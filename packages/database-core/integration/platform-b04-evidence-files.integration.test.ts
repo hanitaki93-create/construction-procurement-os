@@ -24,7 +24,14 @@ import {
 } from './procurement-wave-test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b04-evidence-setup');
-const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), applicationName: 'cpos-b04-evidence-runtime' });
+const runtime = createDatabaseRuntime({
+  connectionString: requiredDatabaseUrl(),
+  maximumConnections: 12,
+  idleTimeoutMs: 1_000,
+  connectionTimeoutMs: 5_000,
+  statementTimeoutMs: 20_000,
+  applicationName: 'cpos-b04-evidence-runtime',
+});
 const trackingSchema = uniqueSchema('b04_evidence_tracking');
 
 interface EvidenceHandle {

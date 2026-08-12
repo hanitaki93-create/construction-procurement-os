@@ -19,7 +19,14 @@ import {
 } from './procurement-wave-test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b06-sourcing-setup');
-const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), maximumConnections: 12, applicationName: 'cpos-b06-sourcing-runtime' });
+const runtime = createDatabaseRuntime({
+  connectionString: requiredDatabaseUrl(),
+  maximumConnections: 12,
+  idleTimeoutMs: 1_000,
+  connectionTimeoutMs: 5_000,
+  statementTimeoutMs: 20_000,
+  applicationName: 'cpos-b06-sourcing-runtime',
+});
 const trackingSchema = uniqueSchema('b06_sourcing_tracking');
 
 type Draft = Readonly<{ eventId: string; draftVersionId: string; schemaId: string; policyId: string }>;

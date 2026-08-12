@@ -18,7 +18,14 @@ import {
 } from './procurement-wave-test-support.js';
 
 const setupPool = createIntegrationPool('cpos-b05-requirements-setup');
-const runtime = createDatabaseRuntime({ connectionString: requiredDatabaseUrl(), maximumConnections: 12, applicationName: 'cpos-b05-requirements-runtime' });
+const runtime = createDatabaseRuntime({
+  connectionString: requiredDatabaseUrl(),
+  maximumConnections: 12,
+  idleTimeoutMs: 1_000,
+  connectionTimeoutMs: 5_000,
+  statementTimeoutMs: 20_000,
+  applicationName: 'cpos-b05-requirements-runtime',
+});
 const trackingSchema = uniqueSchema('b05_requirements_tracking');
 
 interface RequirementHandle {
