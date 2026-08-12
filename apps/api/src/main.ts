@@ -1,5 +1,7 @@
 import { loadRuntimeConfig } from '@cpos/config';
+import { createDatabaseRuntime, type DatabaseRuntime } from '@cpos/database-core';
 import { createTechnicalLogger, startTechnicalTelemetry } from '@cpos/observability';
+import { createGovernedPlatformWorkspaceService } from '@cpos/platform-application';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
@@ -18,13 +20,29 @@ const telemetry = await startTechnicalTelemetry({
 const productDemoEnabled =
   config.build.environment !== 'production' &&
   process.env['CPOS_DEMO_MODE']?.trim().toLowerCase() === 'true';
+const databaseUrl = process.env['DATABASE_URL']?.trim();
+let databaseRuntime: DatabaseRuntime | undefined;
+
+const platformWorkspaceService = productDemoEnabled
+  ? createDevelopmentPlatformWorkspaceService()
+  : databaseUrl
+    ? (() => {
+        databaseRuntime = createDatabaseRuntime({
+          connectionString: databaseUrl,
+          maximumConnections: 12,
+          idleTimeoutMs: 10_000,
+          connectionTimeoutMs: 5_000,
+          statementTimeoutMs: 20_000,
+          applicationName: 'cpos-api-platform',
+        });
+        return createGovernedPlatformWorkspaceService(databaseRuntime);
+      })()
+    : undefined;
 
 const app = buildApi({
   config,
   logger,
-  ...(productDemoEnabled
-    ? { platformWorkspaceService: createDevelopmentPlatformWorkspaceService() }
-    : {}),
+  ...(platformWorkspaceService === undefined ? {} : { platformWorkspaceService }),
 });
 let closing = false;
 
@@ -33,6 +51,7 @@ async function shutdown(signal: string): Promise<void> {
   closing = true;
   logger.info('api_shutdown_started', { signal });
   await app.close();
+  if (databaseRuntime !== undefined) await databaseRuntime.close();
   telemetry.addCounter('api.shutdown', 1, { state: 'completed' });
   await telemetry.shutdown();
   logger.info('api_shutdown_completed', { signal });
@@ -58,10 +77,12 @@ try {
     buildId: config.build.buildId,
     telemetryEnabled: telemetry.enabled,
     productDemoEnabled,
+    governedWorkspaceEnabled: !productDemoEnabled && databaseRuntime !== undefined,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });
   process.exitCode = 1;
   await app.close();
+  if (databaseRuntime !== undefined) await databaseRuntime.close();
   await telemetry.shutdown();
 }
