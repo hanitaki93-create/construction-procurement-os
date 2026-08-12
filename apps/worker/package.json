@@ -1,0 +1,21 @@
+{
+  "name": "@cpos/worker",
+  "version": "0.0.0-b01",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.test.json --pretty false"
+  },
+  "dependencies": {
+    "@cpos/config": "workspace:0.0.0-b01",
+    "@cpos/observability": "workspace:0.0.0-b01"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,94 @@
+name: B01 F3 PostgreSQL
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/b01-f3-postgresql.yml'
+      - 'migrations/**'
+      - 'package.json'
+      - 'packages/database-core/**'
+      - 'packages/invariant-compiler/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/check-database-public-surface.mjs'
+      - 'tsconfig.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b01-f3-postgresql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgresql:
+    name: PostgreSQL 18.4 hostile integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cpos_test
+      MIGRATIONS_DIR: ../../migrations/sql
+      BUILD_ID: b01-f3-ci
+
+    services:
+      postgres:
+        image: postgres:18.4-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cpos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cpos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify database package types and public surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/database-core typecheck
+          node scripts/check-database-public-surface.mjs
+
+      - name: Run real PostgreSQL hostile tests
+        shell: bash
+        run: pnpm db:integration
+
+      - name: Rebuild committed migrations from clean state
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm db:migrate
+          pnpm db:status
+          pnpm db:scan

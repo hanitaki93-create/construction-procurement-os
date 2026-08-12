@@ -1,0 +1,113 @@
+name: B01 F4 Adapters
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/b01-f4-adapters.yml'
+      - 'infra/local/**'
+      - 'packages/object-store/**'
+      - 'packages/observability/**'
+      - 'packages/config/**'
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'scripts/local-infra.mjs'
+      - 'scripts/smoke-otel.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b01-f4-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  adapters:
+    name: Versioned object scanner and OTLP integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      OBJECT_STORE_ENDPOINT: http://127.0.0.1:8333
+      OBJECT_STORE_REGION: us-east-1
+      OBJECT_STORE_ACCESS_KEY_ID: cpos-local
+      OBJECT_STORE_SECRET_ACCESS_KEY: cpos-local-secret
+      CLAMD_HOST: 127.0.0.1
+      CLAMD_PORT: '3310'
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://127.0.0.1:4318
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Activate exact pnpm version
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
+
+      - name: Install exact dependency graph
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify adapter and telemetry package types
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @cpos/object-store typecheck
+          pnpm --filter @cpos/observability typecheck
+          pnpm --filter @cpos/config typecheck
+          pnpm --filter @cpos/api typecheck
+          pnpm --filter @cpos/worker typecheck
+
+      - name: Start scoped local infrastructure
+        shell: bash
+        run: pnpm infra:up
+
+      - name: Execute versioned object and scanner contracts
+        shell: bash
+        run: pnpm object:integration
+
+      - name: Send real trace and metric payloads
+        shell: bash
+        run: pnpm telemetry:smoke
+
+      - name: Prove collector received the technical service identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 2
+          docker compose --project-name cpos-b01 --file infra/local/compose.yml logs --no-color otel-collector | tee /tmp/cpos-otel.log
+          grep -F 'cpos-b01-otel-smoke' /tmp/cpos-otel.log
+
+      - name: Show scoped service status
+        if: always()
+        shell: bash
+        run: pnpm infra:status || true
+
+      - name: Capture scoped service logs
+        if: failure()
+        shell: bash
+        run: docker compose --project-name cpos-b01 --file infra/local/compose.yml logs --no-color || true
+
+      - name: Stop only the B01 local project
+        if: always()
+        shell: bash
+        run: pnpm infra:down || true

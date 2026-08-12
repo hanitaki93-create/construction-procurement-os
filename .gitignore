@@ -1,0 +1,39 @@
+# Dependencies and package-manager state
+node_modules/
+.pnpm-store/
+
+# Build and test outputs
+dist/
+coverage/
+playwright-report/
+test-results/
+.vite/
+*.tsbuildinfo
+
+# Local infrastructure state
+.env
+.env.*
+!.env.example
+.local/
+infra/local/data/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs and runtime files
+*.log
+*.pid
+*.seed
+
+# Security-sensitive local artifacts
+*.pem
+*.key
+*.p12
+*.pfx
+.auth/
+secrets/

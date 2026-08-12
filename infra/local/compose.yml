@@ -1,0 +1,61 @@
+name: cpos-b01
+
+services:
+  postgres:
+    image: postgres:18.4-trixie
+    environment:
+      POSTGRES_USER: cpos
+      POSTGRES_PASSWORD: cpos-local-only
+      POSTGRES_DB: cpos
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cpos -d cpos']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - cpos-postgres:/var/lib/postgresql
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.40
+    command: ['server', '-s3', '-dir=/data', '-ip.bind=0.0.0.0']
+    environment:
+      AWS_ACCESS_KEY_ID: cpos-local
+      AWS_SECRET_ACCESS_KEY: cpos-local-secret
+    ports:
+      - '8333:8333'
+      - '9333:9333'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - cpos-seaweed:/data
+
+  clamav:
+    image: clamav/clamav:1.5.3
+    ports:
+      - '3310:3310'
+    healthcheck:
+      test: ['CMD-SHELL', 'clamdscan --ping=1 --wait >/dev/null 2>&1']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - cpos-clamav-db:/var/lib/clamav
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.157.0
+    command: ['--config=/etc/otelcol-contrib/config.yaml']
+    volumes:
+      - ./otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - '4318:4318'
+      - '13133:13133'
+
+volumes:
+  cpos-postgres:
+  cpos-seaweed:
+  cpos-clamav-db:

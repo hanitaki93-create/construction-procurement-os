@@ -1,0 +1,18 @@
+.external-introduction {
+  max-width: 48rem;
+  margin: 0 0 1.5rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: #eef2ff;
+  border-inline-start: 0.35rem solid #4263eb;
+  border-radius: 0.5rem;
+}
+
+.external-introduction h2 {
+  margin: 0 0 0.75rem;
+}
+
+.external-introduction p {
+  margin: 0;
+  color: #405163;
+  line-height: 1.65;
+}

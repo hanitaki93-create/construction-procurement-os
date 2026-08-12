@@ -1,0 +1,28 @@
+.internal-intro {
+  max-width: 52rem;
+  margin: 0 0 1.5rem;
+  color: #405163;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.build-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.build-list div {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: 6rem 1fr;
+}
+
+.build-list dt {
+  color: #526273;
+  font-weight: 700;
+}
+
+.build-list dd {
+  margin: 0;
+}

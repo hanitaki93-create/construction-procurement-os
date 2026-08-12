@@ -1,0 +1,53 @@
+name: B01 Branch Maintenance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: b01-maintenance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  normalize:
+    name: Refresh final B01 lockfile and formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Refresh exact dependency graph and formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
+          pnpm install --no-frozen-lockfile
+          pnpm format
+
+      - name: Commit normalized B01 files when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add .dockerignore .env.example .gitleaks.toml .github README.md apps docs infra migrations package.json packages playwright.config.ts pnpm-lock.yaml pnpm-workspace.yaml scripts tests tsconfig.json
+          if git diff --cached --quiet; then
+            echo "B01_BRANCH_MAINTENANCE_NO_CHANGE"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "B01 F5: refresh lockfile and formatting"
+          git push origin HEAD:build/b01-engineering-foundation
