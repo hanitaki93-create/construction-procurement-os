@@ -38,7 +38,6 @@ jobs:
           git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.rem01 >> "${TMP_B64}"
           git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/chunk.02 >> "${TMP_B64}"
           git show origin/ci/b04-b06-overlay-apply:.overlay-b04b06/tail.b64 >> "${TMP_B64}"
-          test "$(wc -c < "${TMP_B64}" | tr -d ' ')" = "92708"
           base64 -d "${TMP_B64}" > "${TMP_TGZ}"
           echo '1614295a5f7235d75af49b5b0467b7b6bb1f9e579f20c584e465f434254ba64d  '"${TMP_TGZ}" | sha256sum -c -
           tar -xzf "${TMP_TGZ}" -C .
