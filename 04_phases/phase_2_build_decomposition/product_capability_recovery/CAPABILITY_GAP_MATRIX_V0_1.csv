@@ -1,0 +1,43 @@
+capability,phase1_posture,current_b01_b06_state,benchmark_floor,recovery_disposition,recovery_block
+Tenant/project/authority,SPINE,Strong implemented,Enterprise floor,KEEP,B02
+RLS/security/audit,SPINE,Strong implemented,Enterprise floor,KEEP,B02-B04
+Files/provenance,SPINE,Strong backend but exposed as ontology,Named business documents with history,KEEP_BACKEND_REFRAME_UX,B04/R02
+MR/PR header,SPINE,Missing as user object,Numbered requisition header,ADD,R03
+MR/PR lines,SPINE,Only abstract requirement basis,Item/free-form lines with qty UOM dates,ADD,R03
+MR distributions/cost attribution,Commercial foundation,Missing,Line splits to project/WBS/accounting context,ADD,R03
+Requirement allocation conservation,SPINE,Strong implemented,Usually implicit in products,KEEP_BACKEND,B05
+Procurement package,SPINE,Thin implemented,Package/tender grouping,KEEP_EXTEND,R03/R05
+Supplier master,SPINE,Placeholder name/reference only,Rich durable counterparty profile,MAJOR_EXTEND,R04
+Supplier contacts/addresses,SPINE_support,Email/name only,Multiple role/purpose contacts and addresses,MAJOR_EXTEND,R04
+Supplier compliance documents,THIN plus min eligibility SPINE,Missing product capability,Named expiry-driven documents and qualification,ADD,R04
+Sourcing vs commitment eligibility,SPINE_intent,Not explicit enough,Separate sourcing/fulfillment eligibility,ADD,R04
+Supplier categories/trades,THIN,Missing,Category/trade classification,ADD,R04
+Item/material/service master,THIN,Missing,Master-backed plus free-form lines,ADD,R02
+UOM registry,Required semantic support,Free-text key,Governed reference units and conversions,REPLACE_FREE_TEXT_WITH_REFERENCE,R02
+Cost-code/WBS reference,SPINE,Not first-spine product surface,Project/cost attribution,ADD_REFERENCE_CONTRACT,R02/R03
+Document numbering,Implicit display/legal identity,Manual text fields,System-managed configurable number series,ADD_CONTROL_KERNEL,R02
+Template/rendering kernel,DOC/COM retained,B04 artifact compiler without business templates,Professional versioned business documents,ADD_PRODUCT_TEMPLATES,R02
+RFQ header/event,SPINE,Core implemented,Numbered enquiry/tender,KEEP_EXTEND,R05
+RFQ lines from demand,SPINE lineage intent,Missing serious propagation,Requisition/package lines feed event,ADD,R05
+RFQ response schema,THIN,Strong semantic registry base,Structured bid form plus attachments,KEEP_EXTEND,R05
+RFQ printable PDF/Excel,Retained artifact/document capability,Missing product contract,Professional downloadable supplier package,ADD,R05
+RFQ addenda/versioning,THIN,Strong implemented,Versioned addenda/acknowledgment,KEEP,B06/R05
+External supplier task access,SPINE,Strong grant core,Low-friction no-account participation,KEEP_EXTEND,R06
+Quotation/revision capture,SPINE,Not built yet,Immutable responses/revisions,BUILD_FROM_REVISED_SPEC,R06
+Buyer capture/manual channel,SPINE support,Planned semantics,Manual/email/file capture,BUILD_FROM_REVISED_SPEC,R06
+Bid comparison/leveling,SPINE,Not built yet,Side-by-side scope/price leveling,BUILD_STRONGLY,R07
+Source-normalized-adjusted-confirmed layers,Phase1 core distinction,Not built yet,Advanced differentiation,KEEP_ARCHITECTURE_BUILD,R07
+AI quote extraction,Later AI,Not built,Emerging specialist differentiator,MOVE_CAPABILITY_EARLIER_WITH_GATE,R07
+Recommendation,THIN/core decision path,Not built,Formal recommendation with evidence,BUILD,R08
+Approval/DOA,SPINE,Kernel authority exists but domain flow not built,Approval with stale-basis invalidation,KEEP_KERNEL_BUILD_FLOW,R08
+AwardDecision,SPINE,Not built,Soft award distinct from order/contract,KEEP_ARCHITECTURE_BUILD,R08
+LPO/PO commitment,SPINE,Deferred to late P07,First usable purchasing output,MOVE_EARLIER_SPLIT_FROM_P07,R09
+Subcontract formation,SPINE,Deferred to late P07,Award-to-subcontract conversion,MOVE_EARLIER_BOUNDED,R09
+Deep variations/claims/retention/certification,P07,Not built,Commercial administration,KEEP_LATER,post-R10
+GRN/receipt,THIN,Not built,Order-to-receipt downstream seam,DESIGN_SEAM_THEN_BUILD_LATER,R09/post-R10
+Procurement schedule,THIN,Not built,Live milestone/long-lead control,MOVE_EARLIER,R10
+MR/RFQ/PO registers,Operational UX,Current dashboard toy surface,Searchable operational registers,MOVE_EARLIER,R10
+Portfolio supplier history/performance,THIN/future intelligence,Missing,Cross-project supplier intelligence,ADD_PROJECTION,R10+
+ERP/accounting integration,INTERFACE_ONLY,Architecture ready but not built,Write-back/reconciliation with ERP,KEEP_BOUNDARY_BUILD_LATER,post-R10
+Full internal conventional web,Planned B10,Alpha harness only,Role-focused product UX,CHANGE_FROM_LATE_BLOCK_TO_EVERY_CAPABILITY,R01-R10
+AI governance/provenance,Later AI,Strong evidence/authority prerequisites,Permissioned audited AI actions,KEEP_PRINCIPLES_PHASE_IN,all/R07+
