@@ -100,6 +100,22 @@ function compareDecimal(left: string, right: string): number {
   return l < r ? -1 : l > r ? 1 : 0;
 }
 
+function addDecimal(left: string, right: string): string {
+  const [li = '0', lf = ''] = left.split('.');
+  const [ri = '0', rf = ''] = right.split('.');
+  const scale = Math.max(lf.length, rf.length);
+  const factor = 10n ** BigInt(scale);
+  const sum =
+    BigInt(li) * factor +
+    BigInt(lf.padEnd(scale, '0') || '0') +
+    BigInt(ri) * factor +
+    BigInt(rf.padEnd(scale, '0') || '0');
+  if (scale === 0) return sum.toString();
+  const whole = sum / factor;
+  const fraction = (sum % factor).toString().padStart(scale, '0').replace(/0+$/u, '');
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}
+
 function transactionContext(context: GovernedSourcingRequestContext, operationKey: string) {
   return {
     tenantId: context.tenantId,
@@ -316,8 +332,10 @@ export function createGovernedProcurementSourcingService(
         if (row === undefined || row.route !== 'PACKAGE_SOURCING') throw new Error('MR line is not approved and routed for PACKAGE_SOURCING');
         if (row.project_id !== projectId) throw new Error('Package source line does not belong to the selected project');
         const quantity = positiveQuantity(requested.allocatedQuantity, 'allocatedQuantity');
-        const remaining = Number(row.approved_quantity) - Number(row.already_packaged_quantity);
-        if (!Number.isFinite(remaining) || remaining <= 0 || Number(quantity) > remaining + 1e-9) {
+        if (
+          compareDecimal(row.already_packaged_quantity, row.approved_quantity) >= 0 ||
+          compareDecimal(addDecimal(row.already_packaged_quantity, quantity), row.approved_quantity) > 0
+        ) {
           throw new Error('Package allocation exceeds remaining approved MR authority');
         }
         source.push({ row, quantity });
