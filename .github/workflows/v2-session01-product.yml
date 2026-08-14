@@ -89,6 +89,15 @@ jobs:
           pnpm --filter @cpos/web-internal build
       - name: Apply all migrations
         run: pnpm db:migrate
+      - name: Diagnose tenant isolation invariant
+        continue-on-error: true
+        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "isolates supplier rows by the active tenant context" --reporter=verbose
+      - name: Diagnose inactive-entitlement write denial
+        continue-on-error: true
+        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "denies supplier writes when the tenant has no active product entitlement" --reporter=verbose
+      - name: Diagnose concurrent MR numbering invariant
+        continue-on-error: true
+        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "serializes concurrent MR number allocation within one project/year scope" --reporter=verbose
       - name: Run Session 01 hostile PostgreSQL tests
         run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts --reporter=verbose
       - name: Run full PostgreSQL integration suite
