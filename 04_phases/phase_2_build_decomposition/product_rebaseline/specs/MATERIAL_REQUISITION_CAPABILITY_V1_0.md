@@ -2,7 +2,7 @@
 
 ## User meaning
 
-The primary demand object is **Material Requisition (MR) / Purchase Requisition (PR)**, not an allocation ontology. A requester states what is needed, where, when and against which project/cost context. Procurement routes approved lines to RFQ/tender, direct order, package sourcing or another governed disposition.
+The primary demand object is **Material Requisition (MR) / Purchase Requisition (PR)**, not an allocation ontology. A requester states what is needed, where, when and against which project/cost context. Procurement routes approved lines through the governed Procurement Policy / Route decision to RFQ/tender, direct order, package sourcing or another valid disposition.
 
 ## Header
 
@@ -44,13 +44,15 @@ Minimum visible states:
 
 Cancellation/supersession preserves history; line state may differ from header state.
 
-## Routes
+## Route decision
 
-Approved lines can route to RFQ/tender, direct LPO/PO where policy/authority permits, grouped procurement package, or external/ERP/stock disposition when enabled.
+Approved demand is evaluated against the current governed ProcurementRoutePolicyVersion using value/category/project/legal-entity and other configured typed criteria. The route result may permit/require competitive RFQ, direct LPO/PO, package sourcing, sole-source exception, later framework call-off, or external/ERP/stock disposition.
+
+The exact ProcurementRouteDecision and policy version are preserved. An emergency/direct/sole-source path does not bypass required justification or authority simply because the user can navigate to an order screen.
 
 ## Outputs / register
 
-Professional MR PDF/print, Excel export where useful, attachment index, approval trail and MR register with number, project, requester, dates, priority, status, line count, pending approval, sourcing progress and overdue/risk.
+Professional MR PDF/print, Excel export where useful, attachment index, approval trail and MR register with number, project, requester, dates, priority, status, line count, route/status, pending approval, sourcing progress and overdue/risk.
 
 ## Downstream propagation
 
@@ -58,4 +60,4 @@ RFQ/order creation copies/links approved line identity, description/specificatio
 
 ## Acceptance
 
-A domain reviewer can raise a 10+ line construction MR, mix catalogue/free-form lines, attach drawings/specs, split a line to cost codes, approve selected lines, convert them to RFQ without re-entry, print the MR and trace every downstream line back to the request.
+A domain reviewer can raise a 10+ line construction MR, mix catalogue/free-form lines, attach drawings/specs, split a line to cost codes, approve selected lines, see the applicable procurement route, convert RFQ-routed lines without re-entry, process a separately authorized direct-buy line under policy, print the MR and trace every downstream line/route decision back to the request.
