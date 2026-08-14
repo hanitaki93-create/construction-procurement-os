@@ -8,6 +8,8 @@ import type {
   MaterialRequisitionDetailResponse,
   MaterialRequisitionListResponse,
   ProcurementReferenceDataResponse,
+  ReviewMaterialRequisitionRequest,
+  SetProcurementRouteRequest,
   SupplierListResponse,
 } from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
@@ -22,6 +24,7 @@ import { buildApi } from './app.js';
 const tenantId = '018f0000-0000-7000-8000-000000000001';
 const principalId = '018f0000-0000-7000-8000-000000000002';
 const mrId = '018f0000-0000-7000-8000-000000000003';
+const mrLineId = '018f0000-0000-7000-8000-000000000005';
 
 const config = {
   bodyLimitBytes: 1_000_000,
@@ -78,9 +81,10 @@ function procurementService(): GovernedProcurementService {
     requesterTeam: 'Procurement',
     deliveryLocationId: null,
     instructions: null,
+    reviewTrail: [],
     lines: [
       {
-        mrLineId: '018f0000-0000-7000-8000-000000000005',
+        mrLineId,
         lineNo: 10,
         entryMode: 'FREE_FORM' as const,
         itemId: null,
@@ -98,6 +102,7 @@ function procurementService(): GovernedProcurementService {
         technicalNotes: null,
         approvedQuantity: null,
         lineState: 'DRAFT' as const,
+        routeDecision: null,
       },
     ],
   };
@@ -133,6 +138,57 @@ function procurementService(): GovernedProcurementService {
     ): Promise<CreateMaterialRequisitionResponse> => ({ requisition: detail }),
     submitRequisition: async (): Promise<MaterialRequisitionDetailResponse> => ({
       requisition: { ...detail, status: 'SUBMITTED', submittedAt: '2026-08-14T10:00:00.000Z' },
+    }),
+    reviewRequisition: async (
+      _context,
+      _requestedMrId,
+      _request: ReviewMaterialRequisitionRequest,
+    ): Promise<MaterialRequisitionDetailResponse> => ({
+      requisition: {
+        ...detail,
+        status: 'APPROVED',
+        lines: detail.lines.map((line) => ({
+          ...line,
+          approvedQuantity: line.requestedQuantity,
+          lineState: 'APPROVED',
+        })),
+        reviewTrail: [
+          {
+            reviewOccurrenceId: '018f0000-0000-7000-8000-000000000007',
+            decision: 'APPROVED',
+            reviewerId: principalId,
+            reviewerName: 'Buyer',
+            comments: 'Approved for sourcing',
+            occurredAt: '2026-08-14T10:05:00.000Z',
+          },
+        ],
+      },
+    }),
+    setLineRoute: async (
+      _context,
+      _requestedMrId,
+      _requestedMrLineId,
+      request: SetProcurementRouteRequest,
+    ): Promise<MaterialRequisitionDetailResponse> => ({
+      requisition: {
+        ...detail,
+        status: 'APPROVED',
+        lines: detail.lines.map((line) => ({
+          ...line,
+          approvedQuantity: line.requestedQuantity,
+          lineState: 'APPROVED',
+          routeDecision: {
+            routeDecisionId: '018f0000-0000-7000-8000-000000000008',
+            policyKey: 'UAE_CONTRACTOR_STARTER',
+            policyVersion: 1,
+            route: request.route,
+            justification: request.justification ?? null,
+            decidedBy: principalId,
+            decidedByName: 'Buyer',
+            decidedAt: '2026-08-14T10:06:00.000Z',
+          },
+        })),
+      },
     }),
   };
 }
@@ -176,6 +232,32 @@ describe('Architecture V2 procurement API', () => {
     });
     expect(read.statusCode).toBe(200);
     expect(read.json().requisition.lines).toHaveLength(1);
+    await app.close();
+  });
+
+  it('reviews a submitted MR and routes an approved line', async () => {
+    const app = buildApi({ config, logger, procurementService: procurementService() });
+    const review = await app.inject({
+      method: 'POST',
+      url: `/procurement/requisitions/${mrId}/review`,
+      headers: contextHeaders(),
+      payload: {
+        lineDecisions: [{ mrLineId, outcome: 'APPROVED', approvedQuantity: '20' }],
+        comments: 'Approved for sourcing',
+      },
+    });
+    expect(review.statusCode).toBe(200);
+    expect(review.json().requisition.status).toBe('APPROVED');
+    expect(review.json().requisition.reviewTrail).toHaveLength(1);
+
+    const route = await app.inject({
+      method: 'POST',
+      url: `/procurement/requisitions/${mrId}/lines/${mrLineId}/route`,
+      headers: contextHeaders(),
+      payload: { route: 'COMPETITIVE_RFQ' },
+    });
+    expect(route.statusCode).toBe(200);
+    expect(route.json().requisition.lines[0].routeDecision.route).toBe('COMPETITIVE_RFQ');
     await app.close();
   });
 
