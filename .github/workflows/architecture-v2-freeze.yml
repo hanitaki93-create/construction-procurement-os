@@ -1,0 +1,81 @@
+name: Architecture V2 freeze gate
+
+on:
+  push:
+    branches:
+      - rebuild/cpos-product-rebaseline-clean-v1
+  pull_request:
+    paths:
+      - '04_phases/phase_2_build_decomposition/product_rebaseline/**'
+      - 'scripts/check-product-capabilities.mjs'
+      - 'package.json'
+      - '.github/workflows/architecture-v2-freeze.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architecture-v2-freeze-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  freeze-authority:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Verify clean accepted-B03 lineage and architecture-only rebaseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='b44dcadc2d898b1db98c3a9dc3b182a88c198cd3'
+          AUDITED='a0f976e7da840376c3df4f02d9e7ec8f5102d5ee'
+          git merge-base --is-ancestor "$BASE" HEAD
+          git merge-base --is-ancestor "$AUDITED" HEAD
+          changed="$(git diff --name-only "$BASE" HEAD)"
+          forbidden="$(printf '%s\n' "$changed" | grep -E '^(apps/|packages/|migrations/|infra/)' || true)"
+          if [[ -n "$forbidden" ]]; then
+            echo 'Architecture rebaseline contains product/runtime implementation changes before freeze:'
+            printf '%s\n' "$forbidden"
+            exit 1
+          fi
+          echo "FREEZE_LINEAGE_PASS base=$BASE audited_ancestor=$AUDITED"
+
+      - name: Verify Claude blocker-closure evidence exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/audit/CLAUDE_ARCHITECTURE_V2_HOSTILE_AUDIT_VERDICT_2026-08-14.md
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/audit/POST_CLAUDE_BLOCKER_CLOSURE_VERIFICATION_V1_0.md
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/audit/OWNER_DOMAIN_MEANING_PASS_ARCHITECTURE_V2_2026-08-14.md
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/CPOS_ARCHITECTURE_V2_AUDIT_CANDIDATE_V0_3.md
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_INVENTORY_V0_5.csv
+          test -f 04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_SPEC_MANIFEST_V0_7.json
+          echo 'FREEZE_EVIDENCE_FILES_PASS'
+
+      - name: Syntax check capability compiler
+        run: node --check scripts/check-product-capabilities.mjs
+
+      - name: Require Architecture V2 structural PASS
+        run: node scripts/check-product-capabilities.mjs
+
+      - name: Require Architecture V2 owner/domain authorization PASS
+        run: node scripts/check-product-capabilities.mjs --authorize
+
+      - name: Freeze-candidate summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "ARCHITECTURE_V2_FREEZE_GATE_PASS sha=$(git rev-parse HEAD) tree=$(git rev-parse HEAD^{tree})"

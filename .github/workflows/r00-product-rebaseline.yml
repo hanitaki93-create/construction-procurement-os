@@ -1,0 +1,49 @@
+name: R00 product rebaseline
+
+on:
+  push:
+    branches:
+      - rebuild/cpos-product-rebaseline-clean-v1
+  pull_request:
+    paths:
+      - '04_phases/phase_2_build_decomposition/product_rebaseline/**'
+      - 'scripts/check-product-capabilities.mjs'
+      - 'package.json'
+      - '.github/workflows/r00-product-rebaseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r00-product-rebaseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capability-structure:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - name: Syntax check capability gate
+        run: node --check scripts/check-product-capabilities.mjs
+      - name: Verify first-spine capability specifications exist
+        run: node scripts/check-product-capabilities.mjs
+      - name: Confirm authorization remains explicit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if node scripts/check-product-capabilities.mjs --authorize; then
+            echo 'R00 capability authorization is complete.'
+          else
+            echo 'R00 authorization correctly remains blocked until MEANING_PASS decisions are recorded.'
+          fi

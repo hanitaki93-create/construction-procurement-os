@@ -1,0 +1,45 @@
+capability_id,domain,user_capability,minimum_release_posture,target_block,old_state,rebaseline_disposition
+CAP-001,Platform,Company legal entity and project context,REQUIRED,FOUNDATION,accepted B02 substrate,KEEP_EXTEND
+CAP-002,Platform,Users roles DOA approvals and delegation,REQUIRED,FOUNDATION,accepted B02 substrate,KEEP_EXTEND
+CAP-003,Master Data,Supplier subcontractor master,REQUIRED,R02,minimal rejected B06 placeholder,BUILD_NEW
+CAP-004,Master Data,Supplier contacts and addresses,REQUIRED,R02,minimal rejected B06 contact,BUILD_NEW
+CAP-005,Master Data,Supplier registrations tax and compliance documents,REQUIRED,R02,missing,ADD
+CAP-006,Master Data,Supplier category trade eligibility and history,REQUIRED_THIN,R02,missing/abstract,ADD
+CAP-007,Master Data,Item material service scope master,REQUIRED_THIN,R01,missing,ADD
+CAP-008,Master Data,UOM registry and conversion policy,REQUIRED,R01,rejected free-text key,ADD
+CAP-009,Master Data,Cost code WBS reference and distributions,REQUIRED,R01_R03,partial abstract context,ADD
+CAP-010,Master Data,Currency tax payment terms and delivery locations,REQUIRED,R01,under-specified,ADD
+CAP-011,Control,Document numbering policies and sequences,REQUIRED,R01,rejected manual text numbers,ADD
+CAP-012,Documents,Product-owned template and rendering classes,REQUIRED,R01,rejected wave had artifact machinery only,ADD
+CAP-013,Demand,Material Purchase Requisition header,REQUIRED,R03,missing,ADD
+CAP-014,Demand,MR lines catalogue and free form,REQUIRED,R03,rejected wave abstracted requirement basis,ADD
+CAP-015,Demand,MR distributions approvals attachments and routing,REQUIRED,R03,missing/partial,ADD
+CAP-016,Demand,Procurement package complex scope path,REQUIRED,R03_R04,prior architecture only,REBUILD
+CAP-017,Sourcing,RFQ tender header and governed lifecycle,REQUIRED,R04,rejected B06 partial,REBUILD_WITH_SALVAGE
+CAP-018,Sourcing,RFQ lines derived from MR package without rekeying,REQUIRED,R04,missing,ADD
+CAP-019,Sourcing,Bid form requested pricing structure commercial terms and documents,REQUIRED,R04,partial rejected schema only,REBUILD
+CAP-020,Sourcing,Bidder selection invitation addenda clarifications and issue,REQUIRED,R04,rejected B06 mechanisms,REBUILD_WITH_SALVAGE
+CAP-021,Sourcing,Professional RFQ PDF Excel and manual send,REQUIRED,R04,missing,ADD
+CAP-022,External,Supplier secure task response and no bid,REQUIRED,R05,rejected grant substrate only,REBUILD_WITH_SALVAGE
+CAP-023,Submissions,Quotation original source and revision lifecycle,REQUIRED,R05,planned not built,BUILD_NEW
+CAP-024,Submissions,Email file manual and buyer capture provenance,REQUIRED,R05,policy architecture only,BUILD_NEW
+CAP-025,Comparison,Quote normalization mapping and deviations,REQUIRED,R06,planned semantic model,BUILD_NEW
+CAP-026,Comparison,Side-by-side leveling missing exclusions alternates adjustments,REQUIRED,R06,not built,BUILD_NEW
+CAP-027,AI,Source-cited quotation extraction into deterministic comparison,DIFFERENTIATOR,R06,not built,BUILD_NEW_GOVERNED
+CAP-028,Decision,Negotiation clarification and supplier-confirmed basis,REQUIRED,R07,planned,BUILD_NEW
+CAP-029,Decision,Recommendation budget context justification and approvals,REQUIRED,R07,planned,BUILD_NEW
+CAP-030,Decision,Award decision split sole-source non-lowest controls,REQUIRED,R07,planned,BUILD_NEW
+CAP-031,Commitment,Early LPO PO Subcontract formation,REQUIRED,R08,deferred too late,BUILD_EARLY
+CAP-032,Commitment,LPO PO Subcontract professional issued document,REQUIRED,R08,missing,BUILD_NEW
+CAP-033,Commitment,Order revision amendment boundary and ERP handoff,REQUIRED,R08,planned later,BUILD_EARLY
+CAP-034,Workbench,Role-focused procurement home and task queue,REQUIRED,R09,rejected alpha harness,BUILD_NEW
+CAP-035,Workbench,MR RFQ quote comparison award order registers,REQUIRED,R09,partial/simple,BUILD_NEW
+CAP-036,Planning,Procurement schedule milestones forecast supplier dates,REQUIRED_THIN,R09,deferred,BUILD_NEW
+CAP-037,Search,Search filters export and drill-down,REQUIRED,R09,deferred,BUILD_NEW
+CAP-038,Fulfillment,Delivery receipt GRN partial discrepancy and return,REQUIRED_THIN,R10,deferred,BUILD_NEW
+CAP-039,Integration,ERP AP inventory invoice reference and reconciliation,REQUIRED_SEAM,R10,architecture only,BUILD_INTERFACE
+CAP-040,Commercial,Variation change retention advance claim certification recovery,POST_SPINE,R12+,planned P07,DEFER_KEEP_ARCH
+CAP-041,AI,Historical price supplier performance recommendation and risk intelligence,POST_SPINE,R12+,planned late,BUILD_AFTER_DATA
+CAP-042,Quality,RTL responsive accessibility and user recovery,REQUIRED,CROSS_CUTTING,deferred B10,MAKE_EVERY_BLOCK
+CAP-043,Governance,Capability specification and domain meaning gate,REQUIRED,R00,missing,ADD
+CAP-044,Governance,Capability completeness compiler,REQUIRED,R00,missing,ADD
