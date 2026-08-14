@@ -182,7 +182,6 @@ export interface MaterialRequisitionSummary {
   readonly status: MrStatus;
   readonly submittedAt: string | null;
   readonly lineCount: number;
-  readonly totalRequestedQuantity: string;
 }
 
 export interface MaterialRequisitionDetail extends MaterialRequisitionSummary {
