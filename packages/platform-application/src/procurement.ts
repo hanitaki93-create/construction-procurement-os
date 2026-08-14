@@ -13,6 +13,10 @@ import type {
   MrLineType,
   MrPriority,
   ProcurementReferenceDataResponse,
+  ReviewMaterialRequisitionRequest,
+  ReviewMaterialRequisitionResponse,
+  SetProcurementRouteRequest,
+  SetProcurementRouteResponse,
   SupplierComplianceSummary,
   SupplierContactSummary,
   SupplierListResponse,
@@ -30,6 +34,7 @@ import {
   type SupplierContactRow,
   type SupplierRow,
 } from './persistence/procurement.js';
+import { createGovernedProcurementReviewRuntime } from './procurement-review.js';
 
 export interface GovernedProcurementRequestContext {
   readonly authenticationIdentityId: string;
@@ -59,6 +64,17 @@ export interface GovernedProcurementService {
     context: GovernedProcurementRequestContext,
     mrId: string,
   ): Promise<MaterialRequisitionDetailResponse>;
+  reviewRequisition(
+    context: GovernedProcurementRequestContext,
+    mrId: string,
+    request: ReviewMaterialRequisitionRequest,
+  ): Promise<ReviewMaterialRequisitionResponse>;
+  setLineRoute(
+    context: GovernedProcurementRequestContext,
+    mrId: string,
+    mrLineId: string,
+    request: SetProcurementRouteRequest,
+  ): Promise<SetProcurementRouteResponse>;
 }
 
 const supplierCodePattern = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,39}$/u;
@@ -223,10 +239,11 @@ function mrLine(row: MrLineRow): MaterialRequisitionLine {
     technicalNotes: row.technical_notes,
     approvedQuantity: row.approved_quantity,
     lineState: row.line_state,
+    routeDecision: null,
   };
 }
 
-async function mrDetail(
+async function baseMrDetail(
   handle: ProcurementPersistenceHandle,
   mrId: string,
 ): Promise<MaterialRequisitionDetail | undefined> {
@@ -238,6 +255,7 @@ async function mrDetail(
     deliveryLocationId: header.delivery_location_id,
     instructions: header.instructions,
     lines: lines.map(mrLine),
+    reviewTrail: [],
   };
 }
 
@@ -245,6 +263,8 @@ export function createGovernedProcurementService(
   database: DatabaseRuntime,
   now: () => Date = () => new Date(),
 ): GovernedProcurementService {
+  const reviewRuntime = createGovernedProcurementReviewRuntime(database);
+
   async function verifyAndUse<Result>(
     context: GovernedProcurementRequestContext,
     operationKey: string,
@@ -261,6 +281,16 @@ export function createGovernedProcurementService(
         return callback(handle);
       },
     );
+  }
+
+  async function loadDetail(
+    context: GovernedProcurementRequestContext,
+    mrId: string,
+  ): Promise<MaterialRequisitionDetail | undefined> {
+    const base = await verifyAndUse(context, 'procurement.mr.read.v1', (handle) =>
+      baseMrDetail(handle, mrId),
+    );
+    return base === undefined ? undefined : reviewRuntime.enrich(context, base);
   }
 
   return Object.freeze<GovernedProcurementService>({
@@ -286,9 +316,7 @@ export function createGovernedProcurementService(
 
     createSupplier: (context, request) =>
       verifyAndUse(context, 'procurement.supplier.create.v1', async (handle) => {
-        if (!(await handle.canManageSuppliers())) {
-          throw new Error('not authorized to manage suppliers');
-        }
+        if (!(await handle.canManageSuppliers())) throw new Error('not authorized to manage suppliers');
         if (!supplierTypes.has(request.supplierType)) throw new Error('supplierType is invalid');
         const supplierCode = request.supplierCode.trim().toUpperCase();
         if (!supplierCodePattern.test(supplierCode)) throw new Error('supplierCode is invalid');
@@ -299,6 +327,7 @@ export function createGovernedProcurementService(
         if (businessEmail !== null && !emailPattern.test(businessEmail)) {
           throw new Error('businessEmail is invalid');
         }
+
         const created = await handle.createSupplier({
           supplierCode,
           legalName,
@@ -331,9 +360,7 @@ export function createGovernedProcurementService(
           });
         }
 
-        return {
-          supplier: supplier(created, primaryContact === undefined ? [] : [primaryContact], []),
-        };
+        return { supplier: supplier(created, primaryContact ? [primaryContact] : [], []) };
       }),
 
     listRequisitions: (context) =>
@@ -341,24 +368,20 @@ export function createGovernedProcurementService(
         requisitions: (await handle.requisitions()).map(mrSummary),
       })),
 
-    readRequisition: (context, rawMrId) => {
+    readRequisition: async (context, rawMrId) => {
       const mrId = requireUuid(rawMrId, 'mrId');
-      return verifyAndUse(context, 'procurement.mr.read.v1', async (handle) => {
-        const requisition = await mrDetail(handle, mrId);
-        return requisition === undefined ? undefined : { requisition };
-      });
+      const requisition = await loadDetail(context, mrId);
+      return requisition === undefined ? undefined : { requisition };
     },
 
-    createRequisition: (context, request) =>
-      verifyAndUse(context, 'procurement.mr.create.v1', async (handle) => {
+    createRequisition: async (context, request) => {
+      const mrId = await verifyAndUse(context, 'procurement.mr.create.v1', async (handle) => {
         if (!(await handle.canCreateRequisition())) {
           throw new Error('not authorized to create Material/Purchase Requisitions');
         }
         const projectId = requireUuid(request.projectId, 'projectId');
         const project = await handle.project(projectId);
-        if (project === undefined) {
-          throw new Error('project is not active or not visible in this tenant');
-        }
+        if (project === undefined) throw new Error('project is not active or not visible in this tenant');
         if (!Array.isArray(request.lines) || request.lines.length < 1 || request.lines.length > 250) {
           throw new Error('MR must contain between 1 and 250 lines');
         }
@@ -379,7 +402,7 @@ export function createGovernedProcurementService(
         const sequence = await handle.allocateNextMrNumber(scopeKey);
         const mrNumber = `MR-${project.project_code}-${yy}-${String(sequence).padStart(5, '0')}`;
 
-        const mrId = await handle.createMaterialRequisition({
+        const createdMrId = await handle.createMaterialRequisition({
           projectId,
           mrNumber,
           scopeKey,
@@ -404,28 +427,26 @@ export function createGovernedProcurementService(
           if (line.equivalentRule !== undefined && !equivalentRules.has(line.equivalentRule)) {
             throw new Error('line.equivalentRule is invalid');
           }
-          const entryMode = line.entryMode;
           const itemId = line.itemId === undefined ? null : requireUuid(line.itemId, 'itemId');
-          if ((entryMode === 'MASTER_BACKED') !== (itemId !== null)) {
+          if ((line.entryMode === 'MASTER_BACKED') !== (itemId !== null)) {
             throw new Error('MASTER_BACKED lines require itemId; FREE_FORM lines must not carry itemId');
           }
           const uomCode = requiredText(line.uomCode, 'uomCode', 12).toUpperCase();
           if (!availableUoms.has(uomCode)) throw new Error(`uomCode ${uomCode} is not active`);
-          const requiredDateOverride =
-            line.requiredDateOverride === undefined
-              ? null
-              : requireDate(line.requiredDateOverride, 'requiredDateOverride');
           await handle.createMaterialRequisitionLine({
-            mrId,
+            mrId: createdMrId,
             lineNo,
-            entryMode,
+            entryMode: line.entryMode,
             itemId,
             lineType: line.lineType,
             description: requiredText(line.description, 'line.description', 500),
             specification: text(line.specification, 12_000),
             requestedQuantity: requireQuantity(line.requestedQuantity),
             uomCode,
-            requiredDateOverride,
+            requiredDateOverride:
+              line.requiredDateOverride === undefined
+                ? null
+                : requireDate(line.requiredDateOverride, 'requiredDateOverride'),
             manufacturer: text(line.manufacturer, 160),
             brand: text(line.brand, 160),
             model: text(line.model, 160),
@@ -438,25 +459,44 @@ export function createGovernedProcurementService(
           });
           lineNo += 10;
         }
+        return createdMrId;
+      });
 
-        const requisition = await mrDetail(handle, mrId);
-        if (requisition === undefined) throw new Error('created MR could not be reloaded');
-        return { requisition };
-      }),
+      const requisition = await loadDetail(context, mrId);
+      if (requisition === undefined) throw new Error('created MR could not be reloaded');
+      return { requisition };
+    },
 
-    submitRequisition: (context, rawMrId) => {
+    submitRequisition: async (context, rawMrId) => {
       const mrId = requireUuid(rawMrId, 'mrId');
-      return verifyAndUse(context, 'procurement.mr.submit.v1', async (handle) => {
+      await verifyAndUse(context, 'procurement.mr.submit.v1', async (handle) => {
         if (!(await handle.canCreateRequisition())) {
           throw new Error('not authorized to submit Material/Purchase Requisitions');
         }
         if (!(await handle.submitRequisition(mrId))) {
           throw new Error('MR submit conflict: only a populated DRAFT can be submitted');
         }
-        const requisition = await mrDetail(handle, mrId);
-        if (requisition === undefined) throw new Error('submitted MR could not be reloaded');
-        return { requisition };
       });
+      const requisition = await loadDetail(context, mrId);
+      if (requisition === undefined) throw new Error('submitted MR could not be reloaded');
+      return { requisition };
+    },
+
+    reviewRequisition: async (context, rawMrId, request) => {
+      const mrId = requireUuid(rawMrId, 'mrId');
+      await reviewRuntime.review(context, mrId, request);
+      const requisition = await loadDetail(context, mrId);
+      if (requisition === undefined) throw new Error('reviewed MR could not be reloaded');
+      return { requisition };
+    },
+
+    setLineRoute: async (context, rawMrId, rawMrLineId, request) => {
+      const mrId = requireUuid(rawMrId, 'mrId');
+      const mrLineId = requireUuid(rawMrLineId, 'mrLineId');
+      await reviewRuntime.setRoute(context, mrId, mrLineId, request);
+      const requisition = await loadDetail(context, mrId);
+      if (requisition === undefined) throw new Error('routed MR could not be reloaded');
+      return { requisition };
     },
   });
 }
