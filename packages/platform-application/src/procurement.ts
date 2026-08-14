@@ -263,7 +263,7 @@ export function createGovernedProcurementService(
     );
   }
 
-  return Object.freeze({
+  return Object.freeze<GovernedProcurementService>({
     referenceData: (context) =>
       verifyAndUse(context, 'procurement.reference-data.read.v1', async (handle) => ({
         uoms: (await handle.uoms()).map((row) => ({
