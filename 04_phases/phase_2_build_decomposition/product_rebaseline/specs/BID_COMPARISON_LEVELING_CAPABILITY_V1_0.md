@@ -21,18 +21,22 @@ Coverage statuses include EXACT, PARTIAL, BUNDLED, ALTERNATE, SUPPLIER_ADDED, MI
 
 Currency/UOM normalization uses governed reference data, explicit conversion basis/date/rate where applicable and exact decimal/rounding policy. The normalized layer never erases original quoted currency/UOM.
 
-## Supplier / technical decision context
+## Technical evaluation and supplier decision context
 
-The leveling surface exposes relevant registration/qualification/compliance state, company project/tender/commitment exposure, performance history and explainable capacity indicators alongside the current bid.
+The leveling surface consumes the frozen/current TechnicalEvaluation where the tender uses structured technical evaluation. It shows technical compliance/deviation/clarification state beside the commercial offer and respects any two-stage opening policy.
 
-TechnicalApprovalDependency state is visible for proposed brands/alternates/submittals where procurement relies on technical approval. Commercially attractive but technically unapproved offers cannot be presented as fully equivalent without an explicit unresolved/conditional status.
+TechnicalEvaluation is distinct from TechnicalApprovalDependency: evaluation judges the supplier's tender response; TechnicalApprovalDependency may remain unresolved for a later external consultant/client/material approval.
+
+The leveling surface also exposes relevant registration/qualification/compliance state, company project/tender/commitment exposure, performance history and explainable capacity indicators alongside the current bid.
+
+Commercially attractive but technically non-compliant/unresolved offers cannot be presented as fully equivalent without explicit status and justification.
 
 ## Buyer experience
 
 - side-by-side leveling;
 - missing/excluded counts;
 - alternates/substitutes toggles;
-- technical/commercial deviation views;
+- technical evaluation/commercial deviation views;
 - clarification requests/responses linked to procurement correspondence;
 - notes/history;
 - negotiated revision selection;
@@ -42,12 +46,12 @@ TechnicalApprovalDependency state is visible for proposed brands/alternates/subm
 
 ## AI assist
 
-AI may propose extraction, line mapping, UOM/item/currency match, inclusion/exclusion detection and deviation summaries with exact source citations/confidence. Human confirmation is mandatory. AI cannot edit supplier source truth, infer technical approval, silently manipulate performance risk or choose the winner.
+AI may propose extraction, line mapping, UOM/item/currency match, inclusion/exclusion detection and technical/commercial deviation summaries with exact source citations/confidence. Human confirmation is mandatory. AI cannot edit supplier source truth, mark technical compliance as final, infer external technical approval, silently manipulate performance risk or choose the winner.
 
 ## Outputs
 
-Professional comparison workbook/XLSX plus PDF/print summary. Every exported value identifies whether it is source, normalized or adjusted and the conversion/adjustment basis where applicable.
+Professional comparison workbook/XLSX plus PDF/print summary. Every exported value identifies whether it is source, normalized or adjusted and the conversion/adjustment basis where applicable. Where technical evaluation is part of the decision, the output preserves the evaluation version/status relied upon.
 
 ## Acceptance
 
-Given three materially different quotations—including bundled pricing, missing items, an alternate brand requiring technical approval, different currencies/payment terms and one supplier with material current workload exposure—the buyer produces a reproducible leveled comparison, explains every conversion/adjustment, traces every value to source, sees unresolved technical/supplier context, freezes a snapshot and hands the exact basis into recommendation without re-keying.
+Given three materially different quotations—including bundled pricing, missing items, an alternate requiring technical evaluation/approval, different currencies/payment terms and one supplier with material current workload exposure—the buyer produces a reproducible leveled comparison, explains every conversion/adjustment, traces every value to source, sees the formal technical-evaluation state and remaining external approval dependencies, freezes a snapshot and hands the exact basis into recommendation without re-keying.
