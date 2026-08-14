@@ -1,0 +1,19 @@
+inheritance_id,phase1_pattern,v2_capabilities,v2_posture
+DI-01,Requirement intake fast MR plus package path,CAP-007|CAP-008|CAP-009|CAP-010|CAP-013|CAP-014|CAP-015|CAP-016,PRESERVED_STRENGTHENED
+DI-02,Procurement package tender setup,CAP-016|CAP-017|CAP-018|CAP-019|CAP-020|CAP-021|CAP-045|CAP-049,PRESERVED_STRENGTHENED
+DI-03,Supplier participation low-friction multi-channel,CAP-022|CAP-023|CAP-024|CAP-050|CAP-055,PRESERVED_REBUILD
+DI-04,Supplier lifecycle qualification contextual eligibility,CAP-003|CAP-004|CAP-005|CAP-006|CAP-047|CAP-051,PRESERVED_STRENGTHENED
+DI-05,Quote bid capture immutable source plus structured/manual channels,CAP-023|CAP-024|CAP-025|CAP-050,PRESERVED
+DI-06,Bid comparison leveling four semantic layers,CAP-025|CAP-026|CAP-027|CAP-047|CAP-053|CAP-055,PRESERVED_STRENGTHENED
+DI-07,Recommendation approval award separation,CAP-028|CAP-029|CAP-030|CAP-052|CAP-053,PRESERVED_STRENGTHENED
+DI-08,Commitment formation PO/subcontract distinction,CAP-031|CAP-032|CAP-033|CAP-048,PRESERVED_MOVED_EARLY
+DI-09,Framework blanket purchasing CommercialTermsAuthority vs calloff,CAP-054,PRESERVED_DEFERRED_BUILD
+DI-10,Fulfillment receipt distinctions,CAP-038|CAP-039,PRESERVED_THIN
+DI-11,Subcontract valuation payment semantic separation,CAP-040,PRESERVED_POST_SPINE
+DI-12,Changes and history-preserving correction,CAP-033|CAP-040|CAP-050,PRESERVED_BOUNDARY_PLUS_LATER
+DI-13,Procurement schedule long lead,CAP-036|CAP-049,PRESERVED_MOVED_EARLY
+DI-14,Technical document approval dependency with CDE boundary,CAP-050|CAP-053,RESTORED_EXPLICITLY
+DI-15,Workflow approvals fixed gate classes plus bounded configuration,CAP-002|CAP-029,PRESERVED
+DI-16,Accounting integration OWN MIRROR REFERENCE,CAP-039|CAP-052,PRESERVED_STRENGTHENED
+DI-17,Evidence audit business provenance,CAP-050|CAP-055,PRESERVED_REBUILT_ON_CLEAN_LINEAGE
+DI-18,Role-focused adoption UX,CAP-034|CAP-035|CAP-036|CAP-037|CAP-042,PRESERVED_EVERY_BLOCK_UI
