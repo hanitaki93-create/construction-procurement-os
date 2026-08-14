@@ -1,0 +1,53 @@
+event_id,event_type,event_time_utc,event_time_et,release_period,official_source
+2017-01-04_fomc_minutes,FOMC_MINUTES,2017-01-04T19:00:00Z,2017-01-04 14:00 EST,December 13-14 2016 meeting,Federal Reserve minutes release
+2017-01-06_nfp,NFP,2017-01-06T13:30:00Z,2017-01-06 08:30 EST,December 2016,BLS 2017 release schedule
+2017-01-18_cpi,CPI,2017-01-18T13:30:00Z,2017-01-18 08:30 EST,December 2016,BLS 2017 release schedule
+2017-01-30_pce,PCE,2017-01-30T13:30:00Z,2017-01-30 08:30 EST,December 2016,BEA 2017 release schedule
+2017-02-01_fomc,FOMC,2017-02-01T19:00:00Z,2017-02-01 14:00 EST,January 31-February 1 meeting,Federal Reserve historical FOMC 2017
+2017-02-03_nfp,NFP,2017-02-03T13:30:00Z,2017-02-03 08:30 EST,January 2017,BLS 2017 release schedule
+2017-02-15_cpi,CPI,2017-02-15T13:30:00Z,2017-02-15 08:30 EST,January 2017,BLS 2017 release schedule
+2017-02-22_fomc_minutes,FOMC_MINUTES,2017-02-22T19:00:00Z,2017-02-22 14:00 EST,January 31-February 1 meeting,Federal Reserve minutes release
+2017-03-01_pce,PCE,2017-03-01T13:30:00Z,2017-03-01 08:30 EST,January 2017,BEA 2017 release schedule
+2017-03-10_nfp,NFP,2017-03-10T13:30:00Z,2017-03-10 08:30 EST,February 2017,BLS 2017 release schedule
+2017-03-15_cpi,CPI,2017-03-15T12:30:00Z,2017-03-15 08:30 EDT,February 2017,BLS 2017 release schedule
+2017-03-15_fomc,FOMC,2017-03-15T18:00:00Z,2017-03-15 14:00 EDT,March 14-15 meeting,Federal Reserve historical FOMC 2017
+2017-03-31_pce,PCE,2017-03-31T12:30:00Z,2017-03-31 08:30 EDT,February 2017,BEA 2017 release schedule
+2017-04-05_fomc_minutes,FOMC_MINUTES,2017-04-05T18:00:00Z,2017-04-05 14:00 EDT,March 14-15 meeting,Federal Reserve minutes release
+2017-04-07_nfp,NFP,2017-04-07T12:30:00Z,2017-04-07 08:30 EDT,March 2017,BLS 2017 release schedule
+2017-04-14_cpi,CPI,2017-04-14T12:30:00Z,2017-04-14 08:30 EDT,March 2017,BLS 2017 release schedule
+2017-05-01_pce,PCE,2017-05-01T12:30:00Z,2017-05-01 08:30 EDT,March 2017,BEA 2017 release schedule
+2017-05-03_fomc,FOMC,2017-05-03T18:00:00Z,2017-05-03 14:00 EDT,May 2-3 meeting,Federal Reserve historical FOMC 2017
+2017-05-05_nfp,NFP,2017-05-05T12:30:00Z,2017-05-05 08:30 EDT,April 2017,BLS 2017 release schedule
+2017-05-12_cpi,CPI,2017-05-12T12:30:00Z,2017-05-12 08:30 EDT,April 2017,BLS 2017 release schedule
+2017-05-24_fomc_minutes,FOMC_MINUTES,2017-05-24T18:00:00Z,2017-05-24 14:00 EDT,May 2-3 meeting,Federal Reserve minutes release
+2017-05-30_pce,PCE,2017-05-30T12:30:00Z,2017-05-30 08:30 EDT,April 2017,BEA 2017 release schedule
+2017-06-02_nfp,NFP,2017-06-02T12:30:00Z,2017-06-02 08:30 EDT,May 2017,BLS 2017 release schedule
+2017-06-14_cpi,CPI,2017-06-14T12:30:00Z,2017-06-14 08:30 EDT,May 2017,BLS 2017 release schedule
+2017-06-14_fomc,FOMC,2017-06-14T18:00:00Z,2017-06-14 14:00 EDT,June 13-14 meeting,Federal Reserve historical FOMC 2017
+2017-06-30_pce,PCE,2017-06-30T12:30:00Z,2017-06-30 08:30 EDT,May 2017,BEA 2017 release schedule
+2017-07-05_fomc_minutes,FOMC_MINUTES,2017-07-05T18:00:00Z,2017-07-05 14:00 EDT,June 13-14 meeting,Federal Reserve minutes release
+2017-07-07_nfp,NFP,2017-07-07T12:30:00Z,2017-07-07 08:30 EDT,June 2017,BLS 2017 release schedule
+2017-07-14_cpi,CPI,2017-07-14T12:30:00Z,2017-07-14 08:30 EDT,June 2017,BLS 2017 release schedule
+2017-07-26_fomc,FOMC,2017-07-26T18:00:00Z,2017-07-26 14:00 EDT,July 25-26 meeting,Federal Reserve historical FOMC 2017
+2017-08-01_pce,PCE,2017-08-01T12:30:00Z,2017-08-01 08:30 EDT,June 2017,BEA 2017 release schedule
+2017-08-04_nfp,NFP,2017-08-04T12:30:00Z,2017-08-04 08:30 EDT,July 2017,BLS 2017 release schedule
+2017-08-11_cpi,CPI,2017-08-11T12:30:00Z,2017-08-11 08:30 EDT,July 2017,BLS 2017 release schedule
+2017-08-16_fomc_minutes,FOMC_MINUTES,2017-08-16T18:00:00Z,2017-08-16 14:00 EDT,July 25-26 meeting,Federal Reserve minutes release
+2017-08-31_pce,PCE,2017-08-31T12:30:00Z,2017-08-31 08:30 EDT,July 2017,BEA 2017 release schedule
+2017-09-01_nfp,NFP,2017-09-01T12:30:00Z,2017-09-01 08:30 EDT,August 2017,BLS 2017 release schedule
+2017-09-14_cpi,CPI,2017-09-14T12:30:00Z,2017-09-14 08:30 EDT,August 2017,BLS 2017 release schedule
+2017-09-20_fomc,FOMC,2017-09-20T18:00:00Z,2017-09-20 14:00 EDT,September 19-20 meeting,Federal Reserve historical FOMC 2017
+2017-09-29_pce,PCE,2017-09-29T12:30:00Z,2017-09-29 08:30 EDT,August 2017,BEA 2017 release schedule
+2017-10-06_nfp,NFP,2017-10-06T12:30:00Z,2017-10-06 08:30 EDT,September 2017,BLS 2017 release schedule
+2017-10-11_fomc_minutes,FOMC_MINUTES,2017-10-11T18:00:00Z,2017-10-11 14:00 EDT,September 19-20 meeting,Federal Reserve minutes release
+2017-10-13_cpi,CPI,2017-10-13T12:30:00Z,2017-10-13 08:30 EDT,September 2017,BLS 2017 release schedule
+2017-10-30_pce,PCE,2017-10-30T12:30:00Z,2017-10-30 08:30 EDT,September 2017,BEA 2017 release schedule
+2017-11-01_fomc,FOMC,2017-11-01T18:00:00Z,2017-11-01 14:00 EDT,October 31-November 1 meeting,Federal Reserve historical FOMC 2017
+2017-11-03_nfp,NFP,2017-11-03T12:30:00Z,2017-11-03 08:30 EDT,October 2017,BLS 2017 release schedule
+2017-11-15_cpi,CPI,2017-11-15T13:30:00Z,2017-11-15 08:30 EST,October 2017,BLS 2017 release schedule
+2017-11-22_fomc_minutes,FOMC_MINUTES,2017-11-22T19:00:00Z,2017-11-22 14:00 EST,October 31-November 1 meeting,Federal Reserve minutes release
+2017-11-30_pce,PCE,2017-11-30T13:30:00Z,2017-11-30 08:30 EST,October 2017,BEA 2017 release schedule
+2017-12-08_nfp,NFP,2017-12-08T13:30:00Z,2017-12-08 08:30 EST,November 2017,BLS 2017 release schedule
+2017-12-13_cpi,CPI,2017-12-13T13:30:00Z,2017-12-13 08:30 EST,November 2017,BLS 2017 release schedule
+2017-12-13_fomc,FOMC,2017-12-13T19:00:00Z,2017-12-13 14:00 EST,December 12-13 meeting,Federal Reserve historical FOMC 2017
+2017-12-22_pce,PCE,2017-12-22T13:30:00Z,2017-12-22 08:30 EST,November 2017,BEA 2017 release schedule
