@@ -1,0 +1,62 @@
+name: Gold Continuous State 2016 2017
+
+on:
+  push:
+    branches:
+      - ops/gold-vps-bridge-20260814
+    paths:
+      - '.github/workflows/gold-continuous-state-2016-2017.yml'
+      - 'ops/gold_research/diagnose_continuous_macro_state_2016_2017.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/gold-vps-bridge-20260814
+          persist-credentials: false
+      - name: Disposable Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/gold-continuous-state-venv"
+          python3 -m venv "$VENV"
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy
+          echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
+      - name: Verify only consumed caches are present for this run
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d "$HOME/.cache/gold_research/oanda_2016"
+          test -d "$HOME/.cache/gold_research/oanda_2017_holdout"
+      - name: Run continuous macro-state diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" ops/gold_research/diagnose_continuous_macro_state_2016_2017.py | tee "$RUNNER_TEMP/gold_continuous_state_stdout.txt"
+          OUT="$HOME/.cache/gold_research/continuous_macro_state_2016_2017"
+          test -f "$OUT/summary.json"
+          grep -q '"preserved_2018_accessed": false' "$OUT/summary.json"
+      - name: Stage outputs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/gold_continuous_state_artifact"
+          cp -a "$HOME/.cache/gold_research/continuous_macro_state_2016_2017/." "$RUNNER_TEMP/gold_continuous_state_artifact/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/gold_continuous_state_stdout.txt" "$RUNNER_TEMP/gold_continuous_state_artifact/" 2>/dev/null || true
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-continuous-state-2016-2017
+          path: ${{ runner.temp }}/gold_continuous_state_artifact/**
+          if-no-files-found: warn
+          retention-days: 14
