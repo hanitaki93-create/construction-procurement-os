@@ -18,19 +18,28 @@ RFQ/Tender is a business enquiry built from approved MR/package scope, selected 
 - validity requirement;
 - tax/delivery/incoterm requirements where used;
 - confidentiality/access profile;
-- lifecycle status and revision/addendum state.
+- lifecycle status and revision/addendum state;
+- source package/MR route and procurement-schedule relationship.
 
 ## Lines / bid form
 
 Lines originate from approved MR/package scope and preserve lineage. Each line may include source reference, description/specification, quantity, UOM, brand/model/equivalent requirement, target delivery/lead-time request, pricing fields and attachments. Structured bid sections may request unit rate, total, lead time, validity, technical response, alternates and commercial notes.
 
+For package/trade procurement, the RFQ may include the exact frozen ProjectScopeInstance generated from the company Scope Library. Bid-form sections may be seeded from that scope template so scope obligations and price breakdown remain aligned.
+
 ## Supplier selection
 
-Select supplier master records/contacts with visible compliance/eligibility context. Invitation membership is distinct from supplier identity and can be added/removed before issue under governed rules.
+Select supplier master records/contacts with visible compliance/eligibility context. Where available, the selection surface also exposes current workload/exposure, performance history and estimating-stage participation/quote context. These facts support judgment; heuristic intelligence does not silently create eligibility or exclusion.
+
+Invitation membership is distinct from supplier identity and can be added/removed before issue under governed rules.
 
 ## Documents
 
-Tender drawings/specifications/BOQ/scope documents are attached in ordinary document UX. The issue package has an attachment index and exact version binding.
+Tender drawings/specifications/BOQ/scope documents are attached in ordinary document UX. The issue package has an attachment index and exact version binding. Scope-of-works annexures bind to the exact frozen project-scope version.
+
+## Procurement schedule
+
+RFQ planned issue/return milestones originate from the core procurement plan. Actual issue and response milestones populate from canonical events; revisions/addenda do not silently rewrite the baseline schedule.
 
 ## Lifecycle
 
@@ -48,4 +57,4 @@ RFQ register shows number, project, subject/package, buyer, issue/due dates, sta
 
 ## Acceptance
 
-Procurement selects approved MR lines, selects three eligible suppliers, adds drawings/terms, issues a numbered professional RFQ without re-keying lines, downloads the exact PDF/Excel package, later issues an addendum and can prove which supplier saw/responded to which version.
+Procurement selects approved MR/package scope, uses the frozen project scope where relevant, sees bidder compliance/performance/exposure context, selects three suppliers, adds drawings/terms, issues a numbered professional RFQ without re-keying lines, downloads the exact PDF/Excel package, later issues an addendum and can prove which supplier saw/responded to which scope/issue version.
