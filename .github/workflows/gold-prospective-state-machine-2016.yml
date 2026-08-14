@@ -1,0 +1,83 @@
+name: Gold Prospective State Machine 2016
+
+on:
+  push:
+    branches:
+      - ops/gold-vps-bridge-20260814
+    paths:
+      - '.github/workflows/gold-prospective-state-machine-2016.yml'
+      - 'ops/gold_research/run_prospective_state_machine_2016.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/gold-vps-bridge-20260814
+          persist-credentials: false
+
+      - name: Disposable Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/gold-prospective-state-venv"
+          python3 -m venv "$VENV"
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy requests
+          echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
+
+      - name: Patch imported helper pandas collision if present
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ops/gold_research/run_oanda_macro_transition_replay_2016.py')
+          s=p.read_text()
+          old='thresholds_df[thresholds_df.quantile == q]'
+          if old in s:
+              p.write_text(s.replace(old, 'thresholds_df[thresholds_df["quantile"] == q]', 1))
+          print('IMPORT_HELPER_READY')
+          PY
+
+      - name: Verify cached 2016 panel
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATA_DIR="$HOME/.cache/gold_research/oanda_2016"
+          COUNT=$(find "$DATA_DIR" -maxdepth 1 -type f -name 'oanda-*-2016-*.csv' | wc -l)
+          echo "cached_2016_files=$COUNT"
+          test "$COUNT" -eq 60
+
+      - name: Run prospective state machine
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" ops/gold_research/run_prospective_state_machine_2016.py | tee "$RUNNER_TEMP/gold_prospective_state_2016_stdout.txt"
+          OUT="$HOME/.cache/gold_research/prospective_state_machine_2016"
+          test -f "$OUT/summary.json"
+          grep -q '"preserved_2017_accessed": false' "$OUT/summary.json"
+
+      - name: Stage outputs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/gold_prospective_state_artifact"
+          cp -a "$HOME/.cache/gold_research/prospective_state_machine_2016/." "$RUNNER_TEMP/gold_prospective_state_artifact/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/gold_prospective_state_2016_stdout.txt" "$RUNNER_TEMP/gold_prospective_state_artifact/" 2>/dev/null || true
+
+      - name: Upload audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-prospective-state-machine-2016
+          path: ${{ runner.temp }}/gold_prospective_state_artifact/**
+          if-no-files-found: warn
+          retention-days: 14
