@@ -1,0 +1,89 @@
+name: Gold V4 2017 Near Holdout
+
+on:
+  push:
+    branches:
+      - ops/gold-vps-bridge-20260814
+    paths:
+      - '.github/workflows/gold-v4-2017-holdout.yml'
+      - 'ops/gold_research/run_v4_2017_holdout.py'
+      - 'ops/gold_research/2017_holdout_event_manifest.csv'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  holdout:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/gold-vps-bridge-20260814
+          persist-credentials: false
+
+      - name: Disposable Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/gold-v4-2017-venv"
+          python3 -m venv "$VENV"
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy requests
+          echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
+
+      - name: Patch imported helper pandas collision if present
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ops/gold_research/run_oanda_macro_transition_replay_2016.py')
+          s=p.read_text()
+          old='thresholds_df[thresholds_df.quantile == q]'
+          if old in s:
+              p.write_text(s.replace(old, 'thresholds_df[thresholds_df["quantile"] == q]', 1))
+          print('IMPORT_HELPER_READY')
+          PY
+
+      - name: Verify frozen manifest contract before market-data access
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" - <<'PY'
+          import pandas as pd
+          p='ops/gold_research/2017_holdout_event_manifest.csv'
+          d=pd.read_csv(p)
+          assert len(d)==52
+          assert d.event_type.value_counts().to_dict()=={'NFP':12,'CPI':12,'PCE':12,'FOMC':8,'FOMC_MINUTES':8}
+          assert d.event_id.str.startswith('2017-').all()
+          print('GOLD_V4_2017_MANIFEST_FREEZE_PASS')
+          PY
+
+      - name: Run frozen 2017 near-held-out replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" ops/gold_research/run_v4_2017_holdout.py | tee "$RUNNER_TEMP/gold_v4_2017_holdout_stdout.txt"
+          OUT="$HOME/.cache/gold_research/v4_2017_holdout"
+          test -f "$OUT/summary.json"
+          grep -q '"recalibrated_on_2017": false' "$OUT/summary.json"
+
+      - name: Stage outputs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/gold_v4_2017_holdout_artifact"
+          cp -a "$HOME/.cache/gold_research/v4_2017_holdout/." "$RUNNER_TEMP/gold_v4_2017_holdout_artifact/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/gold_v4_2017_holdout_stdout.txt" "$RUNNER_TEMP/gold_v4_2017_holdout_artifact/" 2>/dev/null || true
+
+      - name: Upload holdout audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-v4-2017-near-holdout
+          path: ${{ runner.temp }}/gold_v4_2017_holdout_artifact/**
+          if-no-files-found: warn
+          retention-days: 21
