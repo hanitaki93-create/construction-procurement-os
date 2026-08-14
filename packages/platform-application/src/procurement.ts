@@ -3,16 +3,21 @@ import type {
   CreateMaterialRequisitionResponse,
   CreateSupplierRequest,
   CreateSupplierResponse,
+  EquivalentRule,
   MaterialRequisitionDetail,
   MaterialRequisitionDetailResponse,
   MaterialRequisitionLine,
   MaterialRequisitionListResponse,
   MaterialRequisitionSummary,
+  MrEntryMode,
+  MrLineType,
+  MrPriority,
   ProcurementReferenceDataResponse,
   SupplierComplianceSummary,
   SupplierContactSummary,
   SupplierListResponse,
   SupplierSummary,
+  SupplierType,
 } from '@cpos/contracts';
 import type { DatabaseRuntime } from '@cpos/database-core';
 
@@ -63,6 +68,29 @@ const datePattern = /^\d{4}-\d{2}-\d{2}$/u;
 const positiveDecimalPattern = /^(?:0*[1-9]\d*)(?:\.\d{1,6})?$|^0*\.\d{0,5}[1-9]\d*$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 
+const supplierTypes = new Set<SupplierType>([
+  'MATERIAL_SUPPLIER',
+  'SUBCONTRACTOR',
+  'SERVICE_PROVIDER',
+  'MANUFACTURER',
+  'DISTRIBUTOR',
+  'CONSULTANT_OTHER',
+]);
+const mrPriorities = new Set<MrPriority>(['LOW', 'NORMAL', 'HIGH', 'URGENT']);
+const mrEntryModes = new Set<MrEntryMode>(['MASTER_BACKED', 'FREE_FORM']);
+const mrLineTypes = new Set<MrLineType>([
+  'MATERIAL',
+  'SERVICE',
+  'SUBCONTRACT_SCOPE',
+  'EQUIPMENT',
+  'OTHER',
+]);
+const equivalentRules = new Set<EquivalentRule>([
+  'EXACT_ONLY',
+  'APPROVED_EQUIVALENT_ALLOWED',
+  'ALTERNATE_BY_APPROVAL',
+]);
+
 function text(value: string | undefined, max: number): string | null {
   if (value === undefined) return null;
   const normalized = value.trim();
@@ -92,7 +120,9 @@ function requireDate(value: string, label: string): string {
 
 function requireQuantity(value: string): string {
   const normalized = value.trim();
-  if (!positiveDecimalPattern.test(normalized)) throw new Error('requestedQuantity must be a positive exact decimal');
+  if (!positiveDecimalPattern.test(normalized)) {
+    throw new Error('requestedQuantity must be a positive exact decimal with at most 6 decimals');
+  }
   return normalized;
 }
 
@@ -147,7 +177,9 @@ function supplier(
     businessPhone: row.business_phone,
     businessEmail: row.business_email,
     trnVatNumber: row.trn_vat_number,
-    primaryContact: contact(contacts.find((entry) => entry.supplier_id === row.supplier_id && entry.is_primary)),
+    primaryContact: contact(
+      contacts.find((entry) => entry.supplier_id === row.supplier_id && entry.is_primary),
+    ),
     compliance: documents.filter((entry) => entry.supplier_id === row.supplier_id).map(compliance),
   };
 }
@@ -254,13 +286,19 @@ export function createGovernedProcurementService(
 
     createSupplier: (context, request) =>
       verifyAndUse(context, 'procurement.supplier.create.v1', async (handle) => {
+        if (!(await handle.canManageSuppliers())) {
+          throw new Error('not authorized to manage suppliers');
+        }
+        if (!supplierTypes.has(request.supplierType)) throw new Error('supplierType is invalid');
         const supplierCode = request.supplierCode.trim().toUpperCase();
         if (!supplierCodePattern.test(supplierCode)) throw new Error('supplierCode is invalid');
         const legalName = requiredText(request.legalName, 'legalName', 240);
         const countryCode = (request.countryCode ?? 'AE').trim().toUpperCase();
         if (!countryCodePattern.test(countryCode)) throw new Error('countryCode is invalid');
         const businessEmail = text(request.businessEmail, 320);
-        if (businessEmail !== null && !emailPattern.test(businessEmail)) throw new Error('businessEmail is invalid');
+        if (businessEmail !== null && !emailPattern.test(businessEmail)) {
+          throw new Error('businessEmail is invalid');
+        }
         const created = await handle.createSupplier({
           supplierCode,
           legalName,
@@ -282,7 +320,11 @@ export function createGovernedProcurementService(
           }
           primaryContact = await handle.createPrimaryContact({
             supplierId: created.supplier_id,
-            displayName: requiredText(request.primaryContact.displayName, 'primaryContact.displayName', 160),
+            displayName: requiredText(
+              request.primaryContact.displayName,
+              'primaryContact.displayName',
+              160,
+            ),
             jobTitle: text(request.primaryContact.jobTitle, 120),
             email: contactEmail,
             phone: text(request.primaryContact.phone, 40),
@@ -309,16 +351,27 @@ export function createGovernedProcurementService(
 
     createRequisition: (context, request) =>
       verifyAndUse(context, 'procurement.mr.create.v1', async (handle) => {
+        if (!(await handle.canCreateRequisition())) {
+          throw new Error('not authorized to create Material/Purchase Requisitions');
+        }
         const projectId = requireUuid(request.projectId, 'projectId');
         const project = await handle.project(projectId);
-        if (project === undefined) throw new Error('project is not active or not visible in this tenant');
+        if (project === undefined) {
+          throw new Error('project is not active or not visible in this tenant');
+        }
         if (!Array.isArray(request.lines) || request.lines.length < 1 || request.lines.length > 250) {
           throw new Error('MR must contain between 1 and 250 lines');
         }
+        if (request.priority !== undefined && !mrPriorities.has(request.priority)) {
+          throw new Error('priority is invalid');
+        }
 
+        const availableUoms = new Set((await handle.uoms()).map((entry) => entry.uom_code));
         const requestDate = now().toISOString().slice(0, 10);
         const requiredOnSiteDate = requireDate(request.requiredOnSiteDate, 'requiredOnSiteDate');
-        if (requiredOnSiteDate < requestDate) throw new Error('requiredOnSiteDate cannot be before requestDate');
+        if (requiredOnSiteDate < requestDate) {
+          throw new Error('requiredOnSiteDate cannot be before requestDate');
+        }
         const year = requestDate.slice(0, 4);
         const yy = year.slice(2);
         const scopeKey = `PROJECT:${projectId}:YEAR:${year}`;
@@ -346,11 +399,18 @@ export function createGovernedProcurementService(
 
         let lineNo = 10;
         for (const line of request.lines) {
+          if (!mrEntryModes.has(line.entryMode)) throw new Error('line.entryMode is invalid');
+          if (!mrLineTypes.has(line.lineType)) throw new Error('line.lineType is invalid');
+          if (line.equivalentRule !== undefined && !equivalentRules.has(line.equivalentRule)) {
+            throw new Error('line.equivalentRule is invalid');
+          }
           const entryMode = line.entryMode;
           const itemId = line.itemId === undefined ? null : requireUuid(line.itemId, 'itemId');
           if ((entryMode === 'MASTER_BACKED') !== (itemId !== null)) {
             throw new Error('MASTER_BACKED lines require itemId; FREE_FORM lines must not carry itemId');
           }
+          const uomCode = requiredText(line.uomCode, 'uomCode', 12).toUpperCase();
+          if (!availableUoms.has(uomCode)) throw new Error(`uomCode ${uomCode} is not active`);
           const requiredDateOverride =
             line.requiredDateOverride === undefined
               ? null
@@ -364,7 +424,7 @@ export function createGovernedProcurementService(
             description: requiredText(line.description, 'line.description', 500),
             specification: text(line.specification, 12_000),
             requestedQuantity: requireQuantity(line.requestedQuantity),
-            uomCode: requiredText(line.uomCode, 'uomCode', 12).toUpperCase(),
+            uomCode,
             requiredDateOverride,
             manufacturer: text(line.manufacturer, 160),
             brand: text(line.brand, 160),
@@ -387,6 +447,9 @@ export function createGovernedProcurementService(
     submitRequisition: (context, rawMrId) => {
       const mrId = requireUuid(rawMrId, 'mrId');
       return verifyAndUse(context, 'procurement.mr.submit.v1', async (handle) => {
+        if (!(await handle.canCreateRequisition())) {
+          throw new Error('not authorized to submit Material/Purchase Requisitions');
+        }
         if (!(await handle.submitRequisition(mrId))) {
           throw new Error('MR submit conflict: only a populated DRAFT can be submitted');
         }
