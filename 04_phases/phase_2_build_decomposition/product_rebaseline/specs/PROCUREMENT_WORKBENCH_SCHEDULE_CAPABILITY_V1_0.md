@@ -1,8 +1,10 @@
-# CPOS Procurement Workbench / Schedule Capability v1.0
+# CPOS Procurement Workbench / Portfolio Schedule Capability v1.0
 
 ## Purpose
 
 Provide the operational surface a procurement team actually works from every day. This is not a generic dashboard and must not expose backend ontology as primary navigation.
+
+The core procurement schedule is created earlier with MR/package planning. R09 does **not** invent procurement dates after sourcing; it rolls up, analyzes and manages the schedule facts already carried by live procurement objects.
 
 ## Primary navigation
 
@@ -23,7 +25,7 @@ Provide the operational surface a procurement team actually works from every day
 
 ## My Work
 
-Actionable queues include MRs awaiting review/procurement; RFQs to issue; supplier responses overdue/missing; comparisons in progress; clarifications awaiting action; approvals pending; awards not yet converted; orders awaiting issue/acknowledgment; compliance documents expiring; schedule milestones at risk.
+Actionable queues include MRs awaiting review/procurement; packages/milestones at risk; RFQs to issue; supplier responses overdue/missing; comparisons in progress; clarifications awaiting action; approvals pending; awards not yet converted; contracts/orders awaiting issue or execution; compliance documents expiring; and schedule milestones at risk.
 
 Every card drills to the underlying object and explains why it needs action.
 
@@ -31,9 +33,24 @@ Every card drills to the underlying object and explains why it needs action.
 
 Each major object has a serious register with readable business number, project, supplier, dates, value, status, owner/ball-in-court, age, risk, search/filter/sort, saved views, export and drill-down. Bulk actions are allowed only where domain rules permit them.
 
-## Procurement schedule
+## Portfolio procurement schedule
 
-Track required-on-site date; planned RFQ; planned response; comparison/recommendation target; approval target; award/order target; supplier-confirmed lead/delivery; and actual issue/response/award/order milestones derived from canonical events. Required, baseline, forecast and supplier-confirmed dates remain distinct facts.
+Roll up the core schedule facts created earlier and show:
+- required-on-site/required-by dates;
+- baseline procurement milestones;
+- current forecast milestones;
+- supplier-confirmed dates;
+- actual issue/response/award/order/execution/delivery milestones derived from canonical events;
+- variance and slippage;
+- cross-project/project/package risk;
+- responsible owner/ball-in-court;
+- configurable views by project, trade, buyer, status and date horizon.
+
+Required, baseline, forecast, supplier-confirmed and actual dates remain distinct facts.
+
+## Supplier intelligence in workbench
+
+Supplier views may roll up compliance, current tender/commitment exposure, performance ratings and capacity indicators so procurement management can detect concentration/overexposure across projects.
 
 ## UX rules
 
@@ -47,4 +64,4 @@ Track required-on-site date; planned RFQ; planned response; comparison/recommend
 
 ## Acceptance
 
-A procurement manager opens CPOS in the morning, understands what needs attention across projects without a spreadsheet, and drills from a queue/risk item to the exact MR/RFQ/comparison/order with its source documents and history.
+A procurement manager opens CPOS in the morning, understands what needs attention across projects without a spreadsheet, sees schedule variance generated from live procurement facts rather than manually maintained status columns, identifies a supplier overexposure or unsigned contract risk, and drills from any queue/risk item to the exact source MR/package/RFQ/comparison/order and its history.
