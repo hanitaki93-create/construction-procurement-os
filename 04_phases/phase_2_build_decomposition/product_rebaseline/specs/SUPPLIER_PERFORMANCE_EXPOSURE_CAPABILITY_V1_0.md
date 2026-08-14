@@ -1,10 +1,10 @@
-# CPOS Supplier Performance / Capacity / Exposure Intelligence Capability v1.0
+# CPOS Supplier Performance / Capacity / Exposure Intelligence Capability v1.1
 
-**Status:** DRAFT / MEANING REVIEW REQUIRED
+**Status:** FREEZE-CANDIDATE / MEANING REVIEW
 
 ## User meaning
 
-Supplier selection must consider more than current price and document compliance. CPOS should make company-wide vendor history, performance and current exposure visible at the moment a buyer shortlists, levels and recommends a supplier.
+Supplier selection must consider more than current price and document compliance. CPOS makes company-wide vendor history, performance and current exposure visible **inside the procurement decision moment**, not as information hidden on a supplier master page.
 
 ## Deterministic facts
 
@@ -27,21 +27,30 @@ Configurable governed rating dimensions may include quality, commercial responsi
 
 CPOS may derive transparent indicators such as active project count, current committed value, tender workload and overlapping required-delivery windows. These are decision support, not unchallengeable truth. Any risk label must expose the contributing facts and rule/version.
 
-## Decision integration
+## Mandatory decision placement
 
-Supplier intelligence is visible in:
-- supplier search/shortlisting;
-- RFQ bidder selection;
-- comparison/leveling;
-- recommendation/approval;
-- portfolio supplier view.
+Supplier intelligence must render directly in all of these user contexts when facts exist:
 
-The system must not auto-block a supplier solely because of a heuristic performance/capacity score unless an explicit governed policy defines that control.
+1. **Supplier shortlist/search results** — compact current qualification/compliance + active-project/commitment/exposure summary with drill-down.
+2. **RFQ bidder selection** — the buyer sees the supplier's relevant trade history, current workload/exposure and material warnings before adding the bidder.
+3. **Bid comparison/leveling** — each supplier header/side panel exposes current exposure, performance and qualification/compliance context beside price/technical status; the buyer does not leave the comparison to discover it.
+4. **Recommendation/approval** — the decision brief snapshots the supplier-intelligence facts actually relied upon and distinguishes current live facts from the historical snapshot used by the submitted recommendation.
+5. **Supplier portfolio/profile** — full drill-down/history and source facts.
+
+A price-focused screen that hides these facts until the buyer manually opens the supplier record does **not** satisfy this capability.
+
+## Decision behavior
+
+The system must not auto-block a supplier solely because of a heuristic performance/capacity score unless an explicit governed policy defines that control. Exposure/performance indicators remain explainable facts or bounded heuristics. Event-specific eligibility remains a separate governed evaluation.
 
 ## AI readiness
 
 AI may summarize performance history, identify recurring issues and explain exposure patterns using structured facts and cited documents. It may recommend questions/clarifications but cannot silently downgrade eligibility or make an award decision.
 
+## Field contract
+
+Build-time field semantics are defined by `field_contracts/R02_SUPPLIER_FIELD_CONTRACTS_V1_0.md`, section H, and the common field contract.
+
 ## Acceptance
 
-While comparing three aluminium subcontractors, a buyer can see that the cheapest bidder has four active projects, overlapping delivery dates, two recent poor programme ratings and one open compliance item; the information is traceable to source facts and can be discussed in the recommendation without converting a heuristic into hidden policy.
+While shortlisting and later comparing three aluminium subcontractors, a buyer sees—without leaving those workflows—that the cheapest bidder has four active projects, overlapping delivery dates, two recent poor programme ratings and one open compliance item. The buyer can drill to the source facts, snapshots the relevant context into the recommendation, and the system never converts a heuristic into hidden eligibility policy.
