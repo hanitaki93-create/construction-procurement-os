@@ -1,0 +1,66 @@
+name: Gold VPS Bridge Diagnostic
+
+on:
+  push:
+    branches:
+      - ops/gold-vps-bridge-20260814
+    paths:
+      - '.github/workflows/gold-vps-bridge-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Inspect VPS gold research capability
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/gold_vps_bridge_report.txt"
+          : > "$OUT"
+          echo "runner_name=${RUNNER_NAME:-unknown}" >> "$OUT"
+          echo "runner_os=${RUNNER_OS:-unknown}" >> "$OUT"
+          echo "whoami=$(whoami)" >> "$OUT"
+          echo "home=$HOME" >> "$OUT"
+          echo "pwd=$(pwd)" >> "$OUT"
+          echo "python=$(python3 --version 2>&1 || true)" >> "$OUT"
+          echo "node=$(node --version 2>&1 || true)" >> "$OUT"
+          echo "git=$(git --version 2>&1 || true)" >> "$OUT"
+          echo "disk=$(df -h / | tail -1)" >> "$OUT"
+          echo "=== candidate simulator paths ===" >> "$OUT"
+          for p in /home/ubuntu/eth-realism-simulator /root/eth-realism-simulator "$HOME/eth-realism-simulator"; do
+            if [ -d "$p/.git" ]; then
+              echo "SIM_PATH=$p" >> "$OUT"
+              echo "SIM_HEAD=$(git -C "$p" rev-parse HEAD 2>/dev/null || true)" >> "$OUT"
+              echo "SIM_BRANCH=$(git -C "$p" branch --show-current 2>/dev/null || true)" >> "$OUT"
+              echo "SIM_REMOTE=$(git -C "$p" remote get-url origin 2>/dev/null | sed -E 's#(https://)[^/@]+@#\1***@#' || true)" >> "$OUT"
+              echo "SIM_STATUS_BEGIN" >> "$OUT"
+              git -C "$p" status --short 2>/dev/null | head -100 >> "$OUT" || true
+              echo "SIM_STATUS_END" >> "$OUT"
+              echo "SIM_FETCH_DRY_BEGIN" >> "$OUT"
+              git -C "$p" ls-remote --heads origin research/gold-market-intelligence-baseline 2>&1 | sed -E 's#(https://)[^/@]+@#\1***@#' >> "$OUT" || true
+              echo "SIM_FETCH_DRY_END" >> "$OUT"
+            fi
+          done
+          echo "=== audit paths ===" >> "$OUT"
+          for p in /home/ubuntu/eth-realism-audit /root/eth-realism-audit; do
+            [ -d "$p" ] && { echo "AUDIT_PATH=$p" >> "$OUT"; du -sh "$p" >> "$OUT" 2>&1 || true; }
+          done
+          echo "=== python modules ===" >> "$OUT"
+          python3 - <<'PY' >> "$OUT"
+          import importlib.util
+          for m in ('pandas','numpy','databento'):
+              print(f"{m}={'present' if importlib.util.find_spec(m) else 'missing'}")
+          PY
+          cat "$OUT"
+
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-vps-bridge-diagnostic
+          path: ${{ runner.temp }}/gold_vps_bridge_report.txt
+          retention-days: 3
