@@ -1,0 +1,1 @@
+session continues through backend, UI, documents, tests and debugging
