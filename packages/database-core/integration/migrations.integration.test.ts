@@ -108,7 +108,7 @@ describe('SQL-first migration runner', () => {
     expect(results.map((entry) => entry.newlyApplied.length).sort()).toEqual([0, 1]);
   });
 
-  it('rebuilds the committed migration set including B02 C1-C4 and B03 async-kernel progress from an empty tracking schema', async () => {
+  it('rebuilds the committed migration set including B02, B03 and V2 Session 01 from an empty tracking schema', async () => {
     const schema = uniqueSchema('migration_rebuild');
     schemas.push(schema);
     const directory = path.resolve('../../migrations/sql');
@@ -126,6 +126,8 @@ describe('SQL-first migration runner', () => {
       '000011',
       '000012',
       '000013',
+      '000014',
+      '000015',
     ];
     const first = await runMigrations(pool, {
       directory,
