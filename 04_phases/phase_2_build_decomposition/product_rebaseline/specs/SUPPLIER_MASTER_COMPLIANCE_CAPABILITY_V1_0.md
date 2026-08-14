@@ -35,10 +35,16 @@ Document type, number, issuer, issue date, expiry date, verification status, evi
 
 Derived/contextual eligibility is separate from supplier identity. It can consider current required documents, project/trade criteria, risk/qualification state and explicit overrides with authority/evidence. A supplier can remain in the master while being ineligible for a specific tender/award.
 
+## Performance / workload / exposure relationship
+
+Supplier identity and compliance are the foundation for the separate Supplier Performance / Capacity / Exposure Intelligence capability. The supplier profile must expose current project/tender/commitment activity, governed performance ratings and explainable capacity/exposure indicators when those facts exist. Performance intelligence does not silently mutate legal identity or compliance state and may not become an opaque eligibility shortcut.
+
 ## User surfaces
 
-Supplier profile, contacts, compliance tab, categories/trades, sourcing/award/order history, document expiry view, search/filter/import/export and duplicate-detection workflow.
+Supplier profile, contacts, compliance tab, categories/trades, sourcing/award/order history, performance/exposure summary, document expiry view, search/filter/import/export and duplicate-detection workflow.
+
+Supplier facts must be reachable from bidder selection, comparison/leveling and recommendation without leaving the procurement decision context.
 
 ## Acceptance
 
-A buyer creates a real UAE supplier with multiple contacts, address, TRN, licence and VAT documents, receives an expiry warning, sees that the supplier is valid for one sourcing context but blocked for another, and can invite the correct contact without re-entering supplier details.
+A buyer creates a real UAE supplier with multiple contacts, address, TRN, licence and VAT documents, receives an expiry warning, sees that the supplier is valid for one sourcing context but blocked for another, can inspect current procurement exposure/performance context, and can invite the correct contact without re-entering supplier details.
