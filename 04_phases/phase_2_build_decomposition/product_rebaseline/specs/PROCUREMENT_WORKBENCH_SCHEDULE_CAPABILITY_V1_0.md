@@ -20,12 +20,12 @@ The core procurement schedule is created earlier with MR/package planning. R09 d
 - Suppliers
 - Receipts / GRNs where enabled
 - Documents
-- Reports / Search
+- Analytics / Reports / Search
 - Administration / Reference Data for authorized users
 
 ## My Work
 
-Actionable queues include MRs awaiting review/procurement; packages/milestones at risk; RFQs to issue; supplier responses overdue/missing; comparisons in progress; clarifications awaiting action; approvals pending; awards not yet converted; contracts/orders awaiting issue or execution; compliance documents expiring; and schedule milestones at risk.
+Actionable queues include MRs awaiting review/procurement; packages/milestones at risk; RFQs to issue; supplier responses overdue/missing; comparisons in progress; clarifications awaiting action; approvals pending; route/policy exceptions; awards not yet converted; contracts/orders awaiting issue or execution; compliance/qualification documents expiring; and schedule milestones at risk.
 
 Every card drills to the underlying object and explains why it needs action.
 
@@ -50,7 +50,11 @@ Required, baseline, forecast, supplier-confirmed and actual dates remain distinc
 
 ## Supplier intelligence in workbench
 
-Supplier views may roll up compliance, current tender/commitment exposure, performance ratings and capacity indicators so procurement management can detect concentration/overexposure across projects.
+Supplier views may roll up compliance/qualification, current tender/commitment exposure, performance ratings and capacity indicators so procurement management can detect concentration/overexposure across projects.
+
+## Analytics relationship
+
+The workbench hosts/drills into the separate Procurement Analytics capability. Management views derive cycle time, supplier response/coverage, budget-to-award variance, negotiated movement, execution backlog and related KPIs from canonical transactions. Headline 'savings' never exists without a named comparison baseline.
 
 ## UX rules
 
@@ -64,4 +68,4 @@ Supplier views may roll up compliance, current tender/commitment exposure, perfo
 
 ## Acceptance
 
-A procurement manager opens CPOS in the morning, understands what needs attention across projects without a spreadsheet, sees schedule variance generated from live procurement facts rather than manually maintained status columns, identifies a supplier overexposure or unsigned contract risk, and drills from any queue/risk item to the exact source MR/package/RFQ/comparison/order and its history.
+A procurement manager opens CPOS in the morning, understands what needs attention across projects without a spreadsheet, sees schedule variance generated from live procurement facts rather than manually maintained status columns, identifies a route exception, supplier overexposure or unsigned contract risk, sees deterministic procurement KPIs, and drills from any queue/metric/risk item to the exact source MR/package/RFQ/comparison/order and its history.
