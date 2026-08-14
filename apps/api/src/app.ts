@@ -10,6 +10,8 @@ import {
   type LivenessResponse,
   type PlatformWorkspaceSnapshot,
   type ReadinessResponse,
+  type ReviewMaterialRequisitionRequest,
+  type SetProcurementRouteRequest,
 } from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
 import type { TechnicalLogger } from '@cpos/observability';
@@ -113,7 +115,11 @@ function productErrorStatus(error: unknown): 400 | 401 | 403 | 409 | 500 {
     message.includes('is required') ||
     message.includes('cannot be before') ||
     message.includes('positive exact decimal') ||
+    message.includes('non-negative exact decimal') ||
     message.includes('not active or not visible') ||
+    message.includes('does not belong') ||
+    message.includes('exactly one decision') ||
+    message.includes('requires a justification') ||
     message.includes('violates foreign key constraint') ||
     message.includes('violates check constraint') ||
     message.includes('project code') ||
@@ -133,7 +139,8 @@ function productErrorStatus(error: unknown): 400 | 401 | 403 | 409 | 500 {
   if (
     message.includes('already exists') ||
     message.includes('conflict') ||
-    message.includes('duplicate key value') ||
+    message.includes('not found') ||
+    message.includes('duplicate') ||
     message.includes('unique constraint')
   ) {
     return 409;
@@ -256,18 +263,13 @@ export function buildApi({
         message: 'The platform workspace runtime is not enabled for this API process.',
       });
     }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
         message: sessionRequiredMessage(config.build.environment),
       });
     }
-
     try {
       return await platformWorkspaceService.readWorkspace(context);
     } catch (error: unknown) {
@@ -284,25 +286,19 @@ export function buildApi({
         message: 'The platform workspace runtime is not enabled for this API process.',
       });
     }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
         message: sessionRequiredMessage(config.build.environment),
       });
     }
-
     const raw = request.body;
     if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_PROJECT_REQUEST' });
     const body = raw as Partial<CreateProjectRequest>;
     if (typeof body.projectCode !== 'string' || typeof body.displayName !== 'string') {
       return reply.status(400).send({ code: 'INVALID_PROJECT_REQUEST' });
     }
-
     try {
       const result = await platformWorkspaceService.createProject(context, {
         projectCode: body.projectCode,
@@ -317,20 +313,9 @@ export function buildApi({
   });
 
   app.get('/procurement/reference-data', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     try {
       return await procurementService.referenceData(context);
     } catch (error: unknown) {
@@ -341,20 +326,9 @@ export function buildApi({
   });
 
   app.get('/procurement/suppliers', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     try {
       return await procurementService.listSuppliers(context);
     } catch (error: unknown) {
@@ -365,20 +339,9 @@ export function buildApi({
   });
 
   app.post('/procurement/suppliers', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     const raw = request.body;
     if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_SUPPLIER_REQUEST' });
     if (
@@ -399,20 +362,9 @@ export function buildApi({
   });
 
   app.get('/procurement/requisitions', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     try {
       return await procurementService.listRequisitions(context);
     } catch (error: unknown) {
@@ -423,20 +375,9 @@ export function buildApi({
   });
 
   app.post('/procurement/requisitions', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     const raw = request.body;
     if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_MR_REQUEST' });
     if (
@@ -461,20 +402,9 @@ export function buildApi({
   });
 
   app.get('/procurement/requisitions/:mrId', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     const mrId = (request.params as { readonly mrId?: unknown }).mrId;
     if (typeof mrId !== 'string') return reply.status(400).send({ code: 'INVALID_MR_ID' });
     try {
@@ -489,20 +419,9 @@ export function buildApi({
   });
 
   app.post('/procurement/requisitions/:mrId/submit', async (request, reply) => {
-    if (!procurementService) {
-      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
-    }
-    const context = await resolvedContext(
-      request,
-      config.build.environment,
-      authenticationSessionResolver,
-    );
-    if (!context) {
-      return reply.status(401).send({
-        code: 'SESSION_REQUIRED',
-        message: sessionRequiredMessage(config.build.environment),
-      });
-    }
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
     const mrId = (request.params as { readonly mrId?: unknown }).mrId;
     if (typeof mrId !== 'string') return reply.status(400).send({ code: 'INVALID_MR_ID' });
     try {
@@ -511,6 +430,56 @@ export function buildApi({
       const status = productErrorStatus(error);
       if (status === 500) throw error;
       return reply.status(status).send({ code: 'MR_SUBMIT_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/requisitions/:mrId/review', async (request, reply) => {
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
+    const mrId = (request.params as { readonly mrId?: unknown }).mrId;
+    const raw = request.body;
+    if (typeof mrId !== 'string' || !isObject(raw) || !Array.isArray(raw['lineDecisions'])) {
+      return reply.status(400).send({ code: 'INVALID_MR_REVIEW_REQUEST' });
+    }
+    try {
+      return await procurementService.reviewRequisition(
+        context,
+        mrId,
+        raw as unknown as ReviewMaterialRequisitionRequest,
+      );
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_REVIEW_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/requisitions/:mrId/lines/:mrLineId/route', async (request, reply) => {
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
+    const params = request.params as { readonly mrId?: unknown; readonly mrLineId?: unknown };
+    const raw = request.body;
+    if (
+      typeof params.mrId !== 'string' ||
+      typeof params.mrLineId !== 'string' ||
+      !isObject(raw) ||
+      typeof raw['route'] !== 'string'
+    ) {
+      return reply.status(400).send({ code: 'INVALID_MR_ROUTE_REQUEST' });
+    }
+    try {
+      return await procurementService.setLineRoute(
+        context,
+        params.mrId,
+        params.mrLineId,
+        raw as unknown as SetProcurementRouteRequest,
+      );
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_ROUTE_REJECTED', requestId: request.id });
     }
   });
 
