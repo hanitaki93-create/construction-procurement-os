@@ -1,0 +1,63 @@
+name: V2 Session 01 product
+
+on:
+  push:
+    branches:
+      - build/v2-session-01-foundation-supplier-mr
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'apps/web-internal/**'
+      - 'packages/contracts/**'
+      - 'packages/platform-application/**'
+      - 'migrations/sql/000014_v2_session01_supplier_mr.sql'
+      - '.github/workflows/v2-session01-product.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v2-session01-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Capability authority stays green
+        run: pnpm product:capabilities:authorize
+      - name: Typecheck changed product packages
+        run: |
+          pnpm --filter @cpos/contracts typecheck
+          pnpm --filter @cpos/platform-application typecheck
+          pnpm --filter @cpos/api typecheck
+          pnpm --filter @cpos/web-internal typecheck
+      - name: Unit tests
+        run: |
+          pnpm --filter @cpos/contracts test
+          pnpm --filter @cpos/platform-application test
+          pnpm --filter @cpos/api test
+      - name: Build product surfaces
+        run: |
+          pnpm --filter @cpos/contracts build
+          pnpm --filter @cpos/platform-application build
+          pnpm --filter @cpos/api build
+          pnpm --filter @cpos/web-internal build
+      - name: PostgreSQL migration and integration suite
+        run: pnpm db:integration
