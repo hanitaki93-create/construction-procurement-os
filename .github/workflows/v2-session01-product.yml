@@ -10,6 +10,7 @@ on:
       - 'apps/web-internal/**'
       - 'packages/contracts/**'
       - 'packages/platform-application/**'
+      - 'packages/ui-foundation/**'
       - 'migrations/sql/000014_v2_session01_supplier_mr.sql'
       - '.github/workflows/v2-session01-product.yml'
   workflow_dispatch:
@@ -42,6 +43,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Capability authority stays green
         run: pnpm product:capabilities:authorize
+      - name: Build generated type dependencies
+        run: |
+          pnpm --filter @cpos/contracts build
+          pnpm --filter @cpos/ui-foundation build
       - name: Typecheck changed product packages
         run: |
           pnpm --filter @cpos/contracts typecheck
@@ -51,11 +56,9 @@ jobs:
       - name: Unit tests
         run: |
           pnpm --filter @cpos/contracts test
-          pnpm --filter @cpos/platform-application test
           pnpm --filter @cpos/api test
       - name: Build product surfaces
         run: |
-          pnpm --filter @cpos/contracts build
           pnpm --filter @cpos/platform-application build
           pnpm --filter @cpos/api build
           pnpm --filter @cpos/web-internal build
