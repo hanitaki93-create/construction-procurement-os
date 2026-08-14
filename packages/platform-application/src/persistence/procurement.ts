@@ -91,7 +91,6 @@ export interface MrHeaderRow {
     | 'SUPERSEDED';
   readonly submitted_at: string | null;
   readonly line_count: number;
-  readonly total_requested_quantity: string;
 }
 
 export interface MrLineRow {
@@ -130,6 +129,8 @@ export interface MrLineRow {
 
 export interface ProcurementPersistenceHandle {
   verifyAuthenticationIdentity(authenticationIdentityId: string): Promise<boolean>;
+  canManageSuppliers(): Promise<boolean>;
+  canCreateRequisition(): Promise<boolean>;
   uoms(): Promise<readonly UomRow[]>;
   suppliers(): Promise<readonly SupplierRow[]>;
   supplierContacts(): Promise<readonly SupplierContactRow[]>;
@@ -197,39 +198,6 @@ export interface ProcurementPersistenceHandle {
   submitRequisition(mrId: string): Promise<boolean>;
 }
 
-const headerSelect = sql`
-  SELECT
-    mr.mr_id::text,
-    mr.mr_number,
-    mr.project_id::text,
-    pv.project_code,
-    pv.display_name AS project_name,
-    mr.requester_id::text,
-    requester.display_name AS requester_name,
-    mr.requester_team,
-    mr.request_date::text,
-    mr.required_on_site_date::text,
-    mr.priority,
-    mr.delivery_location_id::text,
-    mr.subject,
-    mr.instructions,
-    mr.status,
-    mr.submitted_at::text,
-    count(line.mr_line_id)::int AS line_count,
-    coalesce(sum(line.requested_quantity), 0)::text AS total_requested_quantity
-  FROM procurement.material_requisition mr
-  JOIN platform.project_version pv
-    ON pv.tenant_id = mr.tenant_id
-   AND pv.project_id = mr.project_id
-   AND pv.effective_period @> statement_timestamp()
-  JOIN platform.principal requester
-    ON requester.tenant_id = mr.tenant_id
-   AND requester.principal_id = mr.requester_id
-  LEFT JOIN procurement.material_requisition_line line
-    ON line.tenant_id = mr.tenant_id
-   AND line.mr_id = mr.mr_id
-`;
-
 export const procurementPersistence = definePersistenceAdapter<ProcurementPersistenceHandle>({
   moduleKey: 'procurement_v2_session01',
   databaseRole: 'cpos_platform_runtime',
@@ -246,6 +214,27 @@ export const procurementPersistence = definePersistenceAdapter<ProcurementPersis
         LIMIT 1
       `);
       return row !== undefined;
+    },
+    canManageSuppliers: async () => {
+      const row = await executor.oneOrNone<{ readonly allowed: boolean }>(sql`
+        SELECT (
+          platform.current_principal_has_active_tenant_role('OWNER')
+          OR platform.current_principal_has_active_tenant_role('PROCUREMENT_MANAGER')
+          OR platform.current_principal_has_active_tenant_role('BUYER')
+        ) AS allowed
+      `);
+      return row?.allowed === true;
+    },
+    canCreateRequisition: async () => {
+      const row = await executor.oneOrNone<{ readonly allowed: boolean }>(sql`
+        SELECT (
+          platform.current_principal_has_active_tenant_role('OWNER')
+          OR platform.current_principal_has_active_tenant_role('PROCUREMENT_MANAGER')
+          OR platform.current_principal_has_active_tenant_role('BUYER')
+          OR platform.current_principal_has_active_tenant_role('REQUESTER')
+        ) AS allowed
+      `);
+      return row?.allowed === true;
     },
     uoms: () =>
       executor.all<UomRow>(sql`
@@ -391,16 +380,75 @@ export const procurementPersistence = definePersistenceAdapter<ProcurementPersis
       return row.mr_line_id;
     },
     requisitions: () =>
-      executor.all<MrHeaderRow>({
-        ...headerSelect,
-        text: `${headerSelect.text}\nWHERE mr.tenant_id = current_setting('cpos.tenant_id')::uuid\nGROUP BY mr.mr_id, pv.project_code, pv.display_name, requester.display_name\nORDER BY mr.recorded_at DESC, mr.mr_number DESC`,
-      }),
+      executor.all<MrHeaderRow>(sql`
+        SELECT
+          mr.mr_id::text,
+          mr.mr_number,
+          mr.project_id::text,
+          pv.project_code,
+          pv.display_name AS project_name,
+          mr.requester_id::text,
+          requester.display_name AS requester_name,
+          mr.requester_team,
+          mr.request_date::text,
+          mr.required_on_site_date::text,
+          mr.priority,
+          mr.delivery_location_id::text,
+          mr.subject,
+          mr.instructions,
+          mr.status,
+          mr.submitted_at::text,
+          count(line.mr_line_id)::int AS line_count
+        FROM procurement.material_requisition mr
+        JOIN platform.project_version pv
+          ON pv.tenant_id = mr.tenant_id
+         AND pv.project_id = mr.project_id
+         AND pv.effective_period @> statement_timestamp()
+        JOIN platform.principal requester
+          ON requester.tenant_id = mr.tenant_id
+         AND requester.principal_id = mr.requester_id
+        LEFT JOIN procurement.material_requisition_line line
+          ON line.tenant_id = mr.tenant_id
+         AND line.mr_id = mr.mr_id
+        WHERE mr.tenant_id = current_setting('cpos.tenant_id')::uuid
+        GROUP BY mr.mr_id, pv.project_code, pv.display_name, requester.display_name
+        ORDER BY mr.recorded_at DESC, mr.mr_number DESC
+      `),
     requisition: (mrId) =>
-      executor.oneOrNone<MrHeaderRow>({
-        ...headerSelect,
-        text: `${headerSelect.text}\nWHERE mr.tenant_id = current_setting('cpos.tenant_id')::uuid AND mr.mr_id = $1\nGROUP BY mr.mr_id, pv.project_code, pv.display_name, requester.display_name`,
-        values: [mrId],
-      }),
+      executor.oneOrNone<MrHeaderRow>(sql`
+        SELECT
+          mr.mr_id::text,
+          mr.mr_number,
+          mr.project_id::text,
+          pv.project_code,
+          pv.display_name AS project_name,
+          mr.requester_id::text,
+          requester.display_name AS requester_name,
+          mr.requester_team,
+          mr.request_date::text,
+          mr.required_on_site_date::text,
+          mr.priority,
+          mr.delivery_location_id::text,
+          mr.subject,
+          mr.instructions,
+          mr.status,
+          mr.submitted_at::text,
+          count(line.mr_line_id)::int AS line_count
+        FROM procurement.material_requisition mr
+        JOIN platform.project_version pv
+          ON pv.tenant_id = mr.tenant_id
+         AND pv.project_id = mr.project_id
+         AND pv.effective_period @> statement_timestamp()
+        JOIN platform.principal requester
+          ON requester.tenant_id = mr.tenant_id
+         AND requester.principal_id = mr.requester_id
+        LEFT JOIN procurement.material_requisition_line line
+          ON line.tenant_id = mr.tenant_id
+         AND line.mr_id = mr.mr_id
+        WHERE mr.tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND mr.mr_id = ${mrId}
+        GROUP BY mr.mr_id, pv.project_code, pv.display_name, requester.display_name
+      `),
     requisitionLines: (mrId) =>
       executor.all<MrLineRow>(sql`
         SELECT mr_line_id::text, line_no, entry_mode, item_id::text, line_type, description, specification,
