@@ -21,6 +21,7 @@ import type {
 } from '@cpos/contracts';
 import type { SupportedLocale } from '@cpos/ui-foundation';
 
+import { MrReviewPanel } from './mr-review-panel.js';
 import './procurement.css';
 
 interface DevelopmentSession {
@@ -478,6 +479,7 @@ function MaterialRequisitionDetail({
       <div className="proc-table-wrap">
         <table className="proc-table proc-table--lines"><thead><tr><th>Line</th><th>Description / specification</th><th>Type</th><th>Quantity</th><th>State</th></tr></thead><tbody>{mr.lines.map((line) => <tr key={line.mrLineId}><td className="proc-number">{line.lineNo}</td><td><strong>{line.description}</strong><small>{line.specification ?? 'No additional specification'}</small></td><td>{readable(line.lineType)}</td><td><strong>{line.requestedQuantity} {line.uomCode}</strong></td><td><Status value={line.lineState} /></td></tr>)}</tbody></table>
       </div>
+      <MrReviewPanel session={session} mr={mr} />
     </div>
   );
 }
