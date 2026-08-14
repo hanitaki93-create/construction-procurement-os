@@ -29,6 +29,14 @@ export type EquivalentRule =
   | 'EXACT_ONLY'
   | 'APPROVED_EQUIVALENT_ALLOWED'
   | 'ALTERNATE_BY_APPROVAL';
+export type MrReviewDecision = 'APPROVED' | 'PARTIALLY_APPROVED' | 'REJECTED';
+export type MrLineReviewOutcome = 'APPROVED' | 'REJECTED';
+export type ProcurementRoute =
+  | 'COMPETITIVE_RFQ'
+  | 'DIRECT_ORDER'
+  | 'PACKAGE_SOURCING'
+  | 'SOLE_SOURCE_EXCEPTION'
+  | 'EXTERNAL_ERP_STOCK';
 
 export interface ProcurementUom {
   readonly code: string;
@@ -136,6 +144,17 @@ export interface CreateMaterialRequisitionRequest {
   readonly lines: readonly CreateMaterialRequisitionLineRequest[];
 }
 
+export interface ProcurementRouteDecisionSummary {
+  readonly routeDecisionId: string;
+  readonly policyKey: string;
+  readonly policyVersion: number;
+  readonly route: ProcurementRoute;
+  readonly justification: string | null;
+  readonly decidedBy: string;
+  readonly decidedByName: string;
+  readonly decidedAt: string;
+}
+
 export interface MaterialRequisitionLine {
   readonly mrLineId: string;
   readonly lineNo: number;
@@ -165,6 +184,7 @@ export interface MaterialRequisitionLine {
     | 'PARTIALLY_FULFILLED'
     | 'FULFILLED'
     | 'CANCELLED';
+  readonly routeDecision: ProcurementRouteDecisionSummary | null;
 }
 
 export interface MaterialRequisitionSummary {
@@ -184,11 +204,21 @@ export interface MaterialRequisitionSummary {
   readonly lineCount: number;
 }
 
+export interface MrReviewOccurrenceSummary {
+  readonly reviewOccurrenceId: string;
+  readonly decision: MrReviewDecision;
+  readonly reviewerId: string;
+  readonly reviewerName: string;
+  readonly comments: string | null;
+  readonly occurredAt: string;
+}
+
 export interface MaterialRequisitionDetail extends MaterialRequisitionSummary {
   readonly requesterTeam: string | null;
   readonly deliveryLocationId: string | null;
   readonly instructions: string | null;
   readonly lines: readonly MaterialRequisitionLine[];
+  readonly reviewTrail: readonly MrReviewOccurrenceSummary[];
 }
 
 export interface MaterialRequisitionListResponse {
@@ -204,5 +234,29 @@ export interface MaterialRequisitionDetailResponse {
 }
 
 export interface SubmitMaterialRequisitionResponse {
+  readonly requisition: MaterialRequisitionDetail;
+}
+
+export interface ReviewMaterialRequisitionLineRequest {
+  readonly mrLineId: string;
+  readonly outcome: MrLineReviewOutcome;
+  readonly approvedQuantity?: string;
+}
+
+export interface ReviewMaterialRequisitionRequest {
+  readonly lineDecisions: readonly ReviewMaterialRequisitionLineRequest[];
+  readonly comments?: string;
+}
+
+export interface ReviewMaterialRequisitionResponse {
+  readonly requisition: MaterialRequisitionDetail;
+}
+
+export interface SetProcurementRouteRequest {
+  readonly route: ProcurementRoute;
+  readonly justification?: string;
+}
+
+export interface SetProcurementRouteResponse {
   readonly requisition: MaterialRequisitionDetail;
 }
