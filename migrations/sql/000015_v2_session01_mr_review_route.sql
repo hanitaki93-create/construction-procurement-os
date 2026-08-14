@@ -1,6 +1,7 @@
 -- Architecture V2 Session 01: turn submitted demand into approved, routable procurement demand.
+-- Declarations follow the accepted re-runnable migration style used by the hostile integration suite.
 
-CREATE TABLE procurement.procurement_route_policy_reference (
+CREATE TABLE IF NOT EXISTS procurement.procurement_route_policy_reference (
   policy_key text NOT NULL,
   version integer NOT NULL CHECK (version > 0),
   display_name text NOT NULL,
@@ -18,7 +19,7 @@ INSERT INTO procurement.procurement_route_policy_reference (
   'UAE_CONTRACTOR_STARTER', 1, 'UAE Contractor Starter Procurement Policy', 'COMPETITIVE_RFQ', DATE '2026-01-01'
 ) ON CONFLICT (policy_key, version) DO NOTHING;
 
-CREATE TABLE procurement.material_requisition_review_occurrence (
+CREATE TABLE IF NOT EXISTS procurement.material_requisition_review_occurrence (
   review_occurrence_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   mr_id uuid NOT NULL,
@@ -33,7 +34,7 @@ CREATE TABLE procurement.material_requisition_review_occurrence (
   CHECK (jsonb_typeof(line_decisions) = 'array')
 );
 
-CREATE TABLE procurement.procurement_route_decision (
+CREATE TABLE IF NOT EXISTS procurement.procurement_route_decision (
   route_decision_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   mr_line_id uuid NOT NULL,
@@ -58,7 +59,7 @@ CREATE TABLE procurement.procurement_route_decision (
   )
 );
 
-CREATE UNIQUE INDEX procurement_route_decision_current_unique
+CREATE UNIQUE INDEX IF NOT EXISTS procurement_route_decision_current_unique
   ON procurement.procurement_route_decision (tenant_id, mr_line_id)
   WHERE is_current;
 
@@ -67,6 +68,8 @@ ALTER TABLE procurement.material_requisition_review_occurrence FORCE ROW LEVEL S
 ALTER TABLE procurement.procurement_route_decision ENABLE ROW LEVEL SECURITY;
 ALTER TABLE procurement.procurement_route_decision FORCE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS tenant_select ON procurement.material_requisition_review_occurrence;
+DROP POLICY IF EXISTS tenant_insert ON procurement.material_requisition_review_occurrence;
 CREATE POLICY tenant_select ON procurement.material_requisition_review_occurrence
   FOR SELECT TO cpos_platform_runtime
   USING (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
@@ -77,6 +80,9 @@ CREATE POLICY tenant_insert ON procurement.material_requisition_review_occurrenc
     AND platform.current_tenant_has_active_product_access()
   );
 
+DROP POLICY IF EXISTS tenant_select ON procurement.procurement_route_decision;
+DROP POLICY IF EXISTS tenant_insert ON procurement.procurement_route_decision;
+DROP POLICY IF EXISTS tenant_update ON procurement.procurement_route_decision;
 CREATE POLICY tenant_select ON procurement.procurement_route_decision
   FOR SELECT TO cpos_platform_runtime
   USING (tenant_id::text = nullif(current_setting('cpos.tenant_id', true), ''));
