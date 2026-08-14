@@ -59,6 +59,36 @@ async function seedProjectVersion(projectId: string, projectCode: string): Promi
   }
 }
 
+async function activateTenant(): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO platform.tenant_subscription (tenant_subscription_id, tenant_id, commercial_channel)
+       VALUES ($1, $2, 'SELF_SERVICE')`,
+      [subscription, tenant],
+    );
+    await client.query(
+      `INSERT INTO platform.subscription_lifecycle_occurrence (
+         tenant_id, tenant_subscription_id, sequence, occurrence_kind, effective_at, actor_kind
+       ) VALUES ($1, $2, 1, 'ACTIVATED', '2026-01-01', 'SYSTEM')`,
+      [tenant, subscription],
+    );
+    await client.query(
+      `UPDATE platform.tenant_entitlement_authority_guard
+       SET guard_version = guard_version + 1
+       WHERE tenant_id = $1`,
+      [tenant],
+    );
+    await client.query('COMMIT');
+  } catch (error: unknown) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function seedMr(input: {
   readonly mrId: string;
   readonly mrNumber: string;
@@ -151,21 +181,7 @@ beforeEach(async () => {
   await seedProjectVersion(projectA, 'A-001');
   await seedProjectVersion(projectB, 'B-001');
 
-  await pool.query(
-    `INSERT INTO platform.tenant_subscription (tenant_subscription_id, tenant_id, commercial_channel)
-     VALUES ($1, $2, 'SELF_SERVICE')`,
-    [subscription, tenant],
-  );
-  await pool.query(
-    `INSERT INTO platform.subscription_lifecycle_occurrence (
-       tenant_id, tenant_subscription_id, sequence, occurrence_kind, effective_at, actor_kind
-     ) VALUES ($1, $2, 1, 'ACTIVATED', '2026-01-01', 'SYSTEM')`,
-    [tenant, subscription],
-  );
-  await pool.query(
-    `UPDATE platform.tenant_entitlement_authority_guard SET guard_version = guard_version + 1 WHERE tenant_id = $1`,
-    [tenant],
-  );
+  await activateTenant();
 
   await seedMr({ mrId: mrA, mrNumber: 'MR-A', projectId: projectA, lineId: lineA, quantity: '10', routeId: routeA, route: 'PACKAGE_SOURCING' });
   await seedMr({ mrId: mrB, mrNumber: 'MR-B', projectId: projectB, lineId: lineB, quantity: '10', routeId: routeB, route: 'PACKAGE_SOURCING' });
