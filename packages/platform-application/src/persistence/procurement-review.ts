@@ -6,8 +6,10 @@ export interface ReviewableMrRow {
 }
 
 export interface ReviewableLineRow {
+  readonly mr_id: string;
   readonly mr_line_id: string;
   readonly requested_quantity: string;
+  readonly approved_quantity: string | null;
   readonly line_state: string;
 }
 
@@ -118,7 +120,8 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `),
     reviewableLines: (mrId) =>
       executor.all<ReviewableLineRow>(sql`
-        SELECT mr_line_id::text, requested_quantity::text, line_state
+        SELECT mr_id::text, mr_line_id::text, requested_quantity::text,
+               approved_quantity::text, line_state
         FROM procurement.material_requisition_line
         WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
           AND mr_id = ${mrId}
@@ -132,7 +135,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
             line_state = ${input.lineState}
         WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
           AND mr_line_id = ${input.mrLineId}
-          AND line_state IN ('SUBMITTED','APPROVED','PARTIALLY_APPROVED','REJECTED')
+          AND line_state = 'SUBMITTED'
       `);
       return result.rowCount === 1;
     },
@@ -142,7 +145,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
         SET status = ${state}, updated_at = clock_timestamp()
         WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
           AND mr_id = ${mrId}
-          AND status IN ('SUBMITTED','UNDER_REVIEW','APPROVED','PARTIALLY_APPROVED','REJECTED')
+          AND status IN ('SUBMITTED','UNDER_REVIEW')
       `);
       return result.rowCount === 1;
     },
@@ -188,7 +191,8 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `),
     lockApprovedLine: (mrLineId) =>
       executor.oneOrNone<ReviewableLineRow>(sql`
-        SELECT mr_line_id::text, requested_quantity::text, line_state
+        SELECT mr_id::text, mr_line_id::text, requested_quantity::text,
+               approved_quantity::text, line_state
         FROM procurement.material_requisition_line
         WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
           AND mr_line_id = ${mrLineId}
