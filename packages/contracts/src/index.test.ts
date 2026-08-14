@@ -15,6 +15,8 @@ describe('technical and product contracts', () => {
       '/procurement/reference-data',
       '/procurement/requisitions',
       '/procurement/requisitions/{mrId}',
+      '/procurement/requisitions/{mrId}/lines/{mrLineId}/route',
+      '/procurement/requisitions/{mrId}/review',
       '/procurement/requisitions/{mrId}/submit',
       '/procurement/suppliers',
     ]);
