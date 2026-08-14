@@ -12,12 +12,17 @@ describe('technical and product contracts', () => {
       '/openapi.json',
       '/platform/projects',
       '/platform/workspace',
+      '/procurement/packages',
+      '/procurement/packages/{packageId}',
       '/procurement/reference-data',
       '/procurement/requisitions',
       '/procurement/requisitions/{mrId}',
       '/procurement/requisitions/{mrId}/lines/{mrLineId}/route',
       '/procurement/requisitions/{mrId}/review',
       '/procurement/requisitions/{mrId}/submit',
+      '/procurement/rfqs',
+      '/procurement/rfqs/{rfqId}',
+      '/procurement/sourcing/candidates',
       '/procurement/suppliers',
     ]);
   });
