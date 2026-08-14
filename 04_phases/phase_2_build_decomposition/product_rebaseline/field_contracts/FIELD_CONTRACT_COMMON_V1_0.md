@@ -1,6 +1,6 @@
 # CPOS Architecture V2 Common Field-Contract Semantics v1.0
 
-**Status:** FREEZE-CANDIDATE SUPPORTING CONTRACT
+**Status:** FREEZE-CANDIDATE / STANDARD §C AUTHORITY
 
 This artifact closes the common part of Capability Specification Standard §C. Owning capability field-contract tables inherit these rules unless an explicit row overrides them.
 
