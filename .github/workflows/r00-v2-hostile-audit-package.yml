@@ -1,0 +1,104 @@
+name: R00 Architecture V2 hostile audit package
+
+on:
+  push:
+    branches:
+      - rebuild/cpos-product-rebaseline-clean-v1
+    paths:
+      - '.github/workflows/r00-v2-hostile-audit-package.yml'
+      - '04_phases/phase_2_build_decomposition/product_rebaseline/audit/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r00-v2-hostile-audit-package
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Exact V2 architecture audit package
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: a0f976e7da840376c3df4f02d9e7ec8f5102d5ee
+      TARGET_TREE: 37808b70d268dc575ee93fe75c0ddb17c993ce5f
+      PACKAGE_NAME: CPOS_ARCHITECTURE_V2_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_a0f976e7
+
+    steps:
+      - name: Check out packaging revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact audit target
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${TARGET_SHA}^{commit}"
+          actual_tree="$(git rev-parse "${TARGET_SHA}^{tree}")"
+          test "$actual_tree" = "$TARGET_TREE"
+          echo "target_sha=$TARGET_SHA"
+          echo "target_tree=$actual_tree"
+
+      - name: Build exact source and outer audit package
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/cpos-v2-audit"
+          rm -rf "$out"
+          mkdir -p "$out"
+
+          source_zip="$out/CPOS_ARCHITECTURE_V2_EXACT_TRACKED_SOURCE_${TARGET_SHA:0:12}.zip"
+          git archive --format=zip --output="$source_zip" "$TARGET_SHA"
+
+          cp 04_phases/phase_2_build_decomposition/product_rebaseline/audit/INDEPENDENT_HOSTILE_ARCHITECTURE_V2_AUDIT_PROMPT.md "$out/"
+          cp 04_phases/phase_2_build_decomposition/product_rebaseline/audit/AUDIT_TARGET_ARCHITECTURE_V2.md "$out/"
+
+          cat > "$out/R00_STRUCTURAL_CI_EVIDENCE.md" <<'EOF'
+          # R00 Structural CI Evidence
+
+          Exact target: `a0f976e7da840376c3df4f02d9e7ec8f5102d5ee`
+          Exact target tree: `37808b70d268dc575ee93fe75c0ddb17c993ce5f`
+          R00 structural workflow run: `31801410549`
+          Job: `94770032049`
+          Result: SUCCESS
+
+          Structural success is not domain acceptance. Capability authorization remains PENDING and Architecture V2 remains NOT FROZEN.
+          EOF
+
+          (
+            cd "$out"
+            sha256sum "$(basename "$source_zip")" \
+              INDEPENDENT_HOSTILE_ARCHITECTURE_V2_AUDIT_PROMPT.md \
+              AUDIT_TARGET_ARCHITECTURE_V2.md \
+              R00_STRUCTURAL_CI_EVIDENCE.md > SHA256SUMS.txt
+          )
+
+          export OUTER_ZIP="$RUNNER_TEMP/${PACKAGE_NAME}.zip"
+          export PACKAGE_DIR="$out"
+          python3 - <<'PY'
+          import os, zipfile
+          from pathlib import Path
+
+          package_dir = Path(os.environ['PACKAGE_DIR'])
+          outer = Path(os.environ['OUTER_ZIP'])
+          with zipfile.ZipFile(outer, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+              for path in sorted(package_dir.iterdir()):
+                  zf.write(path, arcname=path.name)
+          print(outer)
+          PY
+
+          sha256sum "$OUTER_ZIP" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256"
+
+      - name: Upload hostile audit package
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpos-architecture-v2-hostile-audit-a0f976e7
+          path: |
+            ${{ runner.temp }}/CPOS_ARCHITECTURE_V2_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_a0f976e7.zip
+            ${{ runner.temp }}/CPOS_ARCHITECTURE_V2_INDEPENDENT_HOSTILE_AUDIT_PACKAGE_a0f976e7.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
