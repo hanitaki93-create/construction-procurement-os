@@ -324,14 +324,20 @@ export const procurementResponsePersistence = definePersistenceAdapter<Procureme
     },
     rfqForIssue: (rfqId) => executor.oneOrNone<ResponseRfqRow>(sql`
       SELECT r.rfq_id::text, r.revision_no, r.status,
-             count(DISTINCT l.rfq_line_id)::int AS source_line_count,
-             count(DISTINCT b.rfq_bidder_id)::int AS bidder_count
+             (
+               SELECT count(*)::int
+               FROM procurement.rfq_tender_line l
+               WHERE l.tenant_id = r.tenant_id AND l.rfq_id = r.rfq_id
+             ) AS source_line_count,
+             (
+               SELECT count(*)::int
+               FROM procurement.rfq_tender_bidder b
+               WHERE b.tenant_id = r.tenant_id AND b.rfq_id = r.rfq_id
+                 AND b.invitation_state IN ('DRAFT','READY')
+             ) AS bidder_count
       FROM procurement.rfq_tender r
-      LEFT JOIN procurement.rfq_tender_line l ON l.tenant_id = r.tenant_id AND l.rfq_id = r.rfq_id
-      LEFT JOIN procurement.rfq_tender_bidder b ON b.tenant_id = r.tenant_id AND b.rfq_id = r.rfq_id
       WHERE r.tenant_id = current_setting('cpos.tenant_id')::uuid AND r.rfq_id = ${rfqId}
-      GROUP BY r.rfq_id
-      FOR UPDATE OF r
+      FOR UPDATE
     `),
     createIssueFromRfq: async (rfqId, issuedAt, issuedBy) => {
       const row = await executor.oneOrNone<{ readonly rfq_issue_id: string }>(sql`
