@@ -104,23 +104,23 @@ export interface CreateSupplierQuotationLineRequest {
 }
 
 export interface CreateSupplierQuotationRequest {
-  readonly supplierQuotationReference?: string;
-  readonly quotationDate?: string;
-  readonly receivedAt?: string;
+  readonly supplierQuotationReference?: string | undefined;
+  readonly quotationDate?: string | undefined;
+  readonly receivedAt?: string | undefined;
   readonly responseChannel: QuotationResponseChannel;
   readonly captureMode: QuotationCaptureMode;
   readonly currency: string;
-  readonly validityUntil?: string;
-  readonly leadTimePromise?: string;
-  readonly deliveryPromise?: string;
-  readonly paymentTerms?: string;
-  readonly warrantyTerms?: string;
-  readonly commercialNotes?: string;
-  readonly responseStatus?: QuotationResponseStatus;
-  readonly sourceFileName?: string;
-  readonly sourceMediaType?: string;
-  readonly sourceSha256?: string;
-  readonly sourceChannelReference?: string;
+  readonly validityUntil?: string | undefined;
+  readonly leadTimePromise?: string | undefined;
+  readonly deliveryPromise?: string | undefined;
+  readonly paymentTerms?: string | undefined;
+  readonly warrantyTerms?: string | undefined;
+  readonly commercialNotes?: string | undefined;
+  readonly responseStatus?: QuotationResponseStatus | undefined;
+  readonly sourceFileName?: string | undefined;
+  readonly sourceMediaType?: string | undefined;
+  readonly sourceSha256?: string | undefined;
+  readonly sourceChannelReference?: string | undefined;
   readonly lines: readonly CreateSupplierQuotationLineRequest[];
 }
 
