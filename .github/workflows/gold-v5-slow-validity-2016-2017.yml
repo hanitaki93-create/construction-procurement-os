@@ -1,0 +1,63 @@
+name: Gold V5 Slow Validity 2016 2017
+
+on:
+  push:
+    branches: [ops/gold-vps-bridge-20260814]
+    paths:
+      - '.github/workflows/gold-v5-slow-validity-2016-2017.yml'
+      - 'ops/gold_research/audit_v5_slow_validity_2016_2017.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/gold-vps-bridge-20260814
+          persist-credentials: false
+      - name: Disposable Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/gold-v5-slow-venv"
+          python3 -m venv "$VENV"
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy
+          echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
+      - name: Verify frozen development inputs only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$HOME/.cache/gold_research/full_upper_layer_probe/DFII5_2016_2017.csv"
+          test -f "$HOME/.cache/gold_research/full_upper_layer_probe/gld_official_2016_2017.csv"
+          test -f "$HOME/.cache/gold_research/prospective_state_machine_2016/exposure_actions.csv"
+          test -f "$HOME/.cache/gold_research/v4_2017_holdout/exposure_actions.csv"
+      - name: Run frozen V5 slow validity audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" ops/gold_research/audit_v5_slow_validity_2016_2017.py | tee "$RUNNER_TEMP/gold_v5_slow_stdout.txt"
+          OUT="$HOME/.cache/gold_research/v5_slow_validity_2016_2017"
+          test -f "$OUT/summary.json"
+          grep -q '"preserved_2018_accessed": false' "$OUT/summary.json"
+      - name: Stage outputs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/gold_v5_slow_artifact"
+          cp -a "$HOME/.cache/gold_research/v5_slow_validity_2016_2017/." "$RUNNER_TEMP/gold_v5_slow_artifact/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/gold_v5_slow_stdout.txt" "$RUNNER_TEMP/gold_v5_slow_artifact/" 2>/dev/null || true
+      - name: Upload audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-v5-slow-validity-2016-2017
+          path: ${{ runner.temp }}/gold_v5_slow_artifact/**
+          if-no-files-found: warn
+          retention-days: 14
