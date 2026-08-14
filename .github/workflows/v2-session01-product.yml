@@ -13,6 +13,7 @@ on:
       - 'packages/platform-application/**'
       - 'packages/ui-foundation/**'
       - 'migrations/sql/000014_v2_session01_supplier_mr.sql'
+      - 'migrations/sql/000015_v2_session01_mr_review_route.sql'
       - '.github/workflows/v2-session01-product.yml'
   workflow_dispatch:
 
@@ -86,20 +87,13 @@ jobs:
           pnpm --filter @cpos/platform-application build
           pnpm --filter @cpos/api build
           pnpm --filter @cpos/web-internal build
-      - name: PostgreSQL migration and integration suite
-        shell: bash
+      - name: Apply all migrations
+        run: pnpm db:migrate
+      - name: Run Session 01 hostile PostgreSQL tests
+        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts --reporter=verbose
+      - name: Run full PostgreSQL integration suite
+        run: pnpm db:integration
+      - name: Scan migrated catalog
         run: |
-          set -o pipefail
-          LOG_FILE="${RUNNER_TEMP}/v2-session01-db.log"
-          if pnpm db:integration 2>&1 | tee "${LOG_FILE}"; then
-            exit 0
-          fi
-          echo "::group::Session 01 PostgreSQL failure tail"
-          tail -n 160 "${LOG_FILE}" || true
-          echo "::endgroup::"
-          exit 1
-      - name: Rebuild migrations and scan catalog
-        run: |
-          pnpm db:migrate
           pnpm db:status
           pnpm db:scan
