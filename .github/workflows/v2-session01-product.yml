@@ -60,9 +60,13 @@ jobs:
           node-version: '24.18.0'
           check-latest: false
       - name: Enable pnpm
+        shell: bash
         run: |
+          set -euo pipefail
           corepack enable
           corepack prepare pnpm@10.34.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.34.0"
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Capability authority stays green
@@ -87,19 +91,33 @@ jobs:
           pnpm --filter @cpos/platform-application build
           pnpm --filter @cpos/api build
           pnpm --filter @cpos/web-internal build
-      - name: Apply all migrations
-        run: pnpm db:migrate
-      - name: Verify tenant isolation invariant
-        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "isolates supplier rows by the active tenant context" --reporter=verbose
-      - name: Verify inactive-entitlement write denial
-        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "denies supplier writes when the tenant has no active product entitlement" --reporter=verbose
-      - name: Verify concurrent MR numbering invariant
-        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts -t "serializes concurrent MR number allocation within one project/year scope" --reporter=verbose
-      - name: Run Session 01 hostile PostgreSQL tests
-        run: pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts --reporter=verbose
-      - name: Run full PostgreSQL integration suite
-        run: pnpm db:integration
-      - name: Scan migrated catalog
+      - name: Run PostgreSQL hostile integration suite
+        shell: bash
         run: |
+          set -o pipefail
+          LOG_FILE="${RUNNER_TEMP}/v2-session01-db-integration.log"
+          if pnpm db:integration 2>&1 | tee "${LOG_FILE}"; then
+            exit 0
+          fi
+
+          echo "::group::V2 Session 01 PostgreSQL hostile integration failure tail"
+          tail -n 140 "${LOG_FILE}" || true
+          echo "::endgroup::"
+
+          {
+            echo '### V2 Session 01 PostgreSQL hostile integration failure'
+            echo '```text'
+            tail -n 140 "${LOG_FILE}" || true
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          ANNOTATION="$(tail -n 100 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))" )"
+          echo "::error title=V2 Session 01 PostgreSQL hostile integration failure::${ANNOTATION}"
+          exit 1
+      - name: Rebuild committed migrations and scan catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm db:migrate
           pnpm db:status
           pnpm db:scan
