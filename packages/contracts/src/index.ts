@@ -2,6 +2,7 @@ export * from './async.js';
 export * from './bootstrap.js';
 export * from './operation.js';
 export * from './platform.js';
+export * from './procurement.js';
 export * from './usage.js';
 export * from './workspace.js';
 
@@ -38,9 +39,9 @@ export const technicalOpenApiDocument = {
   openapi: '3.1.0',
   info: {
     title: 'Construction Procurement OS API',
-    version: '0.0.0-b02',
+    version: '0.1.0-v2-session01',
     description:
-      'B02 platform and self-service product shell. Procurement-domain commands remain intentionally excluded.',
+      'Architecture V2 product API: accepted platform substrate plus live supplier and Material/Purchase Requisition capabilities.',
   },
   paths: {
     '/health/live': {
@@ -54,7 +55,7 @@ export const technicalOpenApiDocument = {
       get: {
         operationId: 'technicalHealthReady',
         summary: 'Technical readiness',
-        responses: { '200': { description: 'Technical and product-shell readiness' } },
+        responses: { '200': { description: 'Technical and product readiness' } },
       },
     },
     '/meta/build': {
@@ -78,13 +79,69 @@ export const technicalOpenApiDocument = {
     '/platform/projects': {
       post: {
         operationId: 'platformProjectCreate',
-        summary: 'Create the first or subsequent tenant project context',
+        summary: 'Create a tenant project context',
         responses: {
           '201': { description: 'Project created through the governed platform runtime' },
           '400': { description: 'Project request is invalid' },
           '401': { description: 'Session context is absent or invalid' },
           '403': { description: 'Execution principal lacks tenant authority' },
           '409': { description: 'Project code or effective meaning conflicts' },
+        },
+      },
+    },
+    '/procurement/reference-data': {
+      get: {
+        operationId: 'procurementReferenceDataRead',
+        summary: 'Read governed procurement reference data used by live forms',
+        responses: { '200': { description: 'UOM and starter procurement references' } },
+      },
+    },
+    '/procurement/suppliers': {
+      get: {
+        operationId: 'supplierList',
+        summary: 'List tenant suppliers with primary contact and compliance state',
+        responses: { '200': { description: 'Supplier register' } },
+      },
+      post: {
+        operationId: 'supplierCreate',
+        summary: 'Create a real supplier/subcontractor master record',
+        responses: {
+          '201': { description: 'Supplier created' },
+          '400': { description: 'Supplier request invalid' },
+          '409': { description: 'Supplier code/name conflict' },
+        },
+      },
+    },
+    '/procurement/requisitions': {
+      get: {
+        operationId: 'materialRequisitionList',
+        summary: 'List Material/Purchase Requisitions for the governed tenant',
+        responses: { '200': { description: 'MR register' } },
+      },
+      post: {
+        operationId: 'materialRequisitionCreate',
+        summary: 'Create a numbered MR with real lines',
+        responses: {
+          '201': { description: 'MR created' },
+          '400': { description: 'MR validation failed' },
+          '409': { description: 'MR numbering or source conflict' },
+        },
+      },
+    },
+    '/procurement/requisitions/{mrId}': {
+      get: {
+        operationId: 'materialRequisitionRead',
+        summary: 'Read one MR and its lines',
+        responses: { '200': { description: 'MR detail' }, '404': { description: 'MR not found' } },
+      },
+    },
+    '/procurement/requisitions/{mrId}/submit': {
+      post: {
+        operationId: 'materialRequisitionSubmit',
+        summary: 'Submit a draft MR for review',
+        responses: {
+          '200': { description: 'MR submitted' },
+          '409': { description: 'MR cannot be submitted in its current state' },
         },
       },
     },
