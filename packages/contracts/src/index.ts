@@ -3,6 +3,7 @@ export * from './bootstrap.js';
 export * from './operation.js';
 export * from './platform.js';
 export * from './procurement.js';
+export * from './procurement-sourcing.js';
 export * from './usage.js';
 export * from './workspace.js';
 
@@ -39,9 +40,9 @@ export const technicalOpenApiDocument = {
   openapi: '3.1.0',
   info: {
     title: 'Construction Procurement OS API',
-    version: '0.1.0-v2-session01',
+    version: '0.2.0-v2-session02',
     description:
-      'Architecture V2 product API: accepted platform substrate plus live supplier and Material/Purchase Requisition capabilities.',
+      'Architecture V2 product API: accepted platform substrate plus Supplier Master, Material/Purchase Requisition, optional Procurement Package and RFQ/Tender draft formation.',
   },
   paths: {
     '/health/live': {
@@ -166,6 +167,59 @@ export const technicalOpenApiDocument = {
           '403': { description: 'Buyer lacks route authority' },
           '409': { description: 'Line is not approved/routable' },
         },
+      },
+    },
+    '/procurement/sourcing/candidates': {
+      get: {
+        operationId: 'procurementSourcingCandidates',
+        summary: 'List approved routed MR scope available for Package or RFQ formation',
+        responses: { '200': { description: 'Sourcing candidate lines with source authority and route' } },
+      },
+    },
+    '/procurement/packages': {
+      get: {
+        operationId: 'procurementPackageList',
+        summary: 'List optional Procurement Packages',
+        responses: { '200': { description: 'Package register' } },
+      },
+      post: {
+        operationId: 'procurementPackageCreate',
+        summary: 'Create a governed Package from approved PACKAGE_SOURCING MR lines',
+        responses: {
+          '201': { description: 'Package created without re-keying source demand' },
+          '400': { description: 'Package scope or schedule is invalid' },
+          '403': { description: 'Buyer lacks procurement authority' },
+        },
+      },
+    },
+    '/procurement/packages/{packageId}': {
+      get: {
+        operationId: 'procurementPackageRead',
+        summary: 'Read Package header and source-line allocation',
+        responses: { '200': { description: 'Package detail' }, '404': { description: 'Package not found' } },
+      },
+    },
+    '/procurement/rfqs': {
+      get: {
+        operationId: 'rfqList',
+        summary: 'List RFQ/Tender market-event drafts and live events',
+        responses: { '200': { description: 'RFQ/Tender register' } },
+      },
+      post: {
+        operationId: 'rfqDraftCreate',
+        summary: 'Create a numbered RFQ/Tender draft from governed MR or Package scope',
+        responses: {
+          '201': { description: 'RFQ/Tender draft created with source lineage and bidder membership' },
+          '400': { description: 'Source scope, timing, supplier or commercial basis is invalid' },
+          '403': { description: 'Buyer lacks procurement authority' },
+        },
+      },
+    },
+    '/procurement/rfqs/{rfqId}': {
+      get: {
+        operationId: 'rfqRead',
+        summary: 'Read RFQ/Tender header, sourced lines and selected bidders',
+        responses: { '200': { description: 'RFQ/Tender detail' }, '404': { description: 'RFQ not found' } },
       },
     },
     '/openapi.json': {
