@@ -16,6 +16,8 @@ import {
   type SubscriptionRow,
 } from './persistence/workspace.js';
 
+export * from './procurement.js';
+
 export interface GovernedPlatformRequestContext {
   readonly authenticationIdentityId: string;
   readonly tenantId: string;
