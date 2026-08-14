@@ -2,8 +2,10 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
 import {
   technicalOpenApiDocument,
+  type CreateMaterialRequisitionRequest,
   type CreateProjectRequest,
   type CreateProjectResponse,
+  type CreateSupplierRequest,
   type HealthComponent,
   type LivenessResponse,
   type PlatformWorkspaceSnapshot,
@@ -11,6 +13,7 @@ import {
 } from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
 import type { TechnicalLogger } from '@cpos/observability';
+import type { GovernedProcurementService } from '@cpos/platform-application';
 
 const secureHeaders: Readonly<Record<string, string>> = {
   'content-security-policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
@@ -105,8 +108,14 @@ async function resolvedContext(
 function productErrorStatus(error: unknown): 400 | 401 | 403 | 409 | 500 {
   const message = normalizeThrown(error).message.toLowerCase();
   if (
-    message.includes('projectcode') ||
-    message.includes('displayname') ||
+    message.includes('invalid') ||
+    message.includes('must contain') ||
+    message.includes('is required') ||
+    message.includes('cannot be before') ||
+    message.includes('positive exact decimal') ||
+    message.includes('not active or not visible') ||
+    message.includes('violates foreign key constraint') ||
+    message.includes('violates check constraint') ||
     message.includes('project code') ||
     message.includes('authority context')
   ) {
@@ -121,8 +130,25 @@ function productErrorStatus(error: unknown): 400 | 401 | 403 | 409 | 500 {
   ) {
     return 403;
   }
-  if (message.includes('already exists') || message.includes('conflict')) return 409;
+  if (
+    message.includes('already exists') ||
+    message.includes('conflict') ||
+    message.includes('duplicate key value') ||
+    message.includes('unique constraint')
+  ) {
+    return 409;
+  }
   return 500;
+}
+
+function sessionRequiredMessage(environment: string): string {
+  return environment === 'production'
+    ? 'A verified production authentication provider is not configured.'
+    : 'Provide a verified or development session with tenant and principal context.';
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export interface BuildApiOptions {
@@ -130,6 +156,7 @@ export interface BuildApiOptions {
   readonly logger: TechnicalLogger;
   readonly now?: () => Date;
   readonly platformWorkspaceService?: PlatformWorkspaceService;
+  readonly procurementService?: GovernedProcurementService;
   readonly authenticationSessionResolver?: AuthenticationSessionResolver;
 }
 
@@ -138,6 +165,7 @@ export function buildApi({
   logger,
   now = () => new Date(),
   platformWorkspaceService,
+  procurementService,
   authenticationSessionResolver,
 }: BuildApiOptions): FastifyInstance {
   const app = Fastify({
@@ -193,9 +221,12 @@ export function buildApi({
         name: 'runtime',
         state: 'ok',
         checkedAt,
-        detail: platformWorkspaceService
-          ? 'B02 platform workspace runtime is configured.'
-          : 'Technical runtime is ready; the B02 platform workspace runtime is disabled.',
+        detail:
+          platformWorkspaceService && procurementService
+            ? 'Architecture V2 platform and procurement runtimes are configured.'
+            : platformWorkspaceService
+              ? 'Platform workspace runtime is configured; procurement runtime is disabled.'
+              : 'Technical runtime is ready; product runtimes are disabled.',
       },
     ];
     return { status: 'ok', checkedAt, components };
@@ -233,10 +264,7 @@ export function buildApi({
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
-        message:
-          config.build.environment === 'production'
-            ? 'A verified production authentication provider is not configured.'
-            : 'Provide a verified or development session with tenant and principal context.',
+        message: sessionRequiredMessage(config.build.environment),
       });
     }
 
@@ -264,17 +292,12 @@ export function buildApi({
     if (!context) {
       return reply.status(401).send({
         code: 'SESSION_REQUIRED',
-        message:
-          config.build.environment === 'production'
-            ? 'A verified production authentication provider is not configured.'
-            : 'Provide a verified or development session with tenant and principal context.',
+        message: sessionRequiredMessage(config.build.environment),
       });
     }
 
     const raw = request.body;
-    if (!raw || typeof raw !== 'object') {
-      return reply.status(400).send({ code: 'INVALID_PROJECT_REQUEST' });
-    }
+    if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_PROJECT_REQUEST' });
     const body = raw as Partial<CreateProjectRequest>;
     if (typeof body.projectCode !== 'string' || typeof body.displayName !== 'string') {
       return reply.status(400).send({ code: 'INVALID_PROJECT_REQUEST' });
@@ -290,6 +313,204 @@ export function buildApi({
       const status = productErrorStatus(error);
       if (status === 500) throw error;
       return reply.status(status).send({ code: 'PROJECT_CREATE_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.get('/procurement/reference-data', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    try {
+      return await procurementService.referenceData(context);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'REFERENCE_DATA_READ_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.get('/procurement/suppliers', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    try {
+      return await procurementService.listSuppliers(context);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'SUPPLIER_LIST_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/suppliers', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    const raw = request.body;
+    if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_SUPPLIER_REQUEST' });
+    if (
+      typeof raw['supplierCode'] !== 'string' ||
+      typeof raw['legalName'] !== 'string' ||
+      typeof raw['supplierType'] !== 'string'
+    ) {
+      return reply.status(400).send({ code: 'INVALID_SUPPLIER_REQUEST' });
+    }
+    try {
+      const result = await procurementService.createSupplier(context, raw as unknown as CreateSupplierRequest);
+      return reply.status(201).send(result);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'SUPPLIER_CREATE_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.get('/procurement/requisitions', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    try {
+      return await procurementService.listRequisitions(context);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_LIST_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/requisitions', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    const raw = request.body;
+    if (!isObject(raw)) return reply.status(400).send({ code: 'INVALID_MR_REQUEST' });
+    if (
+      typeof raw['projectId'] !== 'string' ||
+      typeof raw['requiredOnSiteDate'] !== 'string' ||
+      typeof raw['subject'] !== 'string' ||
+      !Array.isArray(raw['lines'])
+    ) {
+      return reply.status(400).send({ code: 'INVALID_MR_REQUEST' });
+    }
+    try {
+      const result = await procurementService.createRequisition(
+        context,
+        raw as unknown as CreateMaterialRequisitionRequest,
+      );
+      return reply.status(201).send(result);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_CREATE_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.get('/procurement/requisitions/:mrId', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    const mrId = (request.params as { readonly mrId?: unknown }).mrId;
+    if (typeof mrId !== 'string') return reply.status(400).send({ code: 'INVALID_MR_ID' });
+    try {
+      const result = await procurementService.readRequisition(context, mrId);
+      if (result === undefined) return reply.status(404).send({ code: 'MR_NOT_FOUND' });
+      return result;
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_READ_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/requisitions/:mrId/submit', async (request, reply) => {
+    if (!procurementService) {
+      return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    }
+    const context = await resolvedContext(
+      request,
+      config.build.environment,
+      authenticationSessionResolver,
+    );
+    if (!context) {
+      return reply.status(401).send({
+        code: 'SESSION_REQUIRED',
+        message: sessionRequiredMessage(config.build.environment),
+      });
+    }
+    const mrId = (request.params as { readonly mrId?: unknown }).mrId;
+    if (typeof mrId !== 'string') return reply.status(400).send({ code: 'INVALID_MR_ID' });
+    try {
+      return await procurementService.submitRequisition(context, mrId);
+    } catch (error: unknown) {
+      const status = productErrorStatus(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'MR_SUBMIT_REJECTED', requestId: request.id });
     }
   });
 
