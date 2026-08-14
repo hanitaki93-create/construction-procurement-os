@@ -14,6 +14,7 @@ A Procurement Package is an optional planning/grouping object for complex or tra
 - required-on-site / award target dates;
 - budget/cost/WBS context where available;
 - procurement strategy/route;
+- applicable ProcurementRouteDecision/policy version;
 - lifecycle/status;
 - scope summary and notes;
 - attachments/specifications/drawings;
@@ -32,6 +33,10 @@ For package-based/subcontract procurement, the package may instantiate an approv
 
 A newly awarded project may seed package budget allowance, pre-award vendors/quotes, programme assumptions, notes, risks and opportunities from an Estimating Handover. These remain historical/source context; the delivery team can revise procurement strategy without rewriting the estimating basis.
 
+## Procurement route / competition policy
+
+Package strategy is evaluated against the governed ProcurementRoutePolicyVersion. The package records whether competitive tender, sole/single source, direct award, later framework use or another bounded route is permitted/required and what evidence/approvals apply. A manually typed 'strategy' cannot bypass the route decision.
+
 ## Procurement schedule core
 
 Each material package owns a procurement plan from creation, not from a later dashboard block. At minimum track required-on-site and baseline/forecast milestones for RFQ issue, tender return, recommendation, approval, award/order and supplier delivery/start. Actual milestones populate from linked transactions; supplier-confirmed dates remain distinct from buyer forecasts.
@@ -48,8 +53,8 @@ One package may create one or more RFQ/Tender events, and one RFQ may source sel
 
 ## Schedule / register
 
-Package register shows code, project, trade/category, owner, required date, baseline/forecast/actual RFQ/award/order milestones, supplier-confirmed delivery where known, scope/budget context, current sourcing state and risk/overdue indicators.
+Package register shows code, project, trade/category, owner, required date, route/policy state, baseline/forecast/actual RFQ/award/order milestones, supplier-confirmed delivery where known, scope/budget context, current sourcing state and risk/overdue indicators.
 
 ## Acceptance
 
-A buyer receives an aluminium package from estimating handover, seeds its allowance and known bidders, instantiates the approved Aluminium & Glazing scope template, tailors project requirements, groups approved MR/scope into the package, baselines its procurement milestones, tenders only selected package scope, later sources a residual line separately, and can prove exactly which authorized scope/template/handover basis each tender/order consumed.
+A buyer receives an aluminium package from estimating handover, seeds its allowance and known bidders, instantiates the approved Aluminium & Glazing scope template, tailors project requirements, groups approved MR/scope into the package, obtains the governed competitive-tender route decision, baselines its procurement milestones, tenders selected package scope, later sources a residual line separately, and can prove exactly which authorized scope/template/handover/policy basis each tender/order consumed.
