@@ -15,7 +15,7 @@ DECLARE
   already_allocated numeric(24,6);
   source_authority numeric(24,6);
 BEGIN
-  SELECT l.*, mr.project_id
+  SELECT l, mr.project_id
   INTO source_line, source_project_id
   FROM procurement.material_requisition_line l
   JOIN procurement.material_requisition mr
@@ -83,7 +83,7 @@ DECLARE
   current_route text;
   source_authority numeric(24,6);
 BEGIN
-  SELECT l.*, mr.project_id
+  SELECT l, mr.project_id
   INTO source_line, source_project_id
   FROM procurement.material_requisition_line l
   JOIN procurement.material_requisition mr
