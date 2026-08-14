@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const inventoryPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_INVENTORY_V0_5.csv');
-const manifestPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_SPEC_MANIFEST_V0_6.json');
+const manifestPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_SPEC_MANIFEST_V0_7.json');
 const authorize = process.argv.includes('--authorize');
 
 function fail(message) {
@@ -55,6 +55,13 @@ if (commonFieldPath) {
   if (!/STANDARD §C AUTHORITY/i.test(text)) fail('common field contract lacks STANDARD §C AUTHORITY marker');
 }
 requireFile(manifest.default_tenant_profile, 'default tenant profile');
+const ownerDecisionPath = requireFile(manifest.owner_domain_decision, 'owner/domain decision');
+if (authorize && ownerDecisionPath) {
+  const ownerDecision = readFileSync(ownerDecisionPath, 'utf8');
+  if (!/OWNER_DOMAIN_DECISION\s*=\s*MEANING_PASS/i.test(ownerDecision)) {
+    fail('owner/domain decision file does not record OWNER_DOMAIN_DECISION = MEANING_PASS');
+  }
+}
 
 const firstSpine = inventory.filter((row) => /^R0[1-8](?:_|$)/.test(row.target_block));
 const requiredProduct = inventory.filter((row) =>
