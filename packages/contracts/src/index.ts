@@ -131,7 +131,7 @@ export const technicalOpenApiDocument = {
     '/procurement/requisitions/{mrId}': {
       get: {
         operationId: 'materialRequisitionRead',
-        summary: 'Read one MR and its lines',
+        summary: 'Read one MR and its lines, review trail and route decisions',
         responses: { '200': { description: 'MR detail' }, '404': { description: 'MR not found' } },
       },
     },
@@ -142,6 +142,29 @@ export const technicalOpenApiDocument = {
         responses: {
           '200': { description: 'MR submitted' },
           '409': { description: 'MR cannot be submitted in its current state' },
+        },
+      },
+    },
+    '/procurement/requisitions/{mrId}/review': {
+      post: {
+        operationId: 'materialRequisitionReview',
+        summary: 'Review every MR line and approve, partially approve or reject the requisition',
+        responses: {
+          '200': { description: 'MR review recorded' },
+          '403': { description: 'Reviewer lacks procurement authority' },
+          '409': { description: 'MR changed or is no longer reviewable' },
+        },
+      },
+    },
+    '/procurement/requisitions/{mrId}/lines/{mrLineId}/route': {
+      post: {
+        operationId: 'materialRequisitionLineRoute',
+        summary: 'Set or supersede the procurement route for an approved MR line',
+        responses: {
+          '200': { description: 'Route decision recorded' },
+          '400': { description: 'Route or justification is invalid' },
+          '403': { description: 'Buyer lacks route authority' },
+          '409': { description: 'Line is not approved/routable' },
         },
       },
     },
