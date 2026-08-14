@@ -7,6 +7,7 @@ Turn a frozen comparison basis into a governed buying decision while keeping rec
 ## Recommendation
 
 - sourcing event and frozen ComparisonSnapshot;
+- source ProcurementRouteDecision and policy version;
 - recommended supplier(s) and selected revision/confirmed basis;
 - recommended value/currency;
 - exact ProcurementBudgetBasis/version and variance where available;
@@ -17,6 +18,7 @@ Turn a frozen comparison basis into a governed buying decision while keeping rec
 - negotiated improvements;
 - supplier registration/qualification/compliance state relied upon;
 - supplier performance/workload/exposure context relevant to the decision;
+- competitive-coverage result and any route-policy exception;
 - non-lowest-bid justification;
 - split-award/sole-source rationale;
 - supporting source documents/correspondence;
@@ -25,6 +27,7 @@ Turn a frozen comparison basis into a governed buying decision while keeping rec
 ## Approval Case
 
 - approval policy/DOA basis;
+- procurement-route/exception policy basis;
 - requested approvers and current ball-in-court;
 - amount/scope thresholds;
 - required evidence/justifications;
@@ -34,22 +37,22 @@ Turn a frozen comparison basis into a governed buying decision while keeping rec
 - delegated-authority provenance;
 - immutable action history.
 
-Approval revalidates current truth and authority at transition time. A stale budget, expired qualification or newly failed mandatory gate cannot be hidden merely because the recommendation was prepared earlier.
+Approval revalidates current truth and authority at transition time. A stale budget, expired qualification, failed competition requirement or newly failed mandatory gate cannot be hidden merely because the recommendation was prepared earlier.
 
 ## Award Decision
 
 Award records the approved supplier/basis/scope and decision time. It does not itself create a legally effective PO/subcontract. Award may be full, split, conditional or no-award. Any divergence from the approved recommendation is explicit and governed.
 
-Historical award provenance preserves the exact comparison snapshot, budget basis, supplier qualification/compliance facts and technical-approval state used by the decision.
+Historical award provenance preserves the exact comparison snapshot, budget basis, route/policy decision, supplier qualification/compliance facts and technical-approval state used by the decision.
 
 ## Outputs / register
 
-Recommendation PDF, approval trail/export, award decision record and a register showing number, project, event, supplier, recommended value, status, pending approver, age, budget variance, qualification/technical/risk flags and order-conversion status.
+Recommendation PDF, approval trail/export, award decision record and a register showing number, project, event, supplier, recommended value, status, pending approver, age, budget variance, competition/policy exception, qualification/technical/risk flags and order-conversion status.
 
 ## AI assist
 
-AI may draft recommendation narratives, summarize deviations, benchmark prices and surface supplier/schedule risks using cited deterministic data. AI cannot approve, award, fabricate budget/qualification/technical facts, infer execution or hide contrary evidence.
+AI may draft recommendation narratives, summarize deviations, benchmark prices and surface supplier/schedule risks using cited deterministic data. AI cannot approve, award, fabricate budget/qualification/technical/policy facts, infer execution or hide contrary evidence.
 
 ## Acceptance
 
-A buyer recommends a supplier who is not the lowest bidder, cites the exact budget version, explains commercial/technical and supplier-capacity reasons, routes the case through DOA, receives conditional approval subject to one technical requirement, later satisfies/revalidates that gate, records the award and converts only the approved basis into LPO/PO/Subcontract without changing the original comparison.
+A buyer recommends a supplier who is not the lowest bidder, cites the exact budget and procurement-policy versions, explains commercial/technical and supplier-capacity reasons, handles an under-competition/sole-source exception through the required justification and DOA, receives conditional approval subject to one technical requirement, later satisfies/revalidates that gate, records the award and converts only the approved basis into LPO/PO/Subcontract without changing the original comparison.
