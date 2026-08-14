@@ -22,6 +22,7 @@ describe('Material Requisition contract', () => {
       requesterTeam: null,
       deliveryLocationId: null,
       instructions: null,
+      reviewTrail: [],
       lines: [
         {
           mrLineId: '018f0000-0000-7000-8000-000000000004',
@@ -42,6 +43,7 @@ describe('Material Requisition contract', () => {
           technicalNotes: null,
           approvedQuantity: null,
           lineState: 'DRAFT',
+          routeDecision: null,
         },
         {
           mrLineId: '018f0000-0000-7000-8000-000000000005',
@@ -62,6 +64,7 @@ describe('Material Requisition contract', () => {
           technicalNotes: null,
           approvedQuantity: null,
           lineState: 'DRAFT',
+          routeDecision: null,
         },
       ],
     };
