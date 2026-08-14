@@ -1,0 +1,63 @@
+name: Gold Macro Oanda 2016 Replay
+
+on:
+  push:
+    branches:
+      - ops/gold-vps-bridge-20260814
+    paths:
+      - '.github/workflows/gold-macro-oanda-2016-replay.yml'
+      - 'ops/gold_research/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 35
+    steps:
+      - name: Checkout isolated ops branch
+        uses: actions/checkout@v4
+        with:
+          ref: ops/gold-vps-bridge-20260814
+          persist-credentials: false
+
+      - name: Create disposable research environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/gold-oanda-venv"
+          python3 -m venv "$VENV"
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
+          "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy requests
+          echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
+
+      - name: Self-test replay implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GOLD_VENV/bin/python" ops/gold_research/run_oanda_macro_transition_replay_2016.py --self-test
+
+      - name: Run 44-event 2016 development replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATA_DIR="$RUNNER_TEMP/gold_oanda_2016_data"
+          OUT_DIR="$RUNNER_TEMP/gold_oanda_2016_results"
+          "$GOLD_VENV/bin/python" ops/gold_research/run_oanda_macro_transition_replay_2016.py \
+            --manifest ops/gold_research/2016_tier_a_event_manifest.csv \
+            --data-dir "$DATA_DIR" \
+            --output-dir "$OUT_DIR" \
+            | tee "$RUNNER_TEMP/gold_oanda_2016_stdout.txt"
+          test -f "$OUT_DIR/manifest.json"
+          grep -q '"preserved_2017_accessed": false' "$OUT_DIR/manifest.json"
+
+      - name: Upload replay audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-oanda-2016-macro-transition-replay
+          path: |
+            ${{ runner.temp }}/gold_oanda_2016_results/**
+            ${{ runner.temp }}/gold_oanda_2016_stdout.txt
+          retention-days: 14
