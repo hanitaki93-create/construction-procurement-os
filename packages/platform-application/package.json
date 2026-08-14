@@ -11,6 +11,10 @@
     "./procurement-sourcing": {
       "types": "./dist/procurement-sourcing.d.ts",
       "default": "./dist/procurement-sourcing.js"
+    },
+    "./procurement-responses": {
+      "types": "./dist/procurement-responses.d.ts",
+      "default": "./dist/procurement-responses.js"
     }
   },
   "files": ["dist"],
