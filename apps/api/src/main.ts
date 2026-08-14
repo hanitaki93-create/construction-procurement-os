@@ -11,9 +11,14 @@ import {
   createGovernedProcurementSourcingService,
   type GovernedProcurementSourcingService,
 } from '@cpos/platform-application/procurement-sourcing';
+import {
+  createGovernedProcurementResponseService,
+  type GovernedProcurementResponseService,
+} from '@cpos/platform-application/procurement-responses';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
+import { registerProcurementResponseRoutes } from './procurement-response-routes.js';
 import { registerProcurementSourcingRoutes } from './procurement-sourcing-routes.js';
 
 const config = loadRuntimeConfig('api');
@@ -35,6 +40,7 @@ let databaseRuntime: DatabaseRuntime | undefined;
 let platformWorkspaceService: GovernedPlatformWorkspaceService | undefined;
 let procurementService: GovernedProcurementService | undefined;
 let procurementSourcingService: GovernedProcurementSourcingService | undefined;
+let procurementResponseService: GovernedProcurementResponseService | undefined;
 
 if (productDemoEnabled) {
   platformWorkspaceService = createDevelopmentPlatformWorkspaceService();
@@ -50,6 +56,7 @@ if (productDemoEnabled) {
   platformWorkspaceService = createGovernedPlatformWorkspaceService(databaseRuntime);
   procurementService = createGovernedProcurementService(databaseRuntime);
   procurementSourcingService = createGovernedProcurementSourcingService(databaseRuntime);
+  procurementResponseService = createGovernedProcurementResponseService(databaseRuntime);
 }
 
 const app = buildApi({
@@ -62,6 +69,12 @@ if (procurementSourcingService !== undefined) {
   registerProcurementSourcingRoutes(app, {
     environment: config.build.environment,
     service: procurementSourcingService,
+  });
+}
+if (procurementResponseService !== undefined) {
+  registerProcurementResponseRoutes(app, {
+    environment: config.build.environment,
+    service: procurementResponseService,
   });
 }
 let closing = false;
@@ -100,6 +113,7 @@ try {
     governedWorkspaceEnabled: platformWorkspaceService !== undefined,
     governedProcurementEnabled: procurementService !== undefined,
     governedSourcingEnabled: procurementSourcingService !== undefined,
+    governedSupplierResponsesEnabled: procurementResponseService !== undefined,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });
