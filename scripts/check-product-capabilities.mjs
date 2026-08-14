@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const inventoryPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_INVENTORY_V0_4.csv');
-const manifestPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_SPEC_MANIFEST_V0_4.json');
+const inventoryPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_INVENTORY_V0_5.csv');
+const manifestPath = resolve(root, '04_phases/phase_2_build_decomposition/product_rebaseline/R00_CAPABILITY_SPEC_MANIFEST_V0_5.json');
 const authorize = process.argv.includes('--authorize');
 
 function fail(message) {
