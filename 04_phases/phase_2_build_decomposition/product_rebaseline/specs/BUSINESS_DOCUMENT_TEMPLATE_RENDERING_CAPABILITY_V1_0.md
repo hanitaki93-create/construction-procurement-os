@@ -4,9 +4,12 @@
 
 Turn governed procurement records into professional issue-ready documents while preserving exact issued-version identity and avoiding a general report-builder platform in V1.
 
+This capability depends on the rebuilt File / Attachment / Issued Artifact Provenance substrate; the clean B03 V2 lineage does not assume rejected B04 code exists.
+
 ## Initial document classes
 
 - MR/PR;
+- Scope of Works annexure;
 - RFQ/Tender enquiry;
 - RFQ addendum;
 - bid comparison summary/workbook export;
@@ -27,16 +30,20 @@ V1 allows bounded configuration only: logo, company/contact/address blocks, appr
 
 `DRAFT_PREVIEW -> APPROVED/READY -> ISSUED_VERSION -> SUPERSEDED/REISSUED`
 
-An issued artifact binds exact source object versions, template class/version, locale, business number/revision and render inputs. Re-rendering an issued version must be reproducible.
+An IssuedArtifactVersion binds exact source object versions, template class/version, locale, business number/revision, attachment/annexure membership and render inputs. Re-rendering an issued version must be reproducible and verifiable against its stored hash/content identity.
 
 ## Outputs
 
-PDF required for issued documents; XLSX for RFQ/comparison where useful; print preview; download/manual-send from day one. Email/connectors later send the exact issued artifact rather than regenerating ad hoc.
+PDF required for issued documents; XLSX for RFQ/comparison where useful; print preview; download/manual-send from day one. Email/eSign/connectors send the exact issued artifact rather than regenerating ad hoc.
 
-## Provenance substrate
+## Provenance rules
 
-The rejected B04 evidence/artifact code may be salvaged only if it cleanly supports this capability; ordinary users see business documents and revisions, not EvidenceVersion vocabulary.
+- ordinary UX says Documents/Attachments/Issued Documents;
+- every issued artifact identifies the exact FileAsset/BusinessAttachment versions included;
+- replacement/supersession never mutates a previously issued artifact;
+- structured data extracted from source documents links back to exact source document/version/location;
+- salvaged rejected-B04 mechanisms may be reused only after explicit V2 adoption and verification.
 
 ## Acceptance
 
-A contractor configures company identity once, creates an MR/RFQ/LPO, previews a professional layout, issues/downloads the exact PDF, later issues a revision and can reproduce both versions with their original numbers, source lines, terms and attachments.
+A contractor configures company identity once, creates an MR/RFQ/LPO, previews a professional layout, issues/downloads the exact PDF, later issues a revision and can reproduce both versions with their original numbers, source lines, terms and exact attachment sets.
