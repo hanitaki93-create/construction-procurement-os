@@ -33,6 +33,22 @@ jobs:
           "$VENV/bin/python" -m pip install --disable-pip-version-check -q pandas numpy requests
           echo "GOLD_VENV=$VENV" >> "$GITHUB_ENV"
 
+      - name: Apply implementation-only pandas compatibility patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ops/gold_research/run_oanda_macro_transition_replay_2016.py')
+          s = p.read_text()
+          old = 'thresholds_df[thresholds_df.quantile == q]'
+          new = 'thresholds_df[thresholds_df["quantile"] == q]'
+          if old not in s:
+              raise SystemExit('expected pandas collision expression not found')
+          p.write_text(s.replace(old, new, 1))
+          print('PANDAS_QUANTILE_COLUMN_COLLISION_PATCHED')
+          PY
+
       - name: Self-test replay implementation
         shell: bash
         run: |
@@ -43,8 +59,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          DATA_DIR="$RUNNER_TEMP/gold_oanda_2016_data"
+          DATA_DIR="$HOME/.cache/gold_research/oanda_2016"
           OUT_DIR="$RUNNER_TEMP/gold_oanda_2016_results"
+          mkdir -p "$DATA_DIR"
           "$GOLD_VENV/bin/python" ops/gold_research/run_oanda_macro_transition_replay_2016.py \
             --manifest ops/gold_research/2016_tier_a_event_manifest.csv \
             --data-dir "$DATA_DIR" \
@@ -54,10 +71,12 @@ jobs:
           grep -q '"preserved_2017_accessed": false' "$OUT_DIR/manifest.json"
 
       - name: Upload replay audit artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gold-oanda-2016-macro-transition-replay
           path: |
             ${{ runner.temp }}/gold_oanda_2016_results/**
             ${{ runner.temp }}/gold_oanda_2016_stdout.txt
+          if-no-files-found: warn
           retention-days: 14
