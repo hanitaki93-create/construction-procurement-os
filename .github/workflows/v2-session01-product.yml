@@ -91,27 +91,6 @@ jobs:
           pnpm --filter @cpos/platform-application build
           pnpm --filter @cpos/api build
           pnpm --filter @cpos/web-internal build
-      - name: Run Session 01 hostile PostgreSQL gate
-        shell: bash
-        run: |
-          set -o pipefail
-          LOG_FILE="${RUNNER_TEMP}/v2-session01-focused-integration.log"
-          if pnpm --filter @cpos/database-core exec vitest run integration/procurement-v2-session01.integration.test.ts --reporter=verbose 2>&1 | tee "${LOG_FILE}"; then
-            exit 0
-          fi
-
-          echo "::group::Session 01 hostile PostgreSQL failure tail"
-          tail -n 180 "${LOG_FILE}" || true
-          echo "::endgroup::"
-          {
-            echo '### Session 01 hostile PostgreSQL failure'
-            echo '```text'
-            tail -n 180 "${LOG_FILE}" || true
-            echo '```'
-          } >> "${GITHUB_STEP_SUMMARY}"
-          ANNOTATION="$(tail -n 140 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))" )"
-          echo "::error title=Session 01 hostile PostgreSQL failure::${ANNOTATION}"
-          exit 1
       - name: Run full PostgreSQL hostile integration suite
         shell: bash
         run: |
@@ -122,15 +101,15 @@ jobs:
           fi
 
           echo "::group::Full PostgreSQL hostile integration failure tail"
-          tail -n 140 "${LOG_FILE}" || true
+          tail -n 180 "${LOG_FILE}" || true
           echo "::endgroup::"
           {
             echo '### Full PostgreSQL hostile integration failure'
             echo '```text'
-            tail -n 140 "${LOG_FILE}" || true
+            tail -n 180 "${LOG_FILE}" || true
             echo '```'
           } >> "${GITHUB_STEP_SUMMARY}"
-          ANNOTATION="$(tail -n 100 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))" )"
+          ANNOTATION="$(tail -n 140 "${LOG_FILE}" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(s.replace(/%/g,'%25').replace(/\\r/g,'%0D').replace(/\\n/g,'%0A')))" )"
           echo "::error title=Full PostgreSQL hostile integration failure::${ANNOTATION}"
           exit 1
       - name: Rebuild committed migrations and scan catalog
