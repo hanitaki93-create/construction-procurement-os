@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./procurement-sourcing": {
+      "types": "./dist/procurement-sourcing.d.ts",
+      "default": "./dist/procurement-sourcing.js"
     }
   },
   "files": ["dist"],
