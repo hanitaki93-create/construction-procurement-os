@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import type { CreateProcurementPackageRequest, CreateRfqDraftRequest } from '@cpos/contracts';
 import type {
@@ -93,7 +93,7 @@ export function registerProcurementSourcingRoutes(
     authenticationSessionResolver?: SourcingAuthenticationSessionResolver;
   }>,
 ): void {
-  async function contextOr401(request: FastifyRequest, reply: Parameters<Parameters<FastifyInstance['get']>[1]>[1]) {
+  async function contextOr401(request: FastifyRequest, reply: FastifyReply) {
     const context = await sourcingContext(request, options.environment, options.authenticationSessionResolver);
     if (context === undefined) {
       void reply.status(401).send({ code: 'SESSION_REQUIRED' });
