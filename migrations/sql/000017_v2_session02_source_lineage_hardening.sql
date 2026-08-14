@@ -8,15 +8,28 @@ SECURITY DEFINER
 SET search_path = pg_catalog, platform, procurement
 AS $$
 DECLARE
-  source_line procurement.material_requisition_line%ROWTYPE;
+  source_line_state text;
+  source_uom_code text;
+  source_approved_quantity numeric(24,6);
+  source_requested_quantity numeric(24,6);
   source_project_id uuid;
   target_project_id uuid;
   current_route text;
   already_allocated numeric(24,6);
   source_authority numeric(24,6);
 BEGIN
-  SELECT l, mr.project_id
-  INTO source_line, source_project_id
+  SELECT
+    l.line_state,
+    l.uom_code,
+    l.approved_quantity,
+    l.requested_quantity,
+    mr.project_id
+  INTO
+    source_line_state,
+    source_uom_code,
+    source_approved_quantity,
+    source_requested_quantity,
+    source_project_id
   FROM procurement.material_requisition_line l
   JOIN procurement.material_requisition mr
     ON mr.tenant_id = l.tenant_id AND mr.mr_id = l.mr_id
@@ -37,12 +50,12 @@ BEGIN
     RAISE EXCEPTION 'package and MR source must belong to the same project' USING ERRCODE = '23514';
   END IF;
 
-  IF source_line.line_state NOT IN ('APPROVED','PARTIALLY_APPROVED','SOURCING') THEN
+  IF source_line_state NOT IN ('APPROVED','PARTIALLY_APPROVED','SOURCING') THEN
     RAISE EXCEPTION 'package scope requires approved MR authority' USING ERRCODE = '23514';
   END IF;
 
-  source_authority := coalesce(source_line.approved_quantity, source_line.requested_quantity);
-  IF NEW.source_uom_code <> source_line.uom_code THEN
+  source_authority := coalesce(source_approved_quantity, source_requested_quantity);
+  IF NEW.source_uom_code <> source_uom_code THEN
     RAISE EXCEPTION 'package scope UOM must preserve source MR UOM' USING ERRCODE = '23514';
   END IF;
 
@@ -73,7 +86,10 @@ SECURITY DEFINER
 SET search_path = pg_catalog, platform, procurement
 AS $$
 DECLARE
-  source_line procurement.material_requisition_line%ROWTYPE;
+  source_line_state text;
+  source_uom_code text;
+  source_approved_quantity numeric(24,6);
+  source_requested_quantity numeric(24,6);
   source_project_id uuid;
   rfq_project_id uuid;
   rfq_package_id uuid;
@@ -83,8 +99,18 @@ DECLARE
   current_route text;
   source_authority numeric(24,6);
 BEGIN
-  SELECT l, mr.project_id
-  INTO source_line, source_project_id
+  SELECT
+    l.line_state,
+    l.uom_code,
+    l.approved_quantity,
+    l.requested_quantity,
+    mr.project_id
+  INTO
+    source_line_state,
+    source_uom_code,
+    source_approved_quantity,
+    source_requested_quantity,
+    source_project_id
   FROM procurement.material_requisition_line l
   JOIN procurement.material_requisition mr
     ON mr.tenant_id = l.tenant_id AND mr.mr_id = l.mr_id
@@ -105,7 +131,7 @@ BEGIN
     RAISE EXCEPTION 'RFQ and MR source must belong to the same project' USING ERRCODE = '23514';
   END IF;
 
-  IF NEW.uom_code <> source_line.uom_code THEN
+  IF NEW.uom_code <> source_uom_code THEN
     RAISE EXCEPTION 'RFQ UOM must preserve source MR UOM' USING ERRCODE = '23514';
   END IF;
 
@@ -134,10 +160,10 @@ BEGIN
     IF current_route IS DISTINCT FROM 'COMPETITIVE_RFQ' THEN
       RAISE EXCEPTION 'direct MR source is not governed for competitive RFQ' USING ERRCODE = '23514';
     END IF;
-    IF source_line.line_state NOT IN ('APPROVED','PARTIALLY_APPROVED','SOURCING') THEN
+    IF source_line_state NOT IN ('APPROVED','PARTIALLY_APPROVED','SOURCING') THEN
       RAISE EXCEPTION 'RFQ requires approved MR authority' USING ERRCODE = '23514';
     END IF;
-    source_authority := coalesce(source_line.approved_quantity, source_line.requested_quantity);
+    source_authority := coalesce(source_approved_quantity, source_requested_quantity);
   END IF;
 
   IF NEW.quantity > source_authority THEN
