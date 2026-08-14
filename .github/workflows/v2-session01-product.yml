@@ -9,6 +9,7 @@ on:
       - 'apps/api/**'
       - 'apps/web-internal/**'
       - 'packages/contracts/**'
+      - 'packages/database-core/**'
       - 'packages/platform-application/**'
       - 'packages/ui-foundation/**'
       - 'migrations/sql/000014_v2_session01_supplier_mr.sql'
@@ -25,7 +26,27 @@ concurrency:
 jobs:
   verify:
     runs-on: [self-hosted, Linux, X64, cpos-ci]
-    timeout-minutes: 25
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cpos_test
+      MIGRATIONS_DIR: ../../migrations/sql
+      BUILD_ID: v2-session01-ci
+
+    services:
+      postgres:
+        image: postgres:18.4-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cpos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cpos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -38,7 +59,9 @@ jobs:
           node-version: '24.18.0'
           check-latest: false
       - name: Enable pnpm
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.34.0 --activate
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Capability authority stays green
@@ -50,6 +73,7 @@ jobs:
       - name: Typecheck changed product packages
         run: |
           pnpm --filter @cpos/contracts typecheck
+          pnpm --filter @cpos/database-core typecheck
           pnpm --filter @cpos/platform-application typecheck
           pnpm --filter @cpos/api typecheck
           pnpm --filter @cpos/web-internal typecheck
@@ -63,4 +87,19 @@ jobs:
           pnpm --filter @cpos/api build
           pnpm --filter @cpos/web-internal build
       - name: PostgreSQL migration and integration suite
-        run: pnpm db:integration
+        shell: bash
+        run: |
+          set -o pipefail
+          LOG_FILE="${RUNNER_TEMP}/v2-session01-db.log"
+          if pnpm db:integration 2>&1 | tee "${LOG_FILE}"; then
+            exit 0
+          fi
+          echo "::group::Session 01 PostgreSQL failure tail"
+          tail -n 160 "${LOG_FILE}" || true
+          echo "::endgroup::"
+          exit 1
+      - name: Rebuild migrations and scan catalog
+        run: |
+          pnpm db:migrate
+          pnpm db:status
+          pnpm db:scan
