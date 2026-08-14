@@ -10,15 +10,30 @@ on:
       - 'scripts/check-product-capabilities.mjs'
       - 'package.json'
       - '.github/workflows/r00-product-rebaseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r00-product-rebaseline-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   capability-structure:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install exact Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '24.18.0'
+          check-latest: false
       - name: Syntax check capability gate
         run: node --check scripts/check-product-capabilities.mjs
       - name: Verify first-spine capability specifications exist
@@ -26,6 +41,7 @@ jobs:
       - name: Confirm authorization remains explicit
         shell: bash
         run: |
+          set -euo pipefail
           if node scripts/check-product-capabilities.mjs --authorize; then
             echo 'R00 capability authorization is complete.'
           else
