@@ -19,7 +19,8 @@ RFQ/Tender is a business enquiry built from approved MR/package scope, a governe
 - validity requirement;
 - tax/delivery/incoterm requirements where used;
 - confidentiality/access profile;
-- bid visibility/opening policy where used (ordinary/open, blind/sealed until governed opening, or other product-owned policy);
+- evaluation mode: combined technical/commercial or governed two-stage/two-envelope where configured;
+- bid visibility/opening policy;
 - lifecycle status and revision/addendum state;
 - source package/MR route and procurement-schedule relationship.
 
@@ -37,9 +38,11 @@ Select supplier master records/contacts with visible registration, qualification
 
 Invitation membership is distinct from supplier identity and can be added/removed before issue under governed rules. If the issued/returned competitive set falls below policy requirements, the event shows the exception and requires the configured justification/authority rather than silently continuing.
 
-## Technical requirements
+## Technical requirements and evaluation
 
-The RFQ can declare required technical returnables such as datasheets, samples, proposed brands/models, shop-drawing references or alternates. Submitted alternates may create TechnicalApprovalDependency records rather than being treated as commercially approved merely because they are priced.
+The RFQ can declare required technical returnables such as datasheets, samples, proposed brands/models, method statements, experience/certifications, programme information, shop-drawing references or alternates.
+
+Complex tenders may attach a governed Technical Bid Evaluation structure/compliance matrix. Where two-stage policy applies, commercial content remains restricted until the governed technical-opening/evaluation condition is satisfied. Technical evaluation is distinct from later TechnicalApprovalDependency for consultant/client/material approval.
 
 ## Documents
 
@@ -57,7 +60,7 @@ RFQ planned issue/return milestones originate from the core procurement plan. Ac
 
 `DRAFT -> REVIEW/READY -> ISSUED -> ADDENDUM/REISSUED -> CLOSED/CANCELLED`
 
-An issued version is immutable. Addenda supersede/augment through explicit version history and acknowledgment requirements where configured. Where blind/sealed policy applies, response visibility/opening follows the configured governed rule.
+An issued version is immutable. Addenda supersede/augment through explicit version history and acknowledgment requirements where configured. Where blind/sealed/two-stage policy applies, response visibility/opening follows the configured governed rule and opening occurrence is auditable.
 
 ## Outputs / distribution
 
@@ -65,8 +68,8 @@ Professional branded RFQ PDF and structured Excel/XLSX where appropriate; previe
 
 ## Register
 
-RFQ register shows number, project, subject/package, buyer, route/policy state, issue/due dates, status, invited suppliers, qualification/eligibility warnings, intent/response counts, competition-policy exception state, overdue state, addenda, clarification state, comparison state and award/order status.
+RFQ register shows number, project, subject/package, buyer, route/policy state, evaluation mode, issue/due dates, status, invited suppliers, qualification/eligibility warnings, intent/response counts, competition-policy exception state, technical-evaluation state, overdue state, addenda, clarification state, comparison state and award/order status.
 
 ## Acceptance
 
-Procurement selects approved MR/package scope, uses the frozen project scope where relevant, sees the required competitive route/minimum evidence, sees bidder registration/qualification/compliance/performance/exposure context, selects suppliers, adds drawings/technical returnables/terms, issues a numbered professional RFQ without re-keying lines, downloads the exact PDF/Excel package, records bidder clarifications, and cannot silently proceed through an under-competitive exception without the policy-required justification/approval.
+Procurement selects approved MR/package scope, uses the frozen project scope where relevant, sees the required competitive route/minimum evidence, sees bidder registration/qualification/compliance/performance/exposure context, configures a combined or two-stage technical/commercial tender as appropriate, adds drawings/returnables/terms, issues a numbered professional RFQ without re-keying lines, and cannot silently expose restricted commercial responses or proceed through an under-competitive exception without the required policy/evidence.
