@@ -12,6 +12,8 @@
 - Accepted implementation base ancestor: `main@b44dcadc2d898b1db98c3a9dc3b182a88c198cd3` (B03)
 - Claude-audited ancestor: `a0f976e7da840376c3df4f02d9e7ec8f5102d5ee`
 
+This checkpoint is metadata committed **after** the frozen target. Its containing commit is not a new architecture target and does not alter the frozen product meaning.
+
 ## Canonical architecture authority
 
 Primary entry point:
