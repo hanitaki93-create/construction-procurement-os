@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "capabilities": [
+    {"ids":["CAP-003","CAP-004","CAP-005","CAP-006"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/SUPPLIER_MASTER_COMPLIANCE_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-007","CAP-008","CAP-009","CAP-010"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/MASTER_REFERENCE_DATA_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-011"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/NUMBERING_POLICY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-012"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/BUSINESS_DOCUMENT_TEMPLATE_RENDERING_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-013","CAP-014","CAP-015"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/MATERIAL_REQUISITION_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-016"],"spec":null,"meaning_status":"PENDING","note":"Dedicated Procurement Package capability specification still required"},
+    {"ids":["CAP-017","CAP-018","CAP-019","CAP-020","CAP-021"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/RFQ_TENDER_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-022","CAP-023","CAP-024"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/SUPPLIER_QUOTATION_REVISION_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-025","CAP-026","CAP-027"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/BID_COMPARISON_LEVELING_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-028","CAP-029","CAP-030"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/RECOMMENDATION_APPROVAL_AWARD_CAPABILITY_V1_0.md","meaning_status":"PENDING"},
+    {"ids":["CAP-031","CAP-032","CAP-033"],"spec":"04_phases/phase_2_build_decomposition/product_rebaseline/specs/EARLY_LPO_PO_SUBCONTRACT_CAPABILITY_V1_0.md","meaning_status":"PENDING"}
+  ]
+}
