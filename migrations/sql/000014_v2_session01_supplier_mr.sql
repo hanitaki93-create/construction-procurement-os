@@ -1,11 +1,13 @@
 -- Architecture V2 Session 01: first real procurement product persistence.
 -- Reuses the accepted B02 tenant/principal/project authority substrate and runtime role.
+-- Like the accepted B03 migrations, declarations are re-runnable so independent hostile
+-- integration ledgers can establish the same committed schema in one test database.
 
 CREATE SCHEMA IF NOT EXISTS procurement;
 REVOKE ALL ON SCHEMA procurement FROM PUBLIC;
 GRANT USAGE ON SCHEMA procurement TO cpos_platform_runtime;
 
-CREATE TABLE procurement.uom_reference (
+CREATE TABLE IF NOT EXISTS procurement.uom_reference (
   uom_code text PRIMARY KEY CHECK (uom_code ~ '^[A-Z0-9]{1,12}$'),
   display_name text NOT NULL CHECK (char_length(btrim(display_name)) BETWEEN 1 AND 80),
   quantity_kind text NOT NULL CHECK (quantity_kind IN ('COUNT','LENGTH','AREA','VOLUME','MASS','TIME','LUMP_SUM')),
@@ -27,7 +29,7 @@ INSERT INTO procurement.uom_reference (uom_code, display_name, quantity_kind, de
   ('HR','Hour','TIME',2)
 ON CONFLICT (uom_code) DO NOTHING;
 
-CREATE TABLE procurement.delivery_location (
+CREATE TABLE IF NOT EXISTS procurement.delivery_location (
   delivery_location_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   project_id uuid NOT NULL,
@@ -41,7 +43,7 @@ CREATE TABLE procurement.delivery_location (
   FOREIGN KEY (tenant_id, project_id) REFERENCES platform.project(tenant_id, project_id)
 );
 
-CREATE TABLE procurement.cost_reference (
+CREATE TABLE IF NOT EXISTS procurement.cost_reference (
   cost_reference_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   project_id uuid NOT NULL,
@@ -54,7 +56,7 @@ CREATE TABLE procurement.cost_reference (
   FOREIGN KEY (tenant_id, project_id) REFERENCES platform.project(tenant_id, project_id)
 );
 
-CREATE TABLE procurement.supplier (
+CREATE TABLE IF NOT EXISTS procurement.supplier (
   supplier_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   supplier_code text NOT NULL CHECK (char_length(btrim(supplier_code)) BETWEEN 1 AND 40),
@@ -79,10 +81,10 @@ CREATE TABLE procurement.supplier (
   FOREIGN KEY (tenant_id, created_by) REFERENCES platform.principal(tenant_id, principal_id)
 );
 
-CREATE UNIQUE INDEX supplier_legal_name_normalized_unique
+CREATE UNIQUE INDEX IF NOT EXISTS supplier_legal_name_normalized_unique
   ON procurement.supplier (tenant_id, lower(btrim(legal_name)));
 
-CREATE TABLE procurement.supplier_contact (
+CREATE TABLE IF NOT EXISTS procurement.supplier_contact (
   supplier_contact_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   supplier_id uuid NOT NULL,
@@ -101,11 +103,11 @@ CREATE TABLE procurement.supplier_contact (
   CHECK (preferred_channel NOT IN ('EMAIL','SECURE_LINK') OR email IS NOT NULL)
 );
 
-CREATE UNIQUE INDEX supplier_primary_contact_unique
+CREATE UNIQUE INDEX IF NOT EXISTS supplier_primary_contact_unique
   ON procurement.supplier_contact (tenant_id, supplier_id)
   WHERE is_primary AND active_state = 'ACTIVE';
 
-CREATE TABLE procurement.supplier_compliance_document (
+CREATE TABLE IF NOT EXISTS procurement.supplier_compliance_document (
   compliance_document_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   supplier_id uuid NOT NULL,
@@ -127,7 +129,7 @@ CREATE TABLE procurement.supplier_compliance_document (
   CHECK ((verification_status IN ('VERIFIED','REJECTED')) = (verified_by IS NOT NULL AND verified_at IS NOT NULL))
 );
 
-CREATE TABLE procurement.item_master (
+CREATE TABLE IF NOT EXISTS procurement.item_master (
   item_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   item_code text NOT NULL CHECK (char_length(btrim(item_code)) BETWEEN 1 AND 60),
@@ -146,7 +148,7 @@ CREATE TABLE procurement.item_master (
   UNIQUE (tenant_id, item_code)
 );
 
-CREATE TABLE procurement.document_number_counter (
+CREATE TABLE IF NOT EXISTS procurement.document_number_counter (
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   document_class text NOT NULL CHECK (document_class IN ('MR')),
   scope_key text NOT NULL CHECK (char_length(scope_key) BETWEEN 1 AND 180),
@@ -155,7 +157,7 @@ CREATE TABLE procurement.document_number_counter (
   PRIMARY KEY (tenant_id, document_class, scope_key)
 );
 
-CREATE TABLE procurement.material_requisition (
+CREATE TABLE IF NOT EXISTS procurement.material_requisition (
   mr_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   project_id uuid NOT NULL,
@@ -185,7 +187,7 @@ CREATE TABLE procurement.material_requisition (
   CHECK ((status = 'DRAFT' AND submitted_at IS NULL) OR status <> 'DRAFT')
 );
 
-CREATE TABLE procurement.material_requisition_line (
+CREATE TABLE IF NOT EXISTS procurement.material_requisition_line (
   mr_line_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   mr_id uuid NOT NULL,
@@ -218,7 +220,7 @@ CREATE TABLE procurement.material_requisition_line (
   CHECK (approved_quantity IS NULL OR (approved_quantity >= 0 AND approved_quantity <= requested_quantity))
 );
 
-CREATE TABLE procurement.material_requisition_distribution (
+CREATE TABLE IF NOT EXISTS procurement.material_requisition_distribution (
   mr_distribution_id uuid PRIMARY KEY DEFAULT uuidv7(),
   tenant_id uuid NOT NULL REFERENCES platform.tenant(tenant_id),
   mr_line_id uuid NOT NULL,
