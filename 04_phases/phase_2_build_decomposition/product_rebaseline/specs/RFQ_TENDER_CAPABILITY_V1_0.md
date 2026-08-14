@@ -2,7 +2,7 @@
 
 ## User meaning
 
-RFQ/Tender is a business enquiry built from approved MR/package scope, selected suppliers and governed tender documents—not an isolated blank event.
+RFQ/Tender is a business enquiry built from approved MR/package scope, a governed procurement-route decision, selected suppliers and governed tender documents—not an isolated blank event.
 
 ## Header
 
@@ -10,6 +10,7 @@ RFQ/Tender is a business enquiry built from approved MR/package scope, selected 
 - project/legal entity/authority context;
 - title/subject and event type;
 - buyer/owner;
+- source ProcurementRouteDecision/policy version;
 - issue date and response due date/time/timezone;
 - commercial instructions and submission instructions;
 - delivery/required dates;
@@ -28,11 +29,13 @@ Lines originate from approved MR/package scope and preserve lineage. Each line m
 
 For package/trade procurement, the RFQ may include the exact frozen ProjectScopeInstance generated from the company Scope Library. Bid-form sections may be seeded from that scope template so scope obligations and price breakdown remain aligned.
 
-## Supplier selection
+## Competition / supplier selection
+
+The RFQ enforces the applicable ProcurementRouteDecision such as minimum competitive participation/quotation requirements, required justification and approval gates. The policy is configurable through bounded typed rules rather than a universal hard-coded 'three quote' rule.
 
 Select supplier master records/contacts with visible registration, qualification, compliance and event-specific eligibility context. Where available, the selection surface also exposes current workload/exposure, performance history and estimating-stage participation/quote context. These facts support judgment; heuristic intelligence does not silently create eligibility or exclusion.
 
-Invitation membership is distinct from supplier identity and can be added/removed before issue under governed rules.
+Invitation membership is distinct from supplier identity and can be added/removed before issue under governed rules. If the issued/returned competitive set falls below policy requirements, the event shows the exception and requires the configured justification/authority rather than silently continuing.
 
 ## Technical requirements
 
@@ -62,8 +65,8 @@ Professional branded RFQ PDF and structured Excel/XLSX where appropriate; previe
 
 ## Register
 
-RFQ register shows number, project, subject/package, buyer, issue/due dates, status, invited suppliers, qualification/eligibility warnings, intent/response counts, overdue state, addenda, clarification state, comparison state and award/order status.
+RFQ register shows number, project, subject/package, buyer, route/policy state, issue/due dates, status, invited suppliers, qualification/eligibility warnings, intent/response counts, competition-policy exception state, overdue state, addenda, clarification state, comparison state and award/order status.
 
 ## Acceptance
 
-Procurement selects approved MR/package scope, uses the frozen project scope where relevant, sees bidder registration/qualification/compliance/performance/exposure context, selects three suppliers, adds drawings/technical returnables/terms, issues a numbered professional RFQ without re-keying lines, downloads the exact PDF/Excel package, records bidder clarifications, later issues an addendum and can prove which supplier saw/responded to which scope/issue version.
+Procurement selects approved MR/package scope, uses the frozen project scope where relevant, sees the required competitive route/minimum evidence, sees bidder registration/qualification/compliance/performance/exposure context, selects suppliers, adds drawings/technical returnables/terms, issues a numbered professional RFQ without re-keying lines, downloads the exact PDF/Excel package, records bidder clarifications, and cannot silently proceed through an under-competitive exception without the policy-required justification/approval.
