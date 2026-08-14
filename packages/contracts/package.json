@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./procurement-responses": {
+      "types": "./dist/procurement-responses.d.ts",
+      "default": "./dist/procurement-responses.js"
     }
   },
   "files": [
