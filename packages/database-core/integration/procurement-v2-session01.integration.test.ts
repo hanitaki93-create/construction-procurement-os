@@ -36,6 +36,10 @@ const projectB = '019e1100-0000-7000-8000-000000000010';
 const subscriptionA = '019e1100-0000-7000-8000-000000000011';
 const supplierA = '019e1100-0000-7000-8000-000000000012';
 const supplierB = '019e1100-0000-7000-8000-000000000013';
+const membershipA = '019e1100-0000-7000-8000-000000000014';
+const membershipB = '019e1100-0000-7000-8000-000000000015';
+const ownerRoleA = '019e1100-0000-7000-8000-000000000016';
+const ownerRoleB = '019e1100-0000-7000-8000-000000000017';
 
 interface TestHandle {
   listSupplierCodes(): Promise<readonly string[]>;
@@ -164,6 +168,37 @@ async function activateTenantA(): Promise<void> {
   }
 }
 
+async function seedProjectVersion(input: {
+  readonly projectId: string;
+  readonly tenantId: string;
+  readonly principalId: string;
+  readonly projectCode: string;
+  readonly displayName: string;
+}): Promise<void> {
+  const client = await setupPool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `SELECT
+         set_config('cpos.tenant_id', $1, true),
+         set_config('cpos.principal_id', $2, true)`,
+      [input.tenantId, input.principalId],
+    );
+    await client.query(
+      `INSERT INTO platform.project_version (
+         project_id, tenant_id, version, project_code, display_name, lifecycle_state, effective_period
+       ) VALUES ($1, $2, 1, $3, $4, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)'))`,
+      [input.projectId, input.tenantId, input.projectCode, input.displayName],
+    );
+    await client.query('COMMIT');
+  } catch (error: unknown) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 beforeAll(async () => {
   await runMigrations(setupPool, {
     directory: path.resolve('../../migrations/sql'),
@@ -200,18 +235,51 @@ beforeEach(async () => {
     [principalA, tenantA, principalB, tenantB],
   );
   await setupPool.query(
+    `INSERT INTO platform.tenant_membership (membership_id, tenant_id, principal_id)
+     VALUES ($1, $2, $3), ($4, $5, $6)`,
+    [membershipA, tenantA, principalA, membershipB, tenantB, principalB],
+  );
+  await setupPool.query(
+    `INSERT INTO platform.tenant_membership_version (
+       membership_id, tenant_id, version, membership_state, effective_period
+     ) VALUES
+       ($1, $2, 1, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)')),
+       ($3, $4, 1, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)'))`,
+    [membershipA, tenantA, membershipB, tenantB],
+  );
+  await setupPool.query(
+    `INSERT INTO platform.role_assignment (
+       role_assignment_id, tenant_id, membership_id, role_key
+     ) VALUES ($1, $2, $3, 'OWNER'), ($4, $5, $6, 'OWNER')`,
+    [ownerRoleA, tenantA, membershipA, ownerRoleB, tenantB, membershipB],
+  );
+  await setupPool.query(
+    `INSERT INTO platform.role_assignment_version (
+       role_assignment_id, tenant_id, version, assignment_state, effective_period
+     ) VALUES
+       ($1, $2, 1, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)')),
+       ($3, $4, 1, 'ACTIVE', tstzrange('2026-01-01', NULL, '[)'))`,
+    [ownerRoleA, tenantA, ownerRoleB, tenantB],
+  );
+  await setupPool.query(
     `INSERT INTO platform.project (project_id, tenant_id, authority_context_id)
      VALUES ($1, $2, $3), ($4, $5, $6)`,
     [projectA, tenantA, authorityA, projectB, tenantB, authorityB],
   );
-  await setupPool.query(
-    `INSERT INTO platform.project_version (
-       project_id, tenant_id, version, project_code, display_name, lifecycle_state, effective_period
-     ) VALUES
-       ($1, $2, 1, 'A-001', 'Project A', 'ACTIVE', tstzrange('2026-01-01', NULL, '[)')),
-       ($3, $4, 1, 'B-001', 'Project B', 'ACTIVE', tstzrange('2026-01-01', NULL, '[)'))`,
-    [projectA, tenantA, projectB, tenantB],
-  );
+  await seedProjectVersion({
+    projectId: projectA,
+    tenantId: tenantA,
+    principalId: principalA,
+    projectCode: 'A-001',
+    displayName: 'Project A',
+  });
+  await seedProjectVersion({
+    projectId: projectB,
+    tenantId: tenantB,
+    principalId: principalB,
+    projectCode: 'B-001',
+    displayName: 'Project B',
+  });
   await activateTenantA();
 
   await setupPool.query(
