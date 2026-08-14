@@ -22,6 +22,7 @@ import {
 import '@cpos/ui-foundation/styles.css';
 
 import { ProcurementWorkspace, type ProcurementPage } from './procurement.js';
+import { SourcingWorkspace, type SourcingPage } from './sourcing.js';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -36,7 +37,7 @@ interface DevelopmentSession {
   readonly principalId: string;
 }
 
-type WorkspacePage = 'overview' | 'projects' | ProcurementPage;
+type WorkspacePage = 'overview' | 'projects' | ProcurementPage | SourcingPage;
 const storageKey = 'cpos.development-session.v1';
 
 function loadStoredSession(): DevelopmentSession | null {
@@ -235,15 +236,15 @@ function Overview({ workspace }: { readonly workspace: PlatformWorkspaceSnapshot
         <article className="metric-card"><span>Projects</span><strong>{workspace.projects.length}</strong><small>Governed project contexts</small></article>
         <article className="metric-card"><span>Company members</span><strong>{workspace.memberships.length}</strong><small>{workspace.currentMembership?.roles.join(', ') || 'No active role'}</small></article>
         <article className="metric-card"><span>Workspace access</span><strong>{workspace.subscription?.lifecycleState ?? 'SETUP'}</strong><small>{workspace.subscription?.accessMode.replaceAll('_', ' ') ?? 'NO SUBSCRIPTION'}</small></article>
-        <article className="metric-card"><span>Product mode</span><strong>V2 LIVE</strong><small>Supplier master + requisitions</small></article>
+        <article className="metric-card"><span>Product mode</span><strong>V2 LIVE</strong><small>Supplier → MR → Package → RFQ</small></article>
       </div>
       <div className="content-grid">
         <section className="panel">
           <div className="panel-heading"><div><p className="panel-kicker">What works now</p><h3>Procurement workspace</h3><p>The current vertical build uses real tenant/project data and governed database writes.</p></div></div>
           <div className="overview-capabilities">
             <div><strong>Supplier master</strong><span>Legal identity, supplier type, primary contact and compliance foundation.</span></div>
-            <div><strong>Material / Purchase Requisition</strong><span>Numbered project demand with free-form construction lines, quantity/UOM and submission state.</span></div>
-            <div><strong>Next in this build session</strong><span>Cost distributions, route/approval controls, source files and professional MR output.</span></div>
+            <div><strong>Material / Purchase Requisition</strong><span>Numbered project demand with free-form construction lines, approvals and sourcing-route authority.</span></div>
+            <div><strong>Packages & RFQs / Tenders</strong><span>Governed source-line packaging, bidder selection, commercial return basis and live sourcing registers.</span></div>
           </div>
         </section>
         <section className="panel subscription-panel">
@@ -270,19 +271,31 @@ function Workspace({
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(workspace.projects[0]?.projectId ?? null);
 
   const labels = locale === 'ar'
-    ? { overview: 'نظرة عامة', projects: 'المشاريع', suppliers: 'الموردون', requisitions: 'طلبات الشراء', approvals: 'الموافقات', reports: 'التقارير', change: 'تغيير الجلسة' }
-    : { overview: 'Overview', projects: 'Projects', suppliers: 'Suppliers', requisitions: 'Requisitions', approvals: 'Approvals', reports: 'Reports', change: 'Change session' };
+    ? { overview: 'نظرة عامة', projects: 'المشاريع', suppliers: 'الموردون', requisitions: 'طلبات الشراء', packages: 'حزم المشتريات', rfqs: 'طلبات الأسعار / المناقصات', approvals: 'الموافقات', reports: 'التقارير', change: 'تغيير الجلسة' }
+    : { overview: 'Overview', projects: 'Projects', suppliers: 'Suppliers', requisitions: 'Requisitions', packages: 'Packages', rfqs: 'RFQs / Tenders', approvals: 'Approvals', reports: 'Reports', change: 'Change session' };
 
   const navigation: readonly { readonly page?: WorkspacePage; readonly label: string; readonly badge: string; readonly disabled?: boolean }[] = [
     { page: 'overview', label: labels.overview, badge: 'HOME' },
     { page: 'projects', label: labels.projects, badge: String(workspace.projects.length).padStart(2, '0') },
     { page: 'suppliers', label: labels.suppliers, badge: 'LIVE' },
     { page: 'requisitions', label: labels.requisitions, badge: 'LIVE' },
+    { page: 'packages', label: labels.packages, badge: 'LIVE' },
+    { page: 'rfqs', label: labels.rfqs, badge: 'LIVE' },
     { label: labels.approvals, badge: 'NEXT', disabled: true },
     { label: labels.reports, badge: 'NEXT', disabled: true },
   ];
 
-  const pageTitle = page === 'suppliers' ? labels.suppliers : page === 'requisitions' ? labels.requisitions : page === 'projects' ? labels.projects : 'Workspace';
+  const pageTitle = page === 'suppliers'
+    ? labels.suppliers
+    : page === 'requisitions'
+      ? labels.requisitions
+      : page === 'packages'
+        ? labels.packages
+        : page === 'rfqs'
+          ? labels.rfqs
+          : page === 'projects'
+            ? labels.projects
+            : 'Workspace';
 
   return (
     <div className="dashboard-layout">
@@ -303,6 +316,7 @@ function Workspace({
         {page === 'overview' ? <Overview workspace={workspace} /> : null}
         {page === 'projects' ? <ProjectsPage workspace={workspace} session={session} selectedProjectId={selectedProjectId} setSelectedProjectId={setSelectedProjectId} /> : null}
         {page === 'suppliers' || page === 'requisitions' ? <ProcurementWorkspace page={page} session={session} locale={locale} projects={workspace.projects} /> : null}
+        {page === 'packages' || page === 'rfqs' ? <SourcingWorkspace page={page} session={session} locale={locale} projects={workspace.projects} /> : null}
       </section>
     </div>
   );
