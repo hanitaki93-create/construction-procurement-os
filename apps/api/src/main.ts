@@ -1,7 +1,12 @@
 import { loadRuntimeConfig } from '@cpos/config';
 import { createDatabaseRuntime, type DatabaseRuntime } from '@cpos/database-core';
 import { createTechnicalLogger, startTechnicalTelemetry } from '@cpos/observability';
-import { createGovernedPlatformWorkspaceService } from '@cpos/platform-application';
+import {
+  createGovernedPlatformWorkspaceService,
+  createGovernedProcurementService,
+  type GovernedPlatformWorkspaceService,
+  type GovernedProcurementService,
+} from '@cpos/platform-application';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
@@ -22,27 +27,29 @@ const productDemoEnabled =
   process.env['CPOS_DEMO_MODE']?.trim().toLowerCase() === 'true';
 const databaseUrl = process.env['DATABASE_URL']?.trim();
 let databaseRuntime: DatabaseRuntime | undefined;
+let platformWorkspaceService: GovernedPlatformWorkspaceService | undefined;
+let procurementService: GovernedProcurementService | undefined;
 
-const platformWorkspaceService = productDemoEnabled
-  ? createDevelopmentPlatformWorkspaceService()
-  : databaseUrl
-    ? (() => {
-        databaseRuntime = createDatabaseRuntime({
-          connectionString: databaseUrl,
-          maximumConnections: 12,
-          idleTimeoutMs: 10_000,
-          connectionTimeoutMs: 5_000,
-          statementTimeoutMs: 20_000,
-          applicationName: 'cpos-api-platform',
-        });
-        return createGovernedPlatformWorkspaceService(databaseRuntime);
-      })()
-    : undefined;
+if (productDemoEnabled) {
+  platformWorkspaceService = createDevelopmentPlatformWorkspaceService();
+} else if (databaseUrl) {
+  databaseRuntime = createDatabaseRuntime({
+    connectionString: databaseUrl,
+    maximumConnections: 12,
+    idleTimeoutMs: 10_000,
+    connectionTimeoutMs: 5_000,
+    statementTimeoutMs: 20_000,
+    applicationName: 'cpos-api-v2',
+  });
+  platformWorkspaceService = createGovernedPlatformWorkspaceService(databaseRuntime);
+  procurementService = createGovernedProcurementService(databaseRuntime);
+}
 
 const app = buildApi({
   config,
   logger,
   ...(platformWorkspaceService === undefined ? {} : { platformWorkspaceService }),
+  ...(procurementService === undefined ? {} : { procurementService }),
 });
 let closing = false;
 
@@ -77,7 +84,8 @@ try {
     buildId: config.build.buildId,
     telemetryEnabled: telemetry.enabled,
     productDemoEnabled,
-    governedWorkspaceEnabled: !productDemoEnabled && databaseRuntime !== undefined,
+    governedWorkspaceEnabled: platformWorkspaceService !== undefined,
+    governedProcurementEnabled: procurementService !== undefined,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });
