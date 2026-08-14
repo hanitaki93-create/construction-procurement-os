@@ -73,4 +73,29 @@ Closed enum `capture_method = {SUPPLIER_STRUCTURED, HUMAN_TRANSCRIPTION, AI_PROP
 | confidence | Extraction confidence | Decimal 0..1 | CONDITIONAL for AI_PROPOSED_HUMAN_CONFIRMED | AI proposal | NONE | immutable proposal | range | SYSTEM_CONTROL | DO_NOT_COPY as business truth |
 | confirmed_by / confirmed_at | Human confirmation of AI/manual ambiguity | Principal + Instant | CONDITIONAL for AI proposed values and policy-required manual review | Identity/SYSTEM | NONE | immutable | authorized buyer/supplier reviewer | SYSTEM_CONTROL | COPY_SNAPSHOT |
 
-Buyer normalization, evaluation adjustments and supplier-confirmed negotiated values are prohibited from this source-capture object and belong to R06/R07 layers.
+## D. External Secure Participation Grant
+
+Closed enum `external_action = {VIEW_ISSUE, ACKNOWLEDGE, DECLARE_INTENT, DECLINE_NO_BID, DRAFT_RESPONSE, SUBMIT_RESPONSE, REVISE_RESPONSE, VIEW_CLARIFICATION, RESPOND_CLARIFICATION, DOWNLOAD_ISSUED_FILES}`.
+Closed enum `grant_state = {CREATED, ISSUED, ACTIVE, EXPIRED, REVOKED, TRANSFERRED, CONSUMED_CLOSED}`.
+
+The raw bearer token is never stored as a business field. Only a one-way verifier/token identifier belongs in persistence; secret material is generated/delivered through the security boundary.
+
+| Field / label | Meaning | Type | Requirement | Master / reference source | Default | Lifecycle editability | Validation | Security | Downstream-copy behavior |
+|---|---|---|---|---|---|---|---|---|---|
+| invitation_id | Tender membership the grant authorizes | Reference<Invitation> | REQUIRED | R04 Invitation | NONE | immutable | issued/planned invitation; supplier/contact compatible | SYSTEM_CONTROL | COPY_REFERENCE |
+| supplier_id | External company identity | Reference<Supplier> | REQUIRED | Supplier Master | invitation supplier | immutable | equals invitation supplier | SYSTEM_CONTROL | COPY_REFERENCE |
+| contact_id | Intended human recipient | Reference<SupplierContact> | REQUIRED unless governed shared-mailbox exception | Supplier contacts | invitation contact | immutable per grant; transfer creates successor grant | active/contact belongs supplier | PERSONAL_CONTACT | COPY_SNAPSHOT |
+| token_verifier_id | Non-secret identifier/hash reference for bearer credential | opaque secure verifier reference | REQUIRED | Security/token service | generated | system-managed immutable | raw token never persisted/logged; strong entropy/one-way verifier | SYSTEM_CONTROL | DO_NOT_COPY |
+| allowed_actions | Exact task actions permitted | set<external_action> | REQUIRED | ExternalParticipationPolicy | issue/task-derived minimum set | immutable per grant version | least privilege; cannot exceed invitation/event policy | SYSTEM_CONTROL | COPY_SNAPSHOT |
+| issued_artifact_scope | Exact RFQ/addendum/source artifacts viewable | Reference<IssuedArtifactVersion>[] | REQUIRED | RFQ provenance | current supplier-visible issued set | immutable grant version; addendum may issue superseding/extended grant policy | supplier entitled to each artifact | SYSTEM_CONTROL | COPY_REFERENCE |
+| response_scope | Response/clarification objects writable | typed scoped references | REQUIRED | invitation/response domain | invitation-specific | immutable | cannot cross supplier/event context | SYSTEM_CONTROL | COPY_REFERENCE |
+| expires_at | Credential expiry | Instant | REQUIRED | external access policy | later of response-due grace policy or bounded max lifetime | controlled extension creates audited update/new grant | future and within maximum configured TTL | SYSTEM_CONTROL | COPY_SNAPSHOT |
+| state | Grant lifecycle | ClosedEnum | REQUIRED | product/security lifecycle | CREATED | transition only | expired/revoked grants denied; transferred predecessor denied | SYSTEM_CONTROL | COPY_SNAPSHOT |
+| issued_at | External access issue occurrence | Instant | CONDITIONAL at ISSUED+ | SYSTEM | issue time | immutable | trusted | SYSTEM_CONTROL | COPY_SNAPSHOT |
+| revoked_at / revoked_by | Revocation occurrence | Instant + Principal | CONDITIONAL at REVOKED | SYSTEM/Identity | NONE | immutable | authorized revoker | SYSTEM_CONTROL | COPY_SNAPSHOT |
+| successor_grant_id | Transfer/replacement relationship | Reference<ExternalParticipationGrant> | CONDITIONAL for TRANSFERRED | external access domain | NONE | immutable | same invitation/supplier unless governed supplier replacement is separate invitation change | SYSTEM_CONTROL | COPY_REFERENCE |
+| last_authenticated_at | Last valid task access occurrence | Instant | OPTIONAL | security event stream | NONE | system-managed | must not replace full audit event history | SYSTEM_CONTROL | DO_NOT_COPY |
+
+Access to a secure task never converts the contact into a persistent supplier portal account. Every mutation still uses normal bounded domain commands, authority/issue-version checks and idempotency rules.
+
+Buyer normalization, evaluation adjustments and supplier-confirmed negotiated values are prohibited from the source-capture object and belong to R06/R07 layers.
