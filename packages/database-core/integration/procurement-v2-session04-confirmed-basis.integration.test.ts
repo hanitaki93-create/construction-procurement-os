@@ -360,14 +360,14 @@ describe('Architecture V2 Session 04 supplier-confirmed contractable basis', () 
     const unrelatedQuote = '019e1500-0000-7000-8000-000000000099';
     await pool.query(
       `INSERT INTO procurement.supplier_quotation_revision (
-         quotation_revision_id, tenant_id, rfq_issue_bidder_id, revision_no,
+         quotation_revision_id, tenant_id, rfq_issue_bidder_id, revision_no, supersedes_revision_id,
          supplier_quotation_reference, quotation_date, received_at, response_channel, capture_mode,
          captured_by_principal_id, currency, response_status, source_file_name,
          source_media_type, source_sha256, created_by
-       ) VALUES ($1, $2, $3, 1, 'OTHER', DATE '2026-08-15', '2026-08-15T09:00:00Z',
-         'BUYER_CAPTURE', 'BUYER_ON_BEHALF', $4, 'AED', 'RECEIVED', 'other.pdf',
-         'application/pdf', repeat('c', 64), $4)`,
-      [unrelatedQuote, tenant, issueBidder, principal],
+       ) VALUES ($1, $2, $3, 1, $4, 'OTHER', DATE '2026-08-15', '2026-08-15T09:00:00Z',
+         'BUYER_CAPTURE', 'BUYER_ON_BEHALF', $5, 'AED', 'RECEIVED', 'other.pdf',
+         'application/pdf', repeat('c', 64), $5)`,
+      [unrelatedQuote, tenant, issueBidder, quote, principal],
     );
 
     await expect(inExecutionContext(async (query) => {
