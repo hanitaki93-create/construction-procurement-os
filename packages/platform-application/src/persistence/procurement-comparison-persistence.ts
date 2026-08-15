@@ -2,6 +2,7 @@ import { definePersistenceAdapter, sql } from '@cpos/database-core/persistence';
 
 export interface ComparisonHeaderRow {
   readonly comparison_id: string;
+  readonly comparison_number: string | null;
   readonly rfq_issue_id: string;
   readonly rfq_number: string;
   readonly rfq_title: string;
@@ -20,6 +21,7 @@ export interface ComparisonHeaderRow {
 
 export interface ComparisonRegisterRowDb {
   readonly comparison_id: string;
+  readonly comparison_number: string | null;
   readonly rfq_issue_id: string;
   readonly rfq_number: string;
   readonly rfq_title: string;
@@ -107,6 +109,27 @@ export interface ComparisonAdjustmentRowDb {
   readonly recorded_at: string;
 }
 
+export interface ComparisonConfirmedBasisRowDb {
+  readonly confirmed_basis_id: string;
+  readonly comparison_row_id: string;
+  readonly comparison_bidder_id: string;
+  readonly basis_version: number;
+  readonly supersedes_confirmed_basis_id: string | null;
+  readonly confirmation_kind: 'QUOTATION_REVISION' | 'CLARIFICATION_CONFIRMATION' | 'NEGOTIATED_BAFO' | 'WRITTEN_CONFIRMATION';
+  readonly source_quotation_revision_id: string | null;
+  readonly source_confirmation_refs: readonly string[];
+  readonly confirmed_description: string;
+  readonly confirmed_quantity: string | null;
+  readonly confirmed_uom_code: string | null;
+  readonly confirmed_unit_rate: string | null;
+  readonly confirmed_amount: string;
+  readonly currency: string;
+  readonly confirmed_terms: Readonly<Record<string, string>>;
+  readonly technical_status_refs: readonly string[];
+  readonly recorded_by: string;
+  readonly recorded_at: string;
+}
+
 export interface ProcurementComparisonPersistenceHandle {
   verifyAuthenticationIdentity(authenticationIdentityId: string): Promise<boolean>;
   canManageSourcing(): Promise<boolean>;
@@ -116,17 +139,19 @@ export interface ProcurementComparisonPersistenceHandle {
   rows(comparisonId: string): Promise<readonly ComparisonRowDb[]>;
   cells(comparisonId: string): Promise<readonly ComparisonCellRowDb[]>;
   adjustments(comparisonId: string): Promise<readonly ComparisonAdjustmentRowDb[]>;
+  confirmedBasis(comparisonId: string): Promise<readonly ComparisonConfirmedBasisRowDb[]>;
   createHeader(input: { readonly rfqIssueId: string; readonly title: string; readonly baseCurrency: string; readonly actorId: string }): Promise<string>;
   addBidder(input: { readonly comparisonId: string; readonly rfqIssueBidderId: string; readonly selectedQuotationRevisionId: string; readonly actorId: string }): Promise<string>;
   bootstrapIssueRows(comparisonId: string, actorId: string): Promise<number>;
   addRow(input: { readonly comparisonId: string; readonly rowKind: ComparisonRowDb['row_kind']; readonly rfqIssueLineId: string | null; readonly description: string; readonly targetQuantity: string | null; readonly targetUomCode: string | null; readonly actorId: string }): Promise<string>;
   upsertCell(input: { readonly comparisonId: string; readonly comparisonRowId: string; readonly comparisonBidderId: string; readonly sourceQuotationLineId: string | null; readonly coverageStatus: ComparisonCellRowDb['coverage_status']; readonly normalizedQuantity: string | null; readonly normalizedUomCode: string | null; readonly normalizedUnitRate: string | null; readonly normalizedAmount: string | null; readonly currencyConversionRate: string | null; readonly conversionRateDate: string | null; readonly conversionRateSource: string | null; readonly normalizationBasis: string | null; readonly normalizationNote: string | null; readonly actorId: string }): Promise<string>;
   addAdjustment(input: { readonly comparisonId: string; readonly comparisonCellId: string; readonly adjustmentType: ComparisonAdjustmentRowDb['adjustment_type']; readonly adjustmentAmount: string; readonly reason: string; readonly actorId: string }): Promise<string>;
+  confirmBasis(input: { readonly comparisonId: string; readonly comparisonRowId: string; readonly comparisonBidderId: string; readonly confirmationKind: ComparisonConfirmedBasisRowDb['confirmation_kind']; readonly sourceQuotationRevisionId: string | null; readonly sourceConfirmationRefsJson: string; readonly confirmedDescription: string; readonly confirmedQuantity: string | null; readonly confirmedUomCode: string | null; readonly confirmedUnitRate: string | null; readonly confirmedAmount: string; readonly currency: string; readonly confirmedTermsJson: string; readonly technicalStatusRefsJson: string; readonly actorId: string }): Promise<string>;
   freeze(comparisonId: string): Promise<string>;
 }
 
 const headerSql = (comparisonId: string) => sql`
-  SELECT c.comparison_id::text, c.rfq_issue_id::text, i.rfq_number, i.title AS rfq_title,
+  SELECT c.comparison_id::text, c.comparison_number, c.rfq_issue_id::text, i.rfq_number, i.title AS rfq_title,
          c.project_id::text, c.title, c.base_currency, c.state, c.version::text,
          c.created_by::text, c.created_at::text, c.updated_at::text,
          c.frozen_by::text, c.frozen_at::text, s.comparison_snapshot_id::text AS snapshot_id
@@ -169,7 +194,7 @@ export const procurementComparisonPersistence = definePersistenceAdapter<Procure
     },
 
     list: () => executor.all<ComparisonRegisterRowDb>(sql`
-      SELECT c.comparison_id::text, c.rfq_issue_id::text, i.rfq_number, i.title AS rfq_title,
+      SELECT c.comparison_id::text, c.comparison_number, c.rfq_issue_id::text, i.rfq_number, i.title AS rfq_title,
              c.project_id::text, c.title, c.base_currency, c.state,
              (SELECT count(*)::int FROM procurement.bid_comparison_bidder_selection b
                WHERE b.tenant_id = c.tenant_id AND b.comparison_id = c.comparison_id) AS bidder_count,
@@ -253,6 +278,20 @@ export const procurementComparisonPersistence = definePersistenceAdapter<Procure
       WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
         AND comparison_id = ${comparisonId}
       ORDER BY recorded_at, comparison_adjustment_id
+    `),
+
+    confirmedBasis: (comparisonId) => executor.all<ComparisonConfirmedBasisRowDb>(sql`
+      SELECT DISTINCT ON (comparison_row_id, comparison_bidder_id)
+             confirmed_basis_id::text, comparison_row_id::text, comparison_bidder_id::text,
+             basis_version, supersedes_confirmed_basis_id::text, confirmation_kind,
+             source_quotation_revision_id::text, source_confirmation_refs,
+             confirmed_description, confirmed_quantity::text, confirmed_uom_code,
+             confirmed_unit_rate::text, confirmed_amount::text, currency,
+             confirmed_terms, technical_status_refs, recorded_by::text, recorded_at::text
+      FROM procurement.bid_comparison_confirmed_basis
+      WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
+        AND comparison_id = ${comparisonId}
+      ORDER BY comparison_row_id, comparison_bidder_id, basis_version DESC
     `),
 
     createHeader: async (input) => {
@@ -367,6 +406,40 @@ export const procurementComparisonPersistence = definePersistenceAdapter<Procure
       `);
       if (row === undefined) throw new Error('comparison adjustment could not be recorded');
       return row.comparison_adjustment_id;
+    },
+
+    confirmBasis: async (input) => {
+      const row = await executor.oneOrNone<{ readonly confirmed_basis_id: string }>(sql`
+        WITH previous AS (
+          SELECT confirmed_basis_id, basis_version
+          FROM procurement.bid_comparison_confirmed_basis
+          WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
+            AND comparison_id = ${input.comparisonId}
+            AND comparison_row_id = ${input.comparisonRowId}
+            AND comparison_bidder_id = ${input.comparisonBidderId}
+          ORDER BY basis_version DESC
+          LIMIT 1
+          FOR UPDATE
+        )
+        INSERT INTO procurement.bid_comparison_confirmed_basis (
+          tenant_id, comparison_id, comparison_row_id, comparison_bidder_id,
+          basis_version, supersedes_confirmed_basis_id, confirmation_kind,
+          source_quotation_revision_id, source_confirmation_refs, confirmed_description,
+          confirmed_quantity, confirmed_uom_code, confirmed_unit_rate, confirmed_amount,
+          currency, confirmed_terms, technical_status_refs, recorded_by
+        ) VALUES (
+          current_setting('cpos.tenant_id')::uuid, ${input.comparisonId}, ${input.comparisonRowId},
+          ${input.comparisonBidderId}, coalesce((SELECT basis_version + 1 FROM previous), 1),
+          (SELECT confirmed_basis_id FROM previous), ${input.confirmationKind},
+          ${input.sourceQuotationRevisionId}, ${input.sourceConfirmationRefsJson}::jsonb,
+          ${input.confirmedDescription}, ${input.confirmedQuantity}, ${input.confirmedUomCode},
+          ${input.confirmedUnitRate}, ${input.confirmedAmount}, ${input.currency},
+          ${input.confirmedTermsJson}::jsonb, ${input.technicalStatusRefsJson}::jsonb, ${input.actorId}
+        )
+        RETURNING confirmed_basis_id::text
+      `);
+      if (row === undefined) throw new Error('supplier-confirmed comparison basis could not be recorded');
+      return row.confirmed_basis_id;
     },
 
     freeze: async (comparisonId) => {
