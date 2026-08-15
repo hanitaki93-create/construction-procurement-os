@@ -292,7 +292,7 @@ export function createGovernedProcurementDecisionService(database: DatabaseRunti
     return detail(handle, header);
   }
 
-  return Object.freeze({
+  return Object.freeze<GovernedProcurementDecisionService>({
     async listCandidates(context): Promise<DecisionCandidatesResponse> {
       return use(context, 'procurement.decision.candidates.list.v1', false, async (handle) => {
         const snapshots = await handle.listCandidates();
