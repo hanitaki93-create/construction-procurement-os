@@ -15,9 +15,14 @@ import {
   createGovernedProcurementResponseService,
   type GovernedProcurementResponseService,
 } from '@cpos/platform-application/procurement-responses';
+import {
+  createGovernedProcurementComparisonService,
+  type GovernedProcurementComparisonService,
+} from '@cpos/platform-application/procurement-comparison';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
+import { registerProcurementComparisonRoutes } from './procurement-comparison-routes.js';
 import { registerProcurementResponseRoutes } from './procurement-response-routes.js';
 import { registerProcurementSourcingRoutes } from './procurement-sourcing-routes.js';
 
@@ -41,6 +46,7 @@ let platformWorkspaceService: GovernedPlatformWorkspaceService | undefined;
 let procurementService: GovernedProcurementService | undefined;
 let procurementSourcingService: GovernedProcurementSourcingService | undefined;
 let procurementResponseService: GovernedProcurementResponseService | undefined;
+let procurementComparisonService: GovernedProcurementComparisonService | undefined;
 
 if (productDemoEnabled) {
   platformWorkspaceService = createDevelopmentPlatformWorkspaceService();
@@ -57,6 +63,7 @@ if (productDemoEnabled) {
   procurementService = createGovernedProcurementService(databaseRuntime);
   procurementSourcingService = createGovernedProcurementSourcingService(databaseRuntime);
   procurementResponseService = createGovernedProcurementResponseService(databaseRuntime);
+  procurementComparisonService = createGovernedProcurementComparisonService(databaseRuntime);
 }
 
 const app = buildApi({
@@ -75,6 +82,12 @@ if (procurementResponseService !== undefined) {
   registerProcurementResponseRoutes(app, {
     environment: config.build.environment,
     service: procurementResponseService,
+  });
+}
+if (procurementComparisonService !== undefined) {
+  registerProcurementComparisonRoutes(app, {
+    environment: config.build.environment,
+    service: procurementComparisonService,
   });
 }
 let closing = false;
@@ -114,6 +127,7 @@ try {
     governedProcurementEnabled: procurementService !== undefined,
     governedSourcingEnabled: procurementSourcingService !== undefined,
     governedSupplierResponsesEnabled: procurementResponseService !== undefined,
+    governedBidComparisonEnabled: procurementComparisonService !== undefined,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });
