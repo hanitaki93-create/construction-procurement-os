@@ -6,7 +6,9 @@ import type {
   BidComparisonRegisterResponse,
   ComparisonAdjustment,
   ComparisonCell,
+  ComparisonConfirmedBasis,
   ComparisonRow,
+  ConfirmComparisonBasisRequest,
   CreateBidComparisonRequest,
   CreateBidComparisonResponse,
   FreezeBidComparisonResponse,
@@ -19,6 +21,7 @@ import {
   type ComparisonAdjustmentRowDb,
   type ComparisonBidderRowDb,
   type ComparisonCellRowDb,
+  type ComparisonConfirmedBasisRowDb,
   type ComparisonHeaderRow,
   type ComparisonRowDb,
   type ProcurementComparisonPersistenceHandle,
@@ -39,17 +42,20 @@ export interface GovernedProcurementComparisonService {
   addRow(context: GovernedProcurementComparisonRequestContext, comparisonId: string, request: AddComparisonRowRequest): Promise<BidComparisonDetailResponse>;
   upsertCell(context: GovernedProcurementComparisonRequestContext, comparisonId: string, rowId: string, bidderId: string, request: UpsertComparisonCellRequest): Promise<BidComparisonDetailResponse>;
   addAdjustment(context: GovernedProcurementComparisonRequestContext, comparisonId: string, cellId: string, request: AddComparisonAdjustmentRequest): Promise<BidComparisonDetailResponse>;
+  confirmBasis(context: GovernedProcurementComparisonRequestContext, comparisonId: string, rowId: string, bidderId: string, request: ConfirmComparisonBasisRequest): Promise<BidComparisonDetailResponse>;
   freeze(context: GovernedProcurementComparisonRequestContext, comparisonId: string): Promise<FreezeBidComparisonResponse>;
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const exactDecimal = /^-?(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u;
+const nonNegativeDecimal = /^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u;
 const positiveDecimal = /^(?:0*[1-9]\d*)(?:\.\d{1,6})?$|^0*\.\d{0,5}[1-9]\d*$/u;
 const positiveRate = /^(?:0*[1-9]\d*)(?:\.\d{1,12})?$|^0*\.\d{0,11}[1-9]\d*$/u;
 const currencyPattern = /^[A-Z]{3}$/u;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/u;
 const coverageStatuses = new Set(['EXACT','PARTIAL','BUNDLED','ALTERNATE','SUPPLIER_ADDED','MISSING','NOT_APPLICABLE','UNRESOLVED']);
 const adjustmentTypes = new Set(['ADD_COST','DEDUCT_COST','EXCLUSION','PLUG','COMMERCIAL_NORMALIZATION']);
+const confirmationKinds = new Set(['QUOTATION_REVISION','CLARIFICATION_CONFIRMATION','NEGOTIATED_BAFO','WRITTEN_CONFIRMATION']);
 
 function requireUuid(value: string, label: string): string {
   const normalized = value.trim();
@@ -77,6 +83,17 @@ function optionalDecimal(value: string | undefined, label: string, positive = fa
   return normalized;
 }
 
+function requiredNonNegativeDecimal(value: string, label: string): string {
+  const normalized = value.trim();
+  if (!nonNegativeDecimal.test(normalized)) throw new Error(`${label} is invalid non-negative exact decimal`);
+  return normalized;
+}
+
+function optionalNonNegativeDecimal(value: string | undefined, label: string): string | null {
+  if (value === undefined || !value.trim()) return null;
+  return requiredNonNegativeDecimal(value, label);
+}
+
 function optionalRate(value: string | undefined): string | null {
   if (value === undefined || !value.trim()) return null;
   const normalized = value.trim();
@@ -88,6 +105,22 @@ function optionalDate(value: string | undefined): string | null {
   if (value === undefined || !value.trim()) return null;
   if (!datePattern.test(value)) throw new Error('conversionRateDate is invalid');
   return value;
+}
+
+function boundedRefs(values: readonly string[] | undefined, label: string): readonly string[] {
+  if (values === undefined) return [];
+  if (values.length > 100) throw new Error(`${label} contains too many references`);
+  return values.map((value) => requiredText(value, label, 1000));
+}
+
+function boundedTerms(values: Readonly<Record<string, string>> | undefined): Readonly<Record<string, string>> {
+  if (values === undefined) return {};
+  const entries = Object.entries(values);
+  if (entries.length > 50) throw new Error('confirmedTerms contains too many entries');
+  return Object.fromEntries(entries.map(([key, value]) => [
+    requiredText(key, 'confirmedTerms key', 120),
+    requiredText(value, 'confirmedTerms value', 2000),
+  ]));
 }
 
 function transactionContext(context: GovernedProcurementComparisonRequestContext, operationKey: string) {
@@ -132,7 +165,37 @@ function adjustment(row: ComparisonAdjustmentRowDb): ComparisonAdjustment {
   };
 }
 
-function cell(row: ComparisonCellRowDb, adjustments: readonly ComparisonAdjustmentRowDb[]): ComparisonCell {
+function confirmedBasis(row: ComparisonConfirmedBasisRowDb): ComparisonConfirmedBasis {
+  return {
+    confirmedBasisId: row.confirmed_basis_id,
+    comparisonRowId: row.comparison_row_id,
+    comparisonBidderId: row.comparison_bidder_id,
+    basisVersion: row.basis_version,
+    supersedesConfirmedBasisId: row.supersedes_confirmed_basis_id,
+    confirmationKind: row.confirmation_kind,
+    sourceQuotationRevisionId: row.source_quotation_revision_id,
+    sourceConfirmationRefs: row.source_confirmation_refs,
+    confirmedDescription: row.confirmed_description,
+    confirmedQuantity: row.confirmed_quantity,
+    confirmedUomCode: row.confirmed_uom_code,
+    confirmedUnitRate: row.confirmed_unit_rate,
+    confirmedAmount: row.confirmed_amount,
+    currency: row.currency,
+    confirmedTerms: row.confirmed_terms,
+    technicalStatusRefs: row.technical_status_refs,
+    recordedBy: row.recorded_by,
+    recordedAt: row.recorded_at,
+  };
+}
+
+function cell(
+  row: ComparisonCellRowDb,
+  adjustments: readonly ComparisonAdjustmentRowDb[],
+  confirmedRows: readonly ComparisonConfirmedBasisRowDb[],
+): ComparisonCell {
+  const basis = confirmedRows.find(
+    (item) => item.comparison_row_id === row.comparison_row_id && item.comparison_bidder_id === row.comparison_bidder_id,
+  );
   return {
     comparisonCellId: row.comparison_cell_id,
     comparisonRowId: row.comparison_row_id,
@@ -167,17 +230,19 @@ function cell(row: ComparisonCellRowDb, adjustments: readonly ComparisonAdjustme
     adjustments: adjustments.filter((item) => item.comparison_cell_id === row.comparison_cell_id).map(adjustment),
     adjustmentTotal: row.adjustment_total,
     evaluatedAmount: row.evaluated_amount,
+    confirmedBasis: basis === undefined ? null : confirmedBasis(basis),
   };
 }
 
 async function detail(handle: ProcurementComparisonPersistenceHandle, header: ComparisonHeaderRow): Promise<BidComparisonDetail> {
-  const [bidderRows, rowRows, cellRows, adjustmentRows] = await Promise.all([
+  const [bidderRows, rowRows, cellRows, adjustmentRows, confirmedRows] = await Promise.all([
     handle.bidders(header.comparison_id),
     handle.rows(header.comparison_id),
     handle.cells(header.comparison_id),
     handle.adjustments(header.comparison_id),
+    handle.confirmedBasis(header.comparison_id),
   ]);
-  const mappedCells = cellRows.map((item) => cell(item, adjustmentRows));
+  const mappedCells = cellRows.map((item) => cell(item, adjustmentRows, confirmedRows));
   const rows: readonly ComparisonRow[] = rowRows.map((item: ComparisonRowDb) => ({
     comparisonRowId: item.comparison_row_id,
     rowNo: item.row_no,
@@ -190,6 +255,7 @@ async function detail(handle: ProcurementComparisonPersistenceHandle, header: Co
   }));
   return {
     comparisonId: header.comparison_id,
+    comparisonNumber: header.comparison_number,
     rfqIssueId: header.rfq_issue_id,
     rfqNumber: header.rfq_number,
     rfqTitle: header.rfq_title,
@@ -234,6 +300,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       return use(context, 'procurement.comparison.list.v1', false, async (handle) => ({
         comparisons: (await handle.list()).map((row) => ({
           comparisonId: row.comparison_id,
+          comparisonNumber: row.comparison_number,
           rfqIssueId: row.rfq_issue_id,
           rfqNumber: row.rfq_number,
           rfqTitle: row.rfq_title,
@@ -328,6 +395,47 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       const reason = requiredText(request.reason, 'reason', 4000);
       return use(context, 'procurement.comparison.adjustment.add.v1', true, async (handle) => {
         await handle.addAdjustment({ comparisonId: id, comparisonCellId, adjustmentType: request.adjustmentType, adjustmentAmount, reason, actorId: context.principalId });
+        return { comparison: await readRequired(handle, id) };
+      });
+    },
+
+    async confirmBasis(context: GovernedProcurementComparisonRequestContext, comparisonId: string, rowId: string, bidderId: string, request: ConfirmComparisonBasisRequest): Promise<BidComparisonDetailResponse> {
+      const id = requireUuid(comparisonId, 'comparisonId');
+      const comparisonRowId = requireUuid(rowId, 'comparisonRowId');
+      const comparisonBidderId = requireUuid(bidderId, 'comparisonBidderId');
+      if (!confirmationKinds.has(request.confirmationKind)) throw new Error('confirmationKind is invalid');
+      const sourceQuotationRevisionId = request.sourceQuotationRevisionId === undefined ? null : requireUuid(request.sourceQuotationRevisionId, 'sourceQuotationRevisionId');
+      if (request.confirmationKind === 'QUOTATION_REVISION' && sourceQuotationRevisionId === null) throw new Error('QUOTATION_REVISION confirmation requires sourceQuotationRevisionId');
+      const sourceConfirmationRefs = boundedRefs(request.sourceConfirmationRefs, 'sourceConfirmationRefs');
+      if (request.confirmationKind !== 'QUOTATION_REVISION' && sourceConfirmationRefs.length < 1) throw new Error('non-quotation confirmation requires sourceConfirmationRefs');
+      const confirmedDescription = requiredText(request.confirmedDescription, 'confirmedDescription', 2000);
+      const confirmedQuantity = optionalDecimal(request.confirmedQuantity, 'confirmedQuantity', true);
+      const confirmedUomCode = optionalText(request.confirmedUomCode, 80);
+      if ((confirmedQuantity === null) !== (confirmedUomCode === null)) throw new Error('confirmedQuantity and confirmedUomCode must be provided together');
+      const confirmedUnitRate = optionalNonNegativeDecimal(request.confirmedUnitRate, 'confirmedUnitRate');
+      const confirmedAmount = requiredNonNegativeDecimal(request.confirmedAmount, 'confirmedAmount');
+      const currency = request.currency.trim().toUpperCase();
+      if (!currencyPattern.test(currency)) throw new Error('currency is invalid');
+      const confirmedTerms = boundedTerms(request.confirmedTerms);
+      const technicalStatusRefs = boundedRefs(request.technicalStatusRefs, 'technicalStatusRefs');
+      return use(context, 'procurement.comparison.basis.confirm.v1', true, async (handle) => {
+        await handle.confirmBasis({
+          comparisonId: id,
+          comparisonRowId,
+          comparisonBidderId,
+          confirmationKind: request.confirmationKind,
+          sourceQuotationRevisionId,
+          sourceConfirmationRefsJson: JSON.stringify(sourceConfirmationRefs),
+          confirmedDescription,
+          confirmedQuantity,
+          confirmedUomCode,
+          confirmedUnitRate,
+          confirmedAmount,
+          currency,
+          confirmedTermsJson: JSON.stringify(confirmedTerms),
+          technicalStatusRefsJson: JSON.stringify(technicalStatusRefs),
+          actorId: context.principalId,
+        });
         return { comparison: await readRequired(handle, id) };
       });
     },
