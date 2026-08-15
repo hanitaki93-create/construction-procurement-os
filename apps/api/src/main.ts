@@ -19,10 +19,20 @@ import {
   createGovernedProcurementComparisonService,
   type GovernedProcurementComparisonService,
 } from '@cpos/platform-application/procurement-comparison';
+import {
+  createGovernedProcurementDecisionService,
+  type GovernedProcurementDecisionService,
+} from '@cpos/platform-application/procurement-decision';
+import {
+  createGovernedProcurementDecisionDraftService,
+  type GovernedProcurementDecisionDraftService,
+} from '@cpos/platform-application/procurement-decision-draft';
 
 import { buildApi } from './app.js';
 import { createDevelopmentPlatformWorkspaceService } from './development-platform.js';
 import { registerProcurementComparisonRoutes } from './procurement-comparison-routes.js';
+import { registerProcurementDecisionDraftRoutes } from './procurement-decision-draft-routes.js';
+import { registerProcurementDecisionRoutes } from './procurement-decision-routes.js';
 import { registerProcurementResponseRoutes } from './procurement-response-routes.js';
 import { registerProcurementSourcingRoutes } from './procurement-sourcing-routes.js';
 
@@ -47,6 +57,8 @@ let procurementService: GovernedProcurementService | undefined;
 let procurementSourcingService: GovernedProcurementSourcingService | undefined;
 let procurementResponseService: GovernedProcurementResponseService | undefined;
 let procurementComparisonService: GovernedProcurementComparisonService | undefined;
+let procurementDecisionService: GovernedProcurementDecisionService | undefined;
+let procurementDecisionDraftService: GovernedProcurementDecisionDraftService | undefined;
 
 if (productDemoEnabled) {
   platformWorkspaceService = createDevelopmentPlatformWorkspaceService();
@@ -64,6 +76,11 @@ if (productDemoEnabled) {
   procurementSourcingService = createGovernedProcurementSourcingService(databaseRuntime);
   procurementResponseService = createGovernedProcurementResponseService(databaseRuntime);
   procurementComparisonService = createGovernedProcurementComparisonService(databaseRuntime);
+  procurementDecisionService = createGovernedProcurementDecisionService(databaseRuntime);
+  procurementDecisionDraftService = createGovernedProcurementDecisionDraftService(
+    databaseRuntime,
+    procurementDecisionService,
+  );
 }
 
 const app = buildApi({
@@ -88,6 +105,18 @@ if (procurementComparisonService !== undefined) {
   registerProcurementComparisonRoutes(app, {
     environment: config.build.environment,
     service: procurementComparisonService,
+  });
+}
+if (procurementDecisionService !== undefined) {
+  registerProcurementDecisionRoutes(app, {
+    environment: config.build.environment,
+    service: procurementDecisionService,
+  });
+}
+if (procurementDecisionDraftService !== undefined) {
+  registerProcurementDecisionDraftRoutes(app, {
+    environment: config.build.environment,
+    service: procurementDecisionDraftService,
   });
 }
 let closing = false;
@@ -128,6 +157,8 @@ try {
     governedSourcingEnabled: procurementSourcingService !== undefined,
     governedSupplierResponsesEnabled: procurementResponseService !== undefined,
     governedBidComparisonEnabled: procurementComparisonService !== undefined,
+    governedProcurementDecisionEnabled: procurementDecisionService !== undefined,
+    governedProcurementDecisionDraftEditingEnabled: procurementDecisionDraftService !== undefined,
   });
 } catch (error: unknown) {
   logger.error('api_start_failed', { error });

@@ -23,6 +23,10 @@
     "./procurement-decision": {
       "types": "./dist/procurement-decision.d.ts",
       "default": "./dist/procurement-decision.js"
+    },
+    "./procurement-decision-draft": {
+      "types": "./dist/procurement-decision-draft.d.ts",
+      "default": "./dist/procurement-decision-draft.js"
     }
   },
   "files": ["dist"],
