@@ -19,6 +19,10 @@
     "./procurement-comparison": {
       "types": "./dist/procurement-comparison.d.ts",
       "default": "./dist/procurement-comparison.js"
+    },
+    "./procurement-decision": {
+      "types": "./dist/procurement-decision.d.ts",
+      "default": "./dist/procurement-decision.js"
     }
   },
   "files": ["dist"],
