@@ -16,6 +16,7 @@ on:
       - 'migrations/sql/000021_v2_session04_comparison_rebase_guards.sql'
       - 'migrations/sql/000022_v2_session04_comparison_invariant_authority_remediation.sql'
       - 'migrations/sql/000023_v2_session04_platform_c2_slot_overlap_repair.sql'
+      - 'migrations/sql/000024_v2_session04_confirmed_basis_numbering.sql'
       - '.github/workflows/v2-session04-product.yml'
   workflow_dispatch:
 
