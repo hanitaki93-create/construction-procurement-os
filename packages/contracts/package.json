@@ -11,6 +11,10 @@
     "./procurement-responses": {
       "types": "./dist/procurement-responses.d.ts",
       "default": "./dist/procurement-responses.js"
+    },
+    "./procurement-comparison": {
+      "types": "./dist/procurement-comparison.d.ts",
+      "default": "./dist/procurement-comparison.js"
     }
   },
   "files": [
