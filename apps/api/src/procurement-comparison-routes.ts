@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type {
   AddComparisonAdjustmentRequest,
   AddComparisonRowRequest,
+  ConfirmComparisonBasisRequest,
   CreateBidComparisonRequest,
   UpsertComparisonCellRequest,
 } from '@cpos/contracts/procurement-comparison';
@@ -42,8 +43,8 @@ function statusFor(error: unknown): 400 | 401 | 403 | 404 | 409 | 500 {
   if (message.includes('authentication identity')) return 401;
   if (message.includes('not authorized') || message.includes('permission denied') || message.includes('row-level security')) return 403;
   if (message.includes('not visible in this tenant')) return 404;
-  if (message.includes('immutable') || message.includes('frozen') || message.includes('cannot select') || message.includes('cannot be selected') || message.includes('unique constraint') || message.includes('rebase')) return 409;
-  if (message.includes('invalid') || message.includes('must contain') || message.includes('must belong') || message.includes('requires') || message.includes('does not exist') || message.includes('cannot bind')) return 400;
+  if (message.includes('immutable') || message.includes('frozen') || message.includes('cannot select') || message.includes('cannot be selected') || message.includes('unique constraint') || message.includes('rebase') || message.includes('supersede')) return 409;
+  if (message.includes('invalid') || message.includes('must contain') || message.includes('must belong') || message.includes('requires') || message.includes('required') || message.includes('does not exist') || message.includes('cannot bind') || message.includes('must be provided')) return 400;
   return 500;
 }
 
@@ -142,6 +143,37 @@ export function registerProcurementComparisonRoutes(
       const status = statusFor(error);
       if (status === 500) throw error;
       return reply.status(status).send({ code: 'COMPARISON_ADJUSTMENT_REJECTED', requestId: request.id });
+    }
+  });
+
+  app.post('/procurement/comparisons/:comparisonId/rows/:rowId/bidders/:bidderId/confirmed-basis', async (request, reply) => {
+    const context = await contextOr401(request, reply);
+    if (context === undefined) return reply;
+    const params = request.params as { readonly comparisonId?: unknown; readonly rowId?: unknown; readonly bidderId?: unknown };
+    if (
+      typeof params.comparisonId !== 'string' ||
+      typeof params.rowId !== 'string' ||
+      typeof params.bidderId !== 'string' ||
+      !isObject(request.body) ||
+      typeof request.body['confirmationKind'] !== 'string' ||
+      typeof request.body['confirmedDescription'] !== 'string' ||
+      typeof request.body['confirmedAmount'] !== 'string' ||
+      typeof request.body['currency'] !== 'string'
+    ) {
+      return reply.status(400).send({ code: 'INVALID_COMPARISON_CONFIRMED_BASIS_REQUEST' });
+    }
+    try {
+      return reply.status(201).send(await options.service.confirmBasis(
+        context,
+        params.comparisonId,
+        params.rowId,
+        params.bidderId,
+        request.body as unknown as ConfirmComparisonBasisRequest,
+      ));
+    } catch (error: unknown) {
+      const status = statusFor(error);
+      if (status === 500) throw error;
+      return reply.status(status).send({ code: 'COMPARISON_CONFIRMED_BASIS_REJECTED', requestId: request.id });
     }
   });
 
