@@ -230,7 +230,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
   }
 
   return Object.freeze({
-    async list(context): Promise<BidComparisonRegisterResponse> {
+    async list(context: GovernedProcurementComparisonRequestContext): Promise<BidComparisonRegisterResponse> {
       return use(context, 'procurement.comparison.list.v1', false, async (handle) => ({
         comparisons: (await handle.list()).map((row) => ({
           comparisonId: row.comparison_id,
@@ -251,7 +251,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       }));
     },
 
-    async create(context, request): Promise<CreateBidComparisonResponse> {
+    async create(context: GovernedProcurementComparisonRequestContext, request: CreateBidComparisonRequest): Promise<CreateBidComparisonResponse> {
       const rfqIssueId = requireUuid(request.rfqIssueId, 'rfqIssueId');
       const title = requiredText(request.title, 'title', 240);
       const baseCurrency = request.baseCurrency.trim().toUpperCase();
@@ -274,7 +274,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       });
     },
 
-    async read(context, comparisonId): Promise<BidComparisonDetailResponse | undefined> {
+    async read(context: GovernedProcurementComparisonRequestContext, comparisonId: string): Promise<BidComparisonDetailResponse | undefined> {
       const id = requireUuid(comparisonId, 'comparisonId');
       return use(context, 'procurement.comparison.read.v1', false, async (handle) => {
         const header = await handle.header(id);
@@ -282,7 +282,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       });
     },
 
-    async addRow(context, comparisonId, request): Promise<BidComparisonDetailResponse> {
+    async addRow(context: GovernedProcurementComparisonRequestContext, comparisonId: string, request: AddComparisonRowRequest): Promise<BidComparisonDetailResponse> {
       const id = requireUuid(comparisonId, 'comparisonId');
       const description = requiredText(request.description, 'description', 2000);
       const rowKind = request.rowKind;
@@ -298,7 +298,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       });
     },
 
-    async upsertCell(context, comparisonId, rowId, bidderId, request): Promise<BidComparisonDetailResponse> {
+    async upsertCell(context: GovernedProcurementComparisonRequestContext, comparisonId: string, rowId: string, bidderId: string, request: UpsertComparisonCellRequest): Promise<BidComparisonDetailResponse> {
       const id = requireUuid(comparisonId, 'comparisonId');
       const comparisonRowId = requireUuid(rowId, 'comparisonRowId');
       const comparisonBidderId = requireUuid(bidderId, 'comparisonBidderId');
@@ -319,7 +319,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       });
     },
 
-    async addAdjustment(context, comparisonId, cellId, request): Promise<BidComparisonDetailResponse> {
+    async addAdjustment(context: GovernedProcurementComparisonRequestContext, comparisonId: string, cellId: string, request: AddComparisonAdjustmentRequest): Promise<BidComparisonDetailResponse> {
       const id = requireUuid(comparisonId, 'comparisonId');
       const comparisonCellId = requireUuid(cellId, 'comparisonCellId');
       if (!adjustmentTypes.has(request.adjustmentType)) throw new Error('adjustmentType is invalid');
@@ -332,7 +332,7 @@ export function createGovernedProcurementComparisonService(database: DatabaseRun
       });
     },
 
-    async freeze(context, comparisonId): Promise<FreezeBidComparisonResponse> {
+    async freeze(context: GovernedProcurementComparisonRequestContext, comparisonId: string): Promise<FreezeBidComparisonResponse> {
       const id = requireUuid(comparisonId, 'comparisonId');
       return use(context, 'procurement.comparison.freeze.v1', true, async (handle) => {
         const comparisonSnapshotId = await handle.freeze(id);
