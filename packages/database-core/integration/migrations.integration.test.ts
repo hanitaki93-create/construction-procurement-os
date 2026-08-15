@@ -137,6 +137,7 @@ describe('SQL-first migration runner', () => {
       '000022',
       '000023',
       '000024',
+      '000025',
     ];
     const first = await runMigrations(pool, {
       directory,
@@ -174,6 +175,55 @@ describe('SQL-first migration runner', () => {
         AND c.relkind = 'r'
     `);
     expect(confirmedBasisTables.rows[0]?.count).toBe('2');
+
+    const r07Authority = await pool.query<{
+      readonly approval_policy_count: string;
+      readonly decision_table_count: string;
+      readonly runtime_direct_dml_count: string;
+    }>(`
+      SELECT
+        (SELECT count(*)::text
+         FROM platform.approval_policy_version
+         WHERE policy_key = 'UAE_CONTRACTOR_PROCUREMENT_DOA_STARTER'
+           AND version = 1
+           AND subject_type = 'PROCUREMENT_RECOMMENDATION') AS approval_policy_count,
+        (SELECT count(*)::text
+         FROM pg_class c
+         JOIN pg_namespace n ON n.oid = c.relnamespace
+         WHERE (n.nspname, c.relname) IN (
+           ('platform', 'approval_case'),
+           ('platform', 'approval_action_occurrence'),
+           ('procurement', 'award_recommendation'),
+           ('procurement', 'award_recommendation_selection'),
+           ('procurement', 'award_recommendation_route_basis'),
+           ('procurement', 'award_decision'),
+           ('procurement', 'award_decision_supplier_basis'),
+           ('procurement', 'award_decision_route_basis'),
+           ('procurement', 'award_decision_condition'),
+           ('procurement', 'award_condition_satisfaction_occurrence')
+         ) AND c.relkind = 'r') AS decision_table_count,
+        (SELECT count(*)::text
+         FROM (VALUES
+           ('platform.approval_case'),
+           ('platform.approval_action_occurrence'),
+           ('procurement.award_recommendation'),
+           ('procurement.award_recommendation_selection'),
+           ('procurement.award_recommendation_route_basis'),
+           ('procurement.award_decision'),
+           ('procurement.award_decision_supplier_basis'),
+           ('procurement.award_decision_route_basis'),
+           ('procurement.award_decision_condition'),
+           ('procurement.award_condition_satisfaction_occurrence')
+         ) AS guarded(table_name)
+         WHERE has_table_privilege('cpos_platform_runtime', guarded.table_name, 'INSERT')
+            OR has_table_privilege('cpos_platform_runtime', guarded.table_name, 'UPDATE')
+            OR has_table_privilege('cpos_platform_runtime', guarded.table_name, 'DELETE')) AS runtime_direct_dml_count
+    `);
+    expect(r07Authority.rows[0]).toEqual({
+      approval_policy_count: '1',
+      decision_table_count: '10',
+      runtime_direct_dml_count: '0',
+    });
 
     await dropSchema(pool, schema);
     const second = await runMigrations(pool, {
