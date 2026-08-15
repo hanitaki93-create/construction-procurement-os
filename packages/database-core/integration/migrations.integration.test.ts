@@ -136,6 +136,7 @@ describe('SQL-first migration runner', () => {
       '000021',
       '000022',
       '000023',
+      '000024',
     ];
     const first = await runMigrations(pool, {
       directory,
@@ -163,6 +164,16 @@ describe('SQL-first migration runner', () => {
     expect(slotOverlapConstraint.rows[0]?.definition).toContain('EXCLUDE USING gist');
     expect(slotOverlapConstraint.rows[0]?.definition).toContain('effective_period WITH &&');
     expect(slotOverlapConstraint.rows[0]?.definition).toContain('superseded_at IS NULL');
+
+    const confirmedBasisTables = await pool.query<{ readonly count: string }>(`
+      SELECT count(*)::text AS count
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'procurement'
+        AND c.relname IN ('bid_comparison_confirmed_basis', 'bid_comparison_snapshot_confirmed_basis')
+        AND c.relkind = 'r'
+    `);
+    expect(confirmedBasisTables.rows[0]?.count).toBe('2');
 
     await dropSchema(pool, schema);
     const second = await runMigrations(pool, {
