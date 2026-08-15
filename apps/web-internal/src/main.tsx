@@ -22,6 +22,7 @@ import {
 import '@cpos/ui-foundation/styles.css';
 
 import { BidComparisonWorkspace } from './comparison.js';
+import { ProcurementDecisionWorkspace } from './decision.js';
 import { ProcurementWorkspace, type ProcurementPage } from './procurement.js';
 import { SupplierResponseWorkspace } from './responses.js';
 import { SourcingWorkspace, type SourcingPage } from './sourcing.js';
@@ -39,7 +40,7 @@ interface DevelopmentSession {
   readonly principalId: string;
 }
 
-type WorkspacePage = 'overview' | 'projects' | 'responses' | 'comparisons' | ProcurementPage | SourcingPage;
+type WorkspacePage = 'overview' | 'projects' | 'responses' | 'comparisons' | 'decisions' | ProcurementPage | SourcingPage;
 const storageKey = 'cpos.development-session.v1';
 
 function loadStoredSession(): DevelopmentSession | null {
@@ -238,7 +239,7 @@ function Overview({ workspace }: { readonly workspace: PlatformWorkspaceSnapshot
         <article className="metric-card"><span>Projects</span><strong>{workspace.projects.length}</strong><small>Governed project contexts</small></article>
         <article className="metric-card"><span>Company members</span><strong>{workspace.memberships.length}</strong><small>{workspace.currentMembership?.roles.join(', ') || 'No active role'}</small></article>
         <article className="metric-card"><span>Workspace access</span><strong>{workspace.subscription?.lifecycleState ?? 'SETUP'}</strong><small>{workspace.subscription?.accessMode.replaceAll('_', ' ') ?? 'NO SUBSCRIPTION'}</small></article>
-        <article className="metric-card"><span>Product mode</span><strong>V2 LIVE</strong><small>Supplier → MR → Package → RFQ → Quote → Leveling</small></article>
+        <article className="metric-card"><span>Product mode</span><strong>V2 LIVE</strong><small>Supplier → MR → Package → RFQ → Quote → Leveling → Recommendation → Approval → Award</small></article>
       </div>
       <div className="content-grid">
         <section className="panel">
@@ -249,6 +250,7 @@ function Overview({ workspace }: { readonly workspace: PlatformWorkspaceSnapshot
             <div><strong>Packages & RFQs / Tenders</strong><span>Governed source-line packaging, bidder selection, commercial return basis and live sourcing registers.</span></div>
             <div><strong>Supplier responses</strong><span>Immutable RFQ issue basis, intent/no-bid, buyer capture and append-only quotation revisions.</span></div>
             <div><strong>Bid comparison / leveling</strong><span>Side-by-side source truth, explicit gaps, buyer normalization, adjustments and an immutable frozen comparison basis.</span></div>
+            <div><strong>Recommendation / approval / award</strong><span>Versioned commercial recommendation, supplier-confirmed award basis, DOA action history, conditional award gates and a pre-commitment handoff ready for the next LPO / PO workflow.</span></div>
           </div>
         </section>
         <section className="panel subscription-panel">
@@ -275,8 +277,8 @@ function Workspace({
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(workspace.projects[0]?.projectId ?? null);
 
   const labels = locale === 'ar'
-    ? { overview: 'نظرة عامة', projects: 'المشاريع', suppliers: 'الموردون', requisitions: 'طلبات الشراء', packages: 'حزم المشتريات', rfqs: 'طلبات الأسعار / المناقصات', responses: 'ردود الموردين / العروض', comparisons: 'مقارنة العروض', approvals: 'الموافقات', reports: 'التقارير', change: 'تغيير الجلسة' }
-    : { overview: 'Overview', projects: 'Projects', suppliers: 'Suppliers', requisitions: 'Requisitions', packages: 'Packages', rfqs: 'RFQs / Tenders', responses: 'Supplier Responses / Quotes', comparisons: 'Bid Comparison / Leveling', approvals: 'Approvals', reports: 'Reports', change: 'Change session' };
+    ? { overview: 'نظرة عامة', projects: 'المشاريع', suppliers: 'الموردون', requisitions: 'طلبات الشراء', packages: 'حزم المشتريات', rfqs: 'طلبات الأسعار / المناقصات', responses: 'ردود الموردين / العروض', comparisons: 'مقارنة العروض', approvals: 'التوصية / الموافقة / الترسية', reports: 'التقارير', change: 'تغيير الجلسة' }
+    : { overview: 'Overview', projects: 'Projects', suppliers: 'Suppliers', requisitions: 'Requisitions', packages: 'Packages', rfqs: 'RFQs / Tenders', responses: 'Supplier Responses / Quotes', comparisons: 'Bid Comparison / Leveling', approvals: 'Recommendation / Approval / Award', reports: 'Reports', change: 'Change session' };
 
   const navigation: readonly { readonly page?: WorkspacePage; readonly label: string; readonly badge: string; readonly disabled?: boolean }[] = [
     { page: 'overview', label: labels.overview, badge: 'HOME' },
@@ -287,7 +289,7 @@ function Workspace({
     { page: 'rfqs', label: labels.rfqs, badge: 'LIVE' },
     { page: 'responses', label: labels.responses, badge: 'LIVE' },
     { page: 'comparisons', label: labels.comparisons, badge: 'LIVE' },
-    { label: labels.approvals, badge: 'NEXT', disabled: true },
+    { page: 'decisions', label: labels.approvals, badge: 'LIVE' },
     { label: labels.reports, badge: 'NEXT', disabled: true },
   ];
 
@@ -303,9 +305,11 @@ function Workspace({
             ? labels.responses
             : page === 'comparisons'
               ? labels.comparisons
-              : page === 'projects'
-                ? labels.projects
-                : 'Workspace';
+              : page === 'decisions'
+                ? labels.approvals
+                : page === 'projects'
+                  ? labels.projects
+                  : 'Workspace';
 
   return (
     <div className="dashboard-layout">
@@ -329,6 +333,7 @@ function Workspace({
         {page === 'packages' || page === 'rfqs' ? <SourcingWorkspace page={page} session={session} locale={locale} projects={workspace.projects} /> : null}
         {page === 'responses' ? <SupplierResponseWorkspace session={session} locale={locale} /> : null}
         {page === 'comparisons' ? <BidComparisonWorkspace session={session} locale={locale} /> : null}
+        {page === 'decisions' ? <ProcurementDecisionWorkspace session={session} locale={locale} /> : null}
       </section>
     </div>
   );
