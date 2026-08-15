@@ -22,6 +22,7 @@ import type {
 } from '@cpos/contracts/procurement-responses';
 import type { SupportedLocale } from '@cpos/ui-foundation';
 
+import { ConfirmedBasisEditor } from './comparison-confirmed-basis.js';
 import './comparison.css';
 
 interface Session {
@@ -213,6 +214,7 @@ function CellEditor({
         {comparison.state === 'DRAFT' && existing ? <><div className="level-mini-grid"><input placeholder="± amount" value={adjustmentAmount} onChange={(event) => setAdjustmentAmount(event.target.value)} /><input placeholder="Reason" value={adjustmentReason} onChange={(event) => setAdjustmentReason(event.target.value)} /></div><button className="secondary-button secondary-button--compact" type="button" disabled={!adjustmentAmount || !adjustmentReason || adjust.isPending} onClick={() => adjust.mutate()}>Add adjustment</button></> : null}
         <strong className="evaluated-total">Evaluated: {money(existing?.evaluatedAmount ?? null, comparison.baseCurrency)}</strong>
       </div>
+      <ConfirmedBasisEditor session={session} comparison={comparison} row={row} bidder={bidder} cell={existing} source={selectedSource} />
       {save.isError ? <small className="form-error">{save.error.message}</small> : null}
       {adjust.isError ? <small className="form-error">{adjust.error.message}</small> : null}
     </div>
@@ -252,8 +254,8 @@ function ComparisonDetail({ session, comparisonId, onBack }: { readonly session:
 
   return (
     <section className="comparison-detail">
-      <div className="comparison-toolbar"><button className="secondary-button secondary-button--compact" type="button" onClick={onBack}>← Register</button><div><span className="status-pill">{comparison.state}</span>{comparison.snapshotId ? <span className="mono comparison-snapshot">Snapshot {comparison.snapshotId.slice(0, 8)}…</span> : null}</div></div>
-      <div className="panel comparison-heading"><div><p className="panel-kicker">{comparison.rfqNumber}</p><h3>{comparison.title}</h3><p>{comparison.rfqTitle} · Base currency {comparison.baseCurrency} · {comparison.bidders.length} bids · {comparison.rows.length} rows</p></div><div className="comparison-readiness"><strong>{actualCells}/{expectedCells}</strong><span>explicit coverage cells</span>{comparison.state === 'DRAFT' ? <button className="primary-button primary-button--compact" type="button" disabled={actualCells !== expectedCells || freeze.isPending} onClick={() => freeze.mutate()}>{freeze.isPending ? 'Freezing…' : 'Freeze comparison'}</button> : <span className="status-pill status-pill--good">Frozen basis</span>}</div></div>
+      <div className="comparison-toolbar"><button className="secondary-button secondary-button--compact" type="button" onClick={onBack}>← Register</button><div><span className="status-pill">{comparison.state}</span>{comparison.comparisonNumber ? <span className="mono comparison-snapshot">{comparison.comparisonNumber}</span> : null}{comparison.snapshotId ? <span className="mono comparison-snapshot">Snapshot {comparison.snapshotId.slice(0, 8)}…</span> : null}</div></div>
+      <div className="panel comparison-heading"><div><p className="panel-kicker">{comparison.comparisonNumber ?? comparison.rfqNumber}</p><h3>{comparison.title}</h3><p>{comparison.rfqTitle} · Base currency {comparison.baseCurrency} · {comparison.bidders.length} bids · {comparison.rows.length} rows</p></div><div className="comparison-readiness"><strong>{actualCells}/{expectedCells}</strong><span>explicit coverage cells</span>{comparison.state === 'DRAFT' ? <button className="primary-button primary-button--compact" type="button" disabled={actualCells !== expectedCells || freeze.isPending} onClick={() => freeze.mutate()}>{freeze.isPending ? 'Freezing…' : 'Freeze comparison'}</button> : <span className="status-pill status-pill--good">Frozen basis</span>}</div></div>
       {freeze.isError ? <p className="form-error">{freeze.error.message}</p> : null}
       {comparison.state === 'DRAFT' ? <form className="supplier-added-row" onSubmit={(event) => { event.preventDefault(); addRow.mutate(); }}><input value={supplierRowDescription} onChange={(event) => setSupplierRowDescription(event.target.value)} placeholder="Add supplier-added comparison row (freight, alternate, exclusion…)" required /><button className="secondary-button" type="submit" disabled={addRow.isPending}>+ Add row</button></form> : null}
       <div className="level-matrix-wrap">
@@ -275,14 +277,14 @@ export function BidComparisonWorkspace({ session, locale: _locale }: { readonly 
   if (selectedId) return <ComparisonDetail session={session} comparisonId={selectedId} onBack={() => setSelectedId(null)} />;
   return (
     <section className="comparison-register">
-      <div className="panel-heading comparison-register-heading"><div><p className="panel-kicker">Commercial evaluation</p><h3>Bid Comparison / Leveling</h3><p>Compare immutable supplier quotations without rewriting supplier source truth. Missing scope stays visible; normalization and buyer adjustments are separate layers.</p></div><button className="primary-button primary-button--compact" type="button" onClick={() => setCreating((value) => !value)}>{creating ? 'Close' : '+ New comparison'}</button></div>
+      <div className="panel-heading comparison-register-heading"><div><p className="panel-kicker">Commercial evaluation</p><h3>Bid Comparison / Leveling</h3><p>Compare immutable supplier quotations without rewriting supplier source truth. Missing scope stays visible; normalization, buyer adjustments and supplier-confirmed contractable basis remain separate layers.</p></div><button className="primary-button primary-button--compact" type="button" onClick={() => setCreating((value) => !value)}>{creating ? 'Close' : '+ New comparison'}</button></div>
       {creating && responses.data ? <ComparisonCreate session={session} responses={responses.data.responses} onCreated={(id) => { setCreating(false); setSelectedId(id); }} /> : null}
       {register.isPending ? <div className="panel"><p>Loading comparisons…</p></div> : null}
       {register.isError ? <div className="panel"><p className="form-error">{register.error.message}</p></div> : null}
       <div className="comparison-card-grid">
         {register.data?.comparisons.map((item) => {
           const expected = item.bidderCount * item.rowCount;
-          return <button className="comparison-card" type="button" key={item.comparisonId} onClick={() => setSelectedId(item.comparisonId)}><div><span className="status-pill">{item.state}</span><small>{item.rfqNumber}</small></div><strong>{item.title}</strong><span>{item.rfqTitle}</span><dl><div><dt>Bids</dt><dd>{item.bidderCount}</dd></div><div><dt>Rows</dt><dd>{item.rowCount}</dd></div><div><dt>Coverage</dt><dd>{item.explicitCellCount}/{expected}</dd></div><div><dt>Missing</dt><dd>{item.missingCellCount}</dd></div></dl></button>;
+          return <button className="comparison-card" type="button" key={item.comparisonId} onClick={() => setSelectedId(item.comparisonId)}><div><span className="status-pill">{item.state}</span><small>{item.comparisonNumber ?? item.rfqNumber}</small></div><strong>{item.title}</strong><span>{item.rfqTitle}</span><dl><div><dt>Bids</dt><dd>{item.bidderCount}</dd></div><div><dt>Rows</dt><dd>{item.rowCount}</dd></div><div><dt>Coverage</dt><dd>{item.explicitCellCount}/{expected}</dd></div><div><dt>Missing</dt><dd>{item.missingCellCount}</dd></div></dl></button>;
         })}
         {register.data?.comparisons.length === 0 ? <div className="panel comparison-empty"><strong>No comparison yet.</strong><span>Create one from an issued RFQ with supplier quotation revisions.</span></div> : null}
       </div>
