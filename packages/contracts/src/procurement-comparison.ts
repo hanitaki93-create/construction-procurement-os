@@ -15,6 +15,11 @@ export type ComparisonAdjustmentType =
   | 'EXCLUSION'
   | 'PLUG'
   | 'COMMERCIAL_NORMALIZATION';
+export type ComparisonConfirmationKind =
+  | 'QUOTATION_REVISION'
+  | 'CLARIFICATION_CONFIRMATION'
+  | 'NEGOTIATED_BAFO'
+  | 'WRITTEN_CONFIRMATION';
 
 export interface CreateBidComparisonBidderRequest {
   readonly rfqIssueBidderId: string;
@@ -56,6 +61,20 @@ export interface AddComparisonAdjustmentRequest {
   readonly reason: string;
 }
 
+export interface ConfirmComparisonBasisRequest {
+  readonly confirmationKind: ComparisonConfirmationKind;
+  readonly sourceQuotationRevisionId?: string;
+  readonly sourceConfirmationRefs?: readonly string[];
+  readonly confirmedDescription: string;
+  readonly confirmedQuantity?: string;
+  readonly confirmedUomCode?: string;
+  readonly confirmedUnitRate?: string;
+  readonly confirmedAmount: string;
+  readonly currency: string;
+  readonly confirmedTerms?: Readonly<Record<string, string>>;
+  readonly technicalStatusRefs?: readonly string[];
+}
+
 export interface ComparisonSourceLine {
   readonly quotationLineId: string;
   readonly supplierLineNo: string | null;
@@ -83,6 +102,27 @@ export interface ComparisonAdjustment {
   readonly recordedAt: string;
 }
 
+export interface ComparisonConfirmedBasis {
+  readonly confirmedBasisId: string;
+  readonly comparisonRowId: string;
+  readonly comparisonBidderId: string;
+  readonly basisVersion: number;
+  readonly supersedesConfirmedBasisId: string | null;
+  readonly confirmationKind: ComparisonConfirmationKind;
+  readonly sourceQuotationRevisionId: string | null;
+  readonly sourceConfirmationRefs: readonly string[];
+  readonly confirmedDescription: string;
+  readonly confirmedQuantity: string | null;
+  readonly confirmedUomCode: string | null;
+  readonly confirmedUnitRate: string | null;
+  readonly confirmedAmount: string;
+  readonly currency: string;
+  readonly confirmedTerms: Readonly<Record<string, string>>;
+  readonly technicalStatusRefs: readonly string[];
+  readonly recordedBy: string;
+  readonly recordedAt: string;
+}
+
 export interface ComparisonCell {
   readonly comparisonCellId: string;
   readonly comparisonRowId: string;
@@ -101,6 +141,7 @@ export interface ComparisonCell {
   readonly adjustments: readonly ComparisonAdjustment[];
   readonly adjustmentTotal: string;
   readonly evaluatedAmount: string | null;
+  readonly confirmedBasis: ComparisonConfirmedBasis | null;
 }
 
 export interface ComparisonRow {
@@ -135,6 +176,7 @@ export interface ComparisonBidder {
 
 export interface BidComparisonDetail {
   readonly comparisonId: string;
+  readonly comparisonNumber: string | null;
   readonly rfqIssueId: string;
   readonly rfqNumber: string;
   readonly rfqTitle: string;
@@ -155,6 +197,7 @@ export interface BidComparisonDetail {
 
 export interface BidComparisonRegisterRow {
   readonly comparisonId: string;
+  readonly comparisonNumber: string | null;
   readonly rfqIssueId: string;
   readonly rfqNumber: string;
   readonly rfqTitle: string;
