@@ -135,6 +135,7 @@ describe('SQL-first migration runner', () => {
       '000020',
       '000021',
       '000022',
+      '000023',
     ];
     const first = await runMigrations(pool, {
       directory,
@@ -142,6 +143,27 @@ describe('SQL-first migration runner', () => {
       buildId: 'rebuild-one',
     });
     expect(first.newlyApplied.map((entry) => entry.id)).toEqual(expected);
+
+    const slotOverlapConstraint = await pool.query<{
+      contype: string;
+      convalidated: boolean;
+      definition: string;
+    }>(`
+      SELECT
+        contype,
+        convalidated,
+        pg_get_constraintdef(oid) AS definition
+      FROM pg_constraint
+      WHERE conrelid = 'platform.tenant_subscription_item_version'::regclass
+        AND conname = 'tenant_subscription_item_version_current_slot_overlap_excl'
+    `);
+    expect(slotOverlapConstraint.rows).toHaveLength(1);
+    expect(slotOverlapConstraint.rows[0]?.contype).toBe('x');
+    expect(slotOverlapConstraint.rows[0]?.convalidated).toBe(true);
+    expect(slotOverlapConstraint.rows[0]?.definition).toContain('EXCLUDE USING gist');
+    expect(slotOverlapConstraint.rows[0]?.definition).toContain('effective_period WITH &&');
+    expect(slotOverlapConstraint.rows[0]?.definition).toContain('superseded_at IS NULL');
+
     await dropSchema(pool, schema);
     const second = await runMigrations(pool, {
       directory,
