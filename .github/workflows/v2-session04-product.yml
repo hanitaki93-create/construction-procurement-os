@@ -14,6 +14,7 @@ on:
       - 'migrations/sql/000019_v2_session04_bid_comparison.sql'
       - 'migrations/sql/000020_v2_session04_comparison_row_uniqueness.sql'
       - 'migrations/sql/000021_v2_session04_comparison_rebase_guards.sql'
+      - 'migrations/sql/000022_v2_session04_comparison_invariant_authority_remediation.sql'
       - '.github/workflows/v2-session04-product.yml'
   workflow_dispatch:
 
