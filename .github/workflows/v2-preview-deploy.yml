@@ -86,6 +86,7 @@ jobs:
           docker run --rm \
             --network "$NETWORK" \
             -e DATABASE_URL="$DATABASE_URL" \
+            -e MIGRATIONS_DIR=/app/migrations/sql \
             -e BUILD_ID="v2-preview-${GITHUB_SHA}" \
             "$IMAGE" \
             pnpm --filter @cpos/database-core db migrate
