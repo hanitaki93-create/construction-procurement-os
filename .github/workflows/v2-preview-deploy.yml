@@ -91,9 +91,15 @@ jobs:
             "$IMAGE" \
             pnpm --filter @cpos/database-core db migrate
 
-          docker exec -i cpos-v2-preview-db \
+          # The immutable issue guard requires the source RFQ to still be issuable.
+          # Seed the source as READY, insert its issue snapshot, then mark the source ISSUED.
+          sed "0,/^  'ISSUED',$/s//  'READY',/" deploy/v2-preview/seed.sql \
+            | docker exec -i cpos-v2-preview-db \
+                psql -v ON_ERROR_STOP=1 -U postgres -d cpos
+
+          docker exec cpos-v2-preview-db \
             psql -v ON_ERROR_STOP=1 -U postgres -d cpos \
-            < deploy/v2-preview/seed.sql
+            -c "UPDATE procurement.rfq_tender SET status='ISSUED', issue_at='2026-08-10T08:00:00Z' WHERE tenant_id='019f1500-0000-7000-8000-000000000001' AND rfq_id='019f1500-0000-7000-8000-000000000013';"
 
       - name: Hostile-smoke V2 candidate
         shell: bash
