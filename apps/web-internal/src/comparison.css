@@ -237,7 +237,8 @@
 
 .level-source,
 .level-normalized,
-.level-adjustments {
+.level-adjustments,
+.level-confirmed {
   display: grid;
   gap: .4rem;
   padding: .6rem;
@@ -247,6 +248,7 @@
 .level-source { background: #f8fafc; }
 .level-normalized { background: #f9fafb; border: 1px dashed #d0d5dd; }
 .level-adjustments { background: #fcfcfd; border-top: 1px solid #eaecf0; }
+.level-confirmed { background: #f6fef9; border: 1px solid #abefc6; }
 
 .level-cell--missing .level-source { background: #fff4ed; }
 .level-cell--unresolved .level-source { background: #fffaeb; }
@@ -304,6 +306,30 @@
 .evaluated-total {
   margin-top: .15rem;
   font-size: .82rem;
+}
+
+.confirmed-basis-summary {
+  display: grid;
+  gap: .18rem;
+  padding: .5rem;
+  border-inline-start: 3px solid #17b26a;
+  font-size: .78rem;
+}
+
+.confirmed-basis-summary span,
+.confirmed-basis-summary small,
+.confirmed-basis-warning {
+  color: #475467;
+}
+
+.confirmed-basis-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.confirmed-basis-warning {
+  font-size: .7rem;
 }
 
 .comparison-empty {
