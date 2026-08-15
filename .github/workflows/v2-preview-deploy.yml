@@ -1,0 +1,208 @@
+name: Architecture V2 Pre-LPO Review Preview
+
+on:
+  push:
+    branches:
+      - build/v2-session-04-bid-comparison
+    paths:
+      - 'apps/api/**'
+      - 'apps/web-internal/**'
+      - 'packages/contracts/**'
+      - 'packages/database-core/**'
+      - 'packages/platform-application/**'
+      - 'migrations/sql/**'
+      - 'deploy/v2-preview/**'
+      - '.github/workflows/v2-preview-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architecture-v2-preview-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build V2 preview image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build -f deploy/v2-preview/Dockerfile -t "cpos-v2-preview:${GITHUB_SHA}" .
+
+      - name: Prepare persistent preview PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          NETWORK=cpos-v2-preview-net
+          DB=cpos-v2-preview-db
+          VOLUME=cpos-v2-preview-db-data
+
+          docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK" >/dev/null
+          docker volume inspect "$VOLUME" >/dev/null 2>&1 || docker volume create "$VOLUME" >/dev/null
+
+          if docker container inspect "$DB" >/dev/null 2>&1; then
+            docker start "$DB" >/dev/null 2>&1 || true
+            docker network connect "$NETWORK" "$DB" >/dev/null 2>&1 || true
+          else
+            docker run -d \
+              --name "$DB" \
+              --restart unless-stopped \
+              --network "$NETWORK" \
+              --network-alias "$DB" \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_DB=cpos \
+              -e POSTGRES_HOST_AUTH_METHOD=trust \
+              -v "$VOLUME:/var/lib/postgresql/data" \
+              postgres:18.4-trixie >/dev/null
+          fi
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec "$DB" pg_isready -U postgres -d cpos >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            docker logs "$DB" || true
+            exit 1
+          fi
+
+      - name: Apply Architecture V2 migrations and seed review workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="cpos-v2-preview:${GITHUB_SHA}"
+          NETWORK=cpos-v2-preview-net
+          DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
+
+          docker run --rm \
+            --network "$NETWORK" \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e BUILD_ID="v2-preview-${GITHUB_SHA}" \
+            "$IMAGE" \
+            pnpm --filter @cpos/database-core db migrate
+
+          docker exec -i cpos-v2-preview-db \
+            psql -v ON_ERROR_STOP=1 -U postgres -d cpos \
+            < deploy/v2-preview/seed.sql
+
+      - name: Hostile-smoke V2 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="cpos-v2-preview:${GITHUB_SHA}"
+          NETWORK=cpos-v2-preview-net
+          CANDIDATE=cpos-v2-preview-candidate
+          CANDIDATE_PORT=43121
+          DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
+          TENANT_ID='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
+
+          docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
+          docker run -d \
+            --name "$CANDIDATE" \
+            --network "$NETWORK" \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -p "127.0.0.1:${CANDIDATE_PORT}:43118" \
+            "$IMAGE" >/dev/null
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl -fsS "http://127.0.0.1:${CANDIDATE_PORT}/health/ready" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            docker logs "$CANDIDATE" || true
+            exit 1
+          fi
+
+          SESSION=(
+            -H 'x-cpos-session-mode: development'
+            -H "x-cpos-tenant-id: ${TENANT_ID}"
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}"
+          )
+
+          READY="$(curl -fsS "http://127.0.0.1:${CANDIDATE_PORT}/health/ready")"
+          PLATFORM="$(curl -fsS "${SESSION[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/platform/workspace")"
+          SUPPLIERS="$(curl -fsS "${SESSION[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/procurement/suppliers")"
+          REQUISITIONS="$(curl -fsS "${SESSION[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions")"
+          COMPARISONS="$(curl -fsS "${SESSION[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/procurement/comparisons")"
+          RECOMMENDATIONS="$(curl -fsS "${SESSION[@]}" "http://127.0.0.1:${CANDIDATE_PORT}/procurement/recommendations")"
+
+          grep -Fq 'procurement runtimes are configured' <<<"$READY"
+          grep -Fq 'Ground Tech — Architecture V2 Review' <<<"$PLATFORM"
+          grep -Fq 'GT-DEMO' <<<"$PLATFORM"
+          grep -Fq 'Al Fahad Supply LLC' <<<"$SUPPLIERS"
+          grep -Fq 'MR-V2-001' <<<"$REQUISITIONS"
+          grep -Fq 'Motorized Valve Commercial Leveling' <<<"$COMPARISONS"
+          grep -Fq 'SINGLE_SUPPLIER' <<<"$RECOMMENDATIONS"
+
+          docker rm -f "$CANDIDATE" >/dev/null
+
+      - name: Replace rejected B04-B06 preview with Architecture V2
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="cpos-v2-preview:${GITHUB_SHA}"
+          NETWORK=cpos-v2-preview-net
+          LIVE=cpos-v2-preview
+          PUBLIC_PORT=43120
+          DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
+          TENANT_ID='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
+
+          docker rm -f cpos-b04-b06-preview >/dev/null 2>&1 || true
+          docker rm -f cpos-b02-demo >/dev/null 2>&1 || true
+          docker rm -f "$LIVE" >/dev/null 2>&1 || true
+
+          docker run -d \
+            --name "$LIVE" \
+            --restart unless-stopped \
+            --label cpos.surface=architecture-v2-pre-lpo-review \
+            --label "cpos.commit=${GITHUB_SHA}" \
+            --network "$NETWORK" \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -p "0.0.0.0:${PUBLIC_PORT}:43118" \
+            "$IMAGE" >/dev/null
+
+          SESSION=(
+            -H 'x-cpos-session-mode: development'
+            -H "x-cpos-tenant-id: ${TENANT_ID}"
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}"
+          )
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl -fsS "${SESSION[@]}" "http://127.0.0.1:${PUBLIC_PORT}/procurement/recommendations" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            docker logs "$LIVE" || true
+            exit 1
+          fi
+
+          PUBLIC_IP="$(curl -fsS --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]' || true)"
+          echo "CPOS_V2_PREVIEW_COMMIT=${GITHUB_SHA}"
+          echo "CPOS_V2_PREVIEW_TENANT_ID=${TENANT_ID}"
+          echo "CPOS_V2_PREVIEW_PRINCIPAL_ID=${PRINCIPAL_ID}"
+          echo "CPOS_V2_PREVIEW_LOCAL_URL=http://127.0.0.1:${PUBLIC_PORT}"
+          if [[ -n "$PUBLIC_IP" ]]; then
+            echo "CPOS_V2_PREVIEW_URL=http://${PUBLIC_IP}:${PUBLIC_PORT}"
+          fi
