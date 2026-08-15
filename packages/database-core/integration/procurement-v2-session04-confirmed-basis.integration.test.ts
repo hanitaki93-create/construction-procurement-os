@@ -55,22 +55,32 @@ async function inExecutionContext<Result>(callback: (query: (text: string, value
 }
 
 async function activateTenant(): Promise<void> {
-  await pool.query(
-    `INSERT INTO platform.tenant_subscription (tenant_subscription_id, tenant_id, commercial_channel)
-     VALUES ($1, $2, 'SELF_SERVICE')`,
-    [subscription, tenant],
-  );
-  await pool.query(
-    `INSERT INTO platform.subscription_lifecycle_occurrence (
-       tenant_id, tenant_subscription_id, sequence, occurrence_kind, effective_at, actor_kind
-     ) VALUES ($1, $2, 1, 'ACTIVATED', '2026-01-01', 'SYSTEM')`,
-    [tenant, subscription],
-  );
-  await pool.query(
-    `UPDATE platform.tenant_entitlement_authority_guard
-     SET guard_version = guard_version + 1 WHERE tenant_id = $1`,
-    [tenant],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO platform.tenant_subscription (tenant_subscription_id, tenant_id, commercial_channel)
+       VALUES ($1, $2, 'SELF_SERVICE')`,
+      [subscription, tenant],
+    );
+    await client.query(
+      `INSERT INTO platform.subscription_lifecycle_occurrence (
+         tenant_id, tenant_subscription_id, sequence, occurrence_kind, effective_at, actor_kind
+       ) VALUES ($1, $2, 1, 'ACTIVATED', '2026-01-01', 'SYSTEM')`,
+      [tenant, subscription],
+    );
+    await client.query(
+      `UPDATE platform.tenant_entitlement_authority_guard
+       SET guard_version = guard_version + 1 WHERE tenant_id = $1`,
+      [tenant],
+    );
+    await client.query('COMMIT');
+  } catch (error: unknown) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 beforeAll(async () => {
