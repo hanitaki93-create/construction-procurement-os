@@ -44,26 +44,23 @@ jobs:
           set -euo pipefail
           NETWORK=cpos-v2-preview-net
           DB=cpos-v2-preview-db
-          VOLUME=cpos-v2-preview-db-data
+          VOLUME=cpos-v2-preview-pg18-data
 
           docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK" >/dev/null
+          docker rm -f "$DB" >/dev/null 2>&1 || true
+          docker volume rm cpos-v2-preview-db-data >/dev/null 2>&1 || true
           docker volume inspect "$VOLUME" >/dev/null 2>&1 || docker volume create "$VOLUME" >/dev/null
 
-          if docker container inspect "$DB" >/dev/null 2>&1; then
-            docker start "$DB" >/dev/null 2>&1 || true
-            docker network connect "$NETWORK" "$DB" >/dev/null 2>&1 || true
-          else
-            docker run -d \
-              --name "$DB" \
-              --restart unless-stopped \
-              --network "$NETWORK" \
-              --network-alias "$DB" \
-              -e POSTGRES_USER=postgres \
-              -e POSTGRES_DB=cpos \
-              -e POSTGRES_HOST_AUTH_METHOD=trust \
-              -v "$VOLUME:/var/lib/postgresql/data" \
-              postgres:18.4-trixie >/dev/null
-          fi
+          docker run -d \
+            --name "$DB" \
+            --restart unless-stopped \
+            --network "$NETWORK" \
+            --network-alias "$DB" \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_DB=cpos \
+            -e POSTGRES_HOST_AUTH_METHOD=trust \
+            -v "$VOLUME:/var/lib/postgresql" \
+            postgres:18.4-trixie >/dev/null
 
           ready=false
           for attempt in $(seq 1 60); do
