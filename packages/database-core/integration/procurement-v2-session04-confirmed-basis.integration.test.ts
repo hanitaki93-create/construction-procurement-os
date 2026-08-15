@@ -35,7 +35,7 @@ const comparisonCell = '019e1500-0000-7000-8000-000000000024';
 const basisV1 = '019e1500-0000-7000-8000-000000000025';
 const basisV2 = '019e1500-0000-7000-8000-000000000026';
 
-async function inExecutionContext<Result>(callback: (query: (text: string, values?: readonly unknown[]) => Promise<any>) => Promise<Result>): Promise<Result> {
+async function inExecutionContext<Result>(callback: (query: (text: string, values?: unknown[]) => Promise<any>) => Promise<Result>): Promise<Result> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
