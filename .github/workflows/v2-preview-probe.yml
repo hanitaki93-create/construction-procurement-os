@@ -1,0 +1,36 @@
+name: Architecture V2 Preview Persistence Probe
+
+on:
+  push:
+    branches:
+      - build/v2-session-04-bid-comparison
+    paths:
+      - '.github/workflows/v2-preview-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 5
+    steps:
+      - name: Verify live V2 container and routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          TENANT_ID='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
+          URL='http://127.0.0.1:43120'
+
+          docker ps --filter name=cpos-v2-preview --format 'CONTAINER={{.Names}} STATUS={{.Status}} PORTS={{.Ports}}'
+          docker inspect cpos-v2-preview --format 'RESTART={{.RestartCount}} STATE={{.State.Status}} IMAGE={{.Config.Image}}'
+          curl -fsS "$URL/health/ready"
+          curl -fsS \
+            -H 'x-cpos-session-mode: development' \
+            -H "x-cpos-tenant-id: ${TENANT_ID}" \
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
+            "$URL/procurement/recommendations" | grep -F 'SINGLE_SUPPLIER'
+          curl -fsS "$URL/" | grep -F '<div id="root"></div>'
+          ss -ltn | grep -F ':43120 '
