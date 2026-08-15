@@ -282,6 +282,7 @@ function BasisEditor({
   const [scopePartitionNote, setScopePartitionNote] = useState('');
   const selectedIds = new Set(recommendation.selections.map((item) => item.snapshotConfirmedBasisId));
   const selectedRows = new Set(recommendation.selections.map((item) => item.comparisonRowId));
+  const noSupplierOutcome = recommendation.outcome === 'NO_AWARD' || recommendation.outcome === 'RETENDER';
   const available = (candidate?.bases ?? []).filter((item) => !selectedIds.has(item.snapshotConfirmedBasisId) && !selectedRows.has(item.comparisonRowId));
 
   async function refresh() {
@@ -310,8 +311,9 @@ function BasisEditor({
   return (
     <section className="decision-section">
       <div className="decision-section-heading"><div><span>02</span><div><strong>Supplier-confirmed award basis</strong><small>Selections are pinned to the frozen comparison snapshot—not buyer-adjusted estimates.</small></div></div><span className="decision-count">{recommendation.selections.length} selected</span></div>
-      {recommendation.selections.length === 0 ? <p className="decision-empty">No award basis selected yet.</p> : <div className="decision-basis-list">{recommendation.selections.map((selection) => <article key={selection.recommendationSelectionId}><div><strong>{selection.supplierCode} · {selection.supplierLegalName}</strong><small>{money(selection.confirmedAmount, selection.currency)}{selection.scopePartitionNote ? ` · ${selection.scopePartitionNote}` : ''}</small></div>{recommendation.status === 'DRAFT' ? <button type="button" className="text-button text-button--danger" onClick={() => remove.mutate(selection.recommendationSelectionId)} disabled={remove.isPending}>Remove</button> : null}</article>)}</div>}
-      {recommendation.status === 'DRAFT' ? <>
+      {recommendation.selections.length === 0 ? <p className="decision-empty">{noSupplierOutcome ? 'No supplier basis is required for a no-award / retender recommendation.' : 'No award basis selected yet.'}</p> : <div className="decision-basis-list">{recommendation.selections.map((selection) => <article key={selection.recommendationSelectionId}><div><strong>{selection.supplierCode} · {selection.supplierLegalName}</strong><small>{money(selection.confirmedAmount, selection.currency)}{selection.scopePartitionNote ? ` · ${selection.scopePartitionNote}` : ''}</small></div>{recommendation.status === 'DRAFT' ? <button type="button" className="text-button text-button--danger" onClick={() => remove.mutate(selection.recommendationSelectionId)} disabled={remove.isPending}>Remove</button> : null}</article>)}</div>}
+      {recommendation.status === 'DRAFT' && noSupplierOutcome ? <p className="decision-empty">NO_AWARD / RETENDER intentionally carries zero supplier award selections. Remove any existing selection before submission if the outcome was changed from a supplier award.</p> : null}
+      {recommendation.status === 'DRAFT' && !noSupplierOutcome ? <>
         <label className="decision-field"><span>Optional split / scope note for next selection</span><input value={scopePartitionNote} onChange={(event) => setScopePartitionNote(event.target.value)} placeholder="Example: Ground floor scope" /></label>
         <div className="decision-candidate-bases">
           {available.length === 0 ? <p className="decision-empty">No additional unallocated confirmed row basis is available.</p> : available.map((basis) => <button type="button" key={basis.snapshotConfirmedBasisId} onClick={() => add.mutate(basis.snapshotConfirmedBasisId)} disabled={add.isPending}><span><strong>Row {basis.rowNo} · {basis.requirementDescription}</strong><small>{basis.supplierCode} · {basis.supplierLegalName} · {label(basis.confirmationKind)}</small></span><b>{money(basis.confirmedAmount, basis.currency)}</b></button>)}
@@ -435,6 +437,8 @@ function RecommendationDetail({
   readonly onRevise: () => void;
 }) {
   const client = useQueryClient();
+  const noSupplierOutcome = recommendation.outcome === 'NO_AWARD' || recommendation.outcome === 'RETENDER';
+  const submissionBasisReady = noSupplierOutcome ? recommendation.selections.length === 0 : recommendation.selections.length > 0;
   const submit = useMutation({
     mutationFn: () => json(`/procurement/recommendations/${recommendation.recommendationId}/submit`, session, { method: 'POST', body: '{}' }),
     onSuccess: async () => {
@@ -459,7 +463,7 @@ function RecommendationDetail({
       </div>
       {recommendation.status === 'DRAFT' ? <DraftEditor session={session} recommendation={recommendation} /> : null}
       <BasisEditor session={session} recommendation={recommendation} candidate={candidate} />
-      {recommendation.status === 'DRAFT' ? <section className="decision-submit"><div><strong>Submit for governed approval</strong><span>Submission numbers and freezes this recommendation version. Later revision is by superseding version, not rewriting evidence.</span></div><button className="primary-button" type="button" onClick={() => submit.mutate()} disabled={submit.isPending || recommendation.selections.length === 0}>{submit.isPending ? 'Submitting…' : 'Submit recommendation'}</button>{submit.isError ? <p className="form-error">{submit.error.message}</p> : null}</section> : null}
+      {recommendation.status === 'DRAFT' ? <section className="decision-submit"><div><strong>Submit for governed approval</strong><span>{noSupplierOutcome ? 'This outcome intentionally submits with zero supplier award selections. Submission still freezes and numbers this recommendation version.' : 'Submission numbers and freezes this recommendation version. Later revision is by superseding version, not rewriting evidence.'}</span></div><button className="primary-button" type="button" onClick={() => submit.mutate()} disabled={submit.isPending || !submissionBasisReady}>{submit.isPending ? 'Submitting…' : 'Submit recommendation'}</button>{submit.isError ? <p className="form-error">{submit.error.message}</p> : null}</section> : null}
       <ApprovalPanel session={session} recommendation={recommendation} />
       {recommendation.status === 'RETURNED_FOR_REVISION' ? <section className="decision-revision-callout"><div><strong>Returned for revision</strong><span>This submitted version remains immutable. Start a superseding DRAFT to address the approval comments.</span></div><button className="primary-button" type="button" onClick={onRevise}>Create revised draft</button></section> : null}
       <AwardPanel session={session} recommendation={recommendation} />
