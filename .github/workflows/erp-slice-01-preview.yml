@@ -57,19 +57,20 @@ jobs:
           CANDIDATE=cpos-erp-slice-01-candidate
           IMAGE="cpos-erp-slice-01:${GITHUB_SHA}"
           DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
+          CANDIDATE_PORT=43123
 
           docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
           docker run -d \
             --name "$CANDIDATE" \
             --network cpos-v2-preview-net \
-            -p 127.0.0.1:43122:43118 \
+            -p 127.0.0.1:${CANDIDATE_PORT}:43118 \
             -e DATABASE_URL="$DATABASE_URL" \
             -e BUILD_ID="erp-slice-01-${GITHUB_SHA}" \
             "$IMAGE" >/dev/null
 
           ready=false
           for attempt in $(seq 1 50); do
-            if curl -fsS http://127.0.0.1:43122/health/ready >/tmp/erp-slice-ready.json; then
+            if curl -fsS http://127.0.0.1:${CANDIDATE_PORT}/health/ready >/tmp/erp-slice-ready.json; then
               ready=true
               break
             fi
@@ -79,7 +80,7 @@ jobs:
             docker logs "$CANDIDATE" || true
             exit 1
           fi
-          curl -fsS http://127.0.0.1:43122/ >/tmp/erp-slice-root.html
+          curl -fsS http://127.0.0.1:${CANDIDATE_PORT}/ >/tmp/erp-slice-root.html
           grep -q '<div id="root"></div>' /tmp/erp-slice-root.html
           docker rm -f "$CANDIDATE" >/dev/null
 
