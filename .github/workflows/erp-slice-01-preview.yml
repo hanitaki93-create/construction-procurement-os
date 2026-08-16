@@ -1,0 +1,88 @@
+name: ERP Slice 01 Requisition Preview
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - 'apps/web-internal/**'
+      - '.github/workflows/erp-slice-01-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: erp-slice-01-preview
+  cancel-in-progress: true
+
+jobs:
+  build-and-preview:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Build evidence-led ERP slice image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build -f deploy/v2-preview/Dockerfile -t "cpos-erp-slice-01:${GITHUB_SHA}" .
+
+      - name: Verify shared V2 database runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker inspect cpos-v2-preview-db >/dev/null
+          docker inspect cpos-v2-preview-net >/dev/null 2>&1 || docker network create cpos-v2-preview-net >/dev/null
+          if [[ "$(docker inspect -f '{{.State.Running}}' cpos-v2-preview-db)" != "true" ]]; then
+            docker start cpos-v2-preview-db >/dev/null
+          fi
+          for attempt in $(seq 1 30); do
+            if docker exec cpos-v2-preview-db pg_isready -U postgres -d cpos >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs cpos-v2-preview-db || true
+          exit 1
+
+      - name: Publish isolated review container
+        shell: bash
+        run: |
+          set -euo pipefail
+          NAME=cpos-erp-slice-01
+          IMAGE="cpos-erp-slice-01:${GITHUB_SHA}"
+          DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
+
+          docker rm -f "$NAME" >/dev/null 2>&1 || true
+          docker run -d \
+            --name "$NAME" \
+            --restart unless-stopped \
+            --network cpos-v2-preview-net \
+            -p 0.0.0.0:43122:43118 \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e BUILD_ID="erp-slice-01-${GITHUB_SHA}" \
+            "$IMAGE" >/dev/null
+
+          ready=false
+          for attempt in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:43122/health/ready >/tmp/erp-slice-ready.json; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            docker logs "$NAME" || true
+            exit 1
+          fi
+
+          curl -fsS http://127.0.0.1:43122/ >/tmp/erp-slice-root.html
+          grep -q 'src=' /tmp/erp-slice-root.html || true
+          echo 'ERP_SLICE_01_URL=http://18.181.166.50:43122'
+          echo "ERP_SLICE_01_COMMIT=${GITHUB_SHA}"
+          cat /tmp/erp-slice-ready.json
