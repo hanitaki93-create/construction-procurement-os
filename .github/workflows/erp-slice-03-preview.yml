@@ -24,16 +24,26 @@ jobs:
   build-test-promote:
     runs-on: [self-hosted, Linux, X64, cpos-ci]
     timeout-minutes: 35
+    env:
+      CPOS_SRC: /tmp/cpos-mr-s03-${{ github.run_id }}
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 1
-          persist-credentials: false
+      - name: Materialize exact S03 source in isolated temp directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$CPOS_SRC"
+          git clone --quiet --single-branch --branch build/v2-erp-shell-requisition-slice \
+            "https://x-access-token:${GH_TOKEN}@github.com/hanitaki93-create/construction-procurement-os.git" "$CPOS_SRC"
+          cd "$CPOS_SRC"
+          git checkout --detach "$GITHUB_SHA"
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
 
       - name: Build MR Slice 03 image
         shell: bash
         run: |
           set -euo pipefail
+          cd "$CPOS_SRC"
           docker build -f deploy/v2-preview/Dockerfile -t "cpos-erp-slice-03:${GITHUB_SHA}" .
 
       - name: Verify shared V2 database runtime
@@ -56,6 +66,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          cd "$CPOS_SRC"
           docker exec -i cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos < deploy/erp-slice-02/seed-realistic-mr.sql
           docker exec -i cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos < deploy/erp-slice-03/seed-item-master.sql
           docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -Atc \
@@ -122,11 +133,11 @@ jobs:
           PORT=$(cat /tmp/mr-s03-candidate-port)
           docker run --rm --network host \
             -e CPOS_BROWSER_BASE_URL="http://127.0.0.1:${PORT}" \
-            -v "$PWD/deploy/erp-slice-03/browser-smoke.mjs:/input/browser-smoke.mjs:ro" \
+            -v "$CPOS_SRC/deploy/erp-slice-03/browser-smoke.mjs:/input/browser-smoke.mjs:ro" \
             mcr.microsoft.com/playwright:v1.61.1-noble \
             bash -lc "set -euo pipefail; mkdir -p /tmp/mr-s03-smoke; cp /input/browser-smoke.mjs /tmp/mr-s03-smoke/browser-smoke.mjs; cd /tmp/mr-s03-smoke; npm init -y >/dev/null; npm install --silent @playwright/test@1.61.1; node browser-smoke.mjs"
 
-      - name: Clean browser smoke record and verify persistence path
+      - name: Clean browser smoke record
         if: always()
         shell: bash
         run: |
@@ -194,3 +205,11 @@ jobs:
           echo "ERP_MR_SLICE_03_COMMIT=${GITHUB_SHA}"
           docker inspect -f 'CONTAINER={{.Name}} STATE={{.State.Status}} RESTART={{.RestartCount}} PORTS={{json .NetworkSettings.Ports}}' "$PUBLIC"
           cat /tmp/mr-s03-public-ready.json
+
+      - name: Cleanup isolated source and candidate
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          docker rm -f cpos-erp-slice-03-candidate >/dev/null 2>&1 || true
+          rm -rf "$CPOS_SRC"
