@@ -1,0 +1,61 @@
+name: MR S02 Runtime Diagnostic
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s02-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Inspect and exercise built S02 image
+        shell: bash
+        run: |
+          set -u
+          IMAGE='cpos-erp-slice-02:4a4c750ac481e5775225cd99dd1f56e0e1969132'
+          NAME=cpos-mr-s02-diagnostic
+          PORT=43124
+          TENANT='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL='019f1500-0000-7000-8000-000000000002'
+          PROJECT='019f1500-0000-7000-8000-000000000005'
+          docker image inspect "$IMAGE" >/dev/null || { echo IMAGE_MISSING; exit 1; }
+          docker rm -f "$NAME" >/dev/null 2>&1 || true
+          docker run -d --name "$NAME" --network cpos-v2-preview-net -p 127.0.0.1:${PORT}:43118 -e DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos' -e BUILD_ID=mr-s02-diagnostic "$IMAGE" >/dev/null
+          cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          ready=false
+          for n in $(seq 1 30); do
+            code=$(curl -sS -o /tmp/d-ready.json -w '%{http_code}' http://127.0.0.1:${PORT}/health/ready || true)
+            echo "READY_ATTEMPT=$n HTTP=$code"
+            if [[ "$code" == 200 ]]; then ready=true; cat /tmp/d-ready.json; break; fi
+            sleep 1
+          done
+          [[ "$ready" == true ]] || { docker logs "$NAME"; exit 1; }
+
+          ROOT=$(curl -sS -o /tmp/d-root.html -w '%{http_code}' http://127.0.0.1:${PORT}/ || true)
+          echo "ROOT_HTTP=$ROOT"; head -c 300 /tmp/d-root.html; echo
+
+          LIST=$(curl -sS -o /tmp/d-list.json -w '%{http_code}' -H 'accept: application/json' -H 'x-cpos-session-mode: development' -H "x-cpos-tenant-id: $TENANT" -H "x-cpos-principal-id: $PRINCIPAL" http://127.0.0.1:${PORT}/procurement/requisitions || true)
+          echo "LIST_HTTP=$LIST"; grep -o 'MR-GT-DEMO-26-09001' /tmp/d-list.json || true; head -c 500 /tmp/d-list.json; echo
+
+          CREATE=$(curl -sS -o /tmp/d-create.json -w '%{http_code}' -X POST -H 'accept: application/json' -H 'content-type: application/json' -H 'x-cpos-session-mode: development' -H "x-cpos-tenant-id: $TENANT" -H "x-cpos-principal-id: $PRINCIPAL" --data "{\"projectId\":\"$PROJECT\",\"requiredOnSiteDate\":\"2026-09-05\",\"priority\":\"NORMAL\",\"subject\":\"MR S02 diagnostic create\",\"requesterTeam\":\"CI diagnostic\",\"instructions\":\"Temporary create diagnostic.\",\"lines\":[{\"entryMode\":\"FREE_FORM\",\"lineType\":\"MATERIAL\",\"description\":\"Temporary MR diagnostic line\",\"requestedQuantity\":\"1\",\"uomCode\":\"EA\",\"requiredDateOverride\":\"2026-09-05\",\"technicalNotes\":\"Delete after diagnostic.\"}]}" http://127.0.0.1:${PORT}/procurement/requisitions || true)
+          echo "CREATE_HTTP=$CREATE"; cat /tmp/d-create.json; echo
+          if [[ "$CREATE" == 201 ]]; then
+            ID=$(node -e "const x=require('/tmp/d-create.json'); process.stdout.write(x.requisition.mrId)")
+            docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -c "DELETE FROM procurement.material_requisition WHERE tenant_id='$TENANT' AND mr_id='$ID'::uuid;" >/dev/null
+            docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -c "UPDATE procurement.document_number_counter SET next_value=GREATEST(1,next_value-1), updated_at=clock_timestamp() WHERE tenant_id='$TENANT' AND document_class='MR' AND scope_key='PROJECT:$PROJECT:YEAR:2026';" >/dev/null
+          fi
+
+          ROUTE=$(curl -sS -o /tmp/d-route.json -w '%{http_code}' -X POST -H 'accept: application/json' -H 'content-type: application/json' -H 'x-cpos-session-mode: development' -H "x-cpos-tenant-id: $TENANT" -H "x-cpos-principal-id: $PRINCIPAL" --data '{"route":"COMPETITIVE_RFQ"}' http://127.0.0.1:${PORT}/procurement/requisitions/019f1500-0000-7000-8000-000000000026/lines/019f1500-0000-7000-8000-000000000027/route || true)
+          echo "ROUTE_HTTP=$ROUTE"; cat /tmp/d-route.json; echo
+
+          echo '--- API LOG TAIL ---'
+          docker logs --tail 80 "$NAME" || true
+          [[ "$ROOT" == 200 && "$LIST" == 200 && "$CREATE" == 201 && "$ROUTE" == 409 ]]
