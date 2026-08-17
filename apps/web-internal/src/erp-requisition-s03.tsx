@@ -251,7 +251,7 @@ function ItemGrid({
       <thead><tr><th className="mr-s03-col-serial">#</th><th className="mr-s03-col-ref">Item code / Ref.</th><th>Description</th><th className="mr-s03-col-qty">Qty</th><th className="mr-s03-col-unit">Unit</th><th className="mr-s03-col-date">Required date</th><th className="mr-s03-col-supplier">Proposed supplier</th><th className="mr-s03-col-actions">Actions</th></tr></thead>
       <tbody>{lines.map((line, index) => <FragmentRow key={line.key} line={line} index={index} refs={refs} suppliers={suppliers} chooseItem={chooseItem} patch={patch} duplicate={duplicate} remove={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} canRemove={lines.length > 1} />)}</tbody>
     </table>
-    <div className="mr-s03-grid-footer"><button className="erp-button erp-button--small" type="button" onClick={() => setLines((current) => [...current, blankLine(refs.uoms[0]?.code ?? 'EA')])}>+ Add item</button><span>Use Item code / Ref. for master-backed items; choose Free-form for one-off project demand.</span></div>
+    <div className="mr-s03-grid-footer"><button className="erp-button erp-button--small" type="button" onClick={() => setLines((current) => [...current, blankLine(refs.uoms.find((uom) => uom.code === 'EA')?.code ?? refs.uoms[0]?.code ?? 'EA')])}>+ Add item</button><span>Use Item code / Ref. for master-backed items; choose Free-form for one-off project demand.</span></div>
   </div>;
 }
 
@@ -341,7 +341,7 @@ function NewRequisition({
   const client = useQueryClient();
   const [projectId, setProjectId] = useState(projects[0]?.projectId ?? '');
   const [header, setHeader] = useState<DraftHeader>({ requiredDate: futureDate(14), priority: 'NORMAL', subject: '', team: '', remarks: '' });
-  const [lines, setLines] = useState<DraftLine[]>([blankLine(refs.uoms[0]?.code ?? 'EA')]);
+  const [lines, setLines] = useState<DraftLine[]>([blankLine(refs.uoms.find((uom) => uom.code === 'EA')?.code ?? refs.uoms[0]?.code ?? 'EA')]);
   const [error, setError] = useState<string | null>(null);
   const create = useMutation({
     mutationFn: () => {

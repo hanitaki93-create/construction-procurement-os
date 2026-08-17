@@ -8,7 +8,7 @@ import '@cpos/ui-foundation/styles.css';
 
 import { BidComparisonWorkspace } from './comparison.js';
 import { ProcurementDecisionWorkspace } from './decision.js';
-import { ErpRequisitionWorkspace, type ErpDevelopmentSession } from './erp-requisition.js';
+import { ErpRequisitionWorkspaceS03, type ErpDevelopmentSession } from './erp-requisition-s03.js';
 import { ProcurementWorkspace } from './procurement.js';
 import { SupplierResponseWorkspace } from './responses.js';
 import { SourcingWorkspace } from './sourcing.js';
@@ -195,7 +195,7 @@ function WorkspaceShell({
         <main className="erp-workspace">
           <div className="erp-workbar"><div className="erp-workbar-path"><span>Ground Tech</span><span>›</span><strong>{title[page]}</strong></div><div className="erp-workbar-path"><span>{workspace.company?.legalName ?? workspace.tenant.displayName}</span></div></div>
           <div className="erp-workarea">
-            {page === 'requisitions' ? <ErpRequisitionWorkspace session={session} projects={workspace.projects} projectScopeId={projectScopeId} /> : null}
+            {page === 'requisitions' ? <ErpRequisitionWorkspaceS03 session={session} projects={workspace.projects} projectScopeId={projectScopeId} /> : null}
             {page === 'suppliers' ? <ProcurementWorkspace page="suppliers" session={session} locale={locale} projects={workspace.projects} /> : null}
             {page === 'packages' ? <SourcingWorkspace page="packages" session={session} locale={locale} projects={workspace.projects} /> : null}
             {page === 'rfqs' ? <SourcingWorkspace page="rfqs" session={session} locale={locale} projects={workspace.projects} /> : null}

@@ -15,7 +15,8 @@ try {
   }, { tenantId, principalId });
 
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 45_000 });
-  await page.getByRole('button', { name: 'Requisitions', exact: true }).click();
+  await page.getByRole('button', { name: /Suppliers & subcontractors/ }).click();
+  await page.getByRole('button', { name: /Requisitions/ }).click();
   await page.getByTestId('new-mr').waitFor({ state: 'visible' });
   await page.getByTestId('new-mr').click();
   await page.getByTestId('mr-create-form').waitFor({ state: 'visible' });
