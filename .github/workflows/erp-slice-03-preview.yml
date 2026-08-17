@@ -8,7 +8,9 @@ on:
       - 'apps/web-internal/**'
       - 'apps/api/**'
       - 'packages/contracts/**'
+      - 'packages/database-core/**'
       - 'packages/platform-application/**'
+      - 'migrations/sql/**'
       - 'deploy/erp-slice-03/**'
       - '.github/workflows/erp-slice-03-preview.yml'
   workflow_dispatch:
@@ -61,6 +63,25 @@ jobs:
           done
           docker logs cpos-v2-preview-db || true
           exit 1
+
+      - name: Apply governed MR draft-edit authority migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="cpos-erp-slice-03:${GITHUB_SHA}"
+          docker run --rm \
+            --network cpos-v2-preview-net \
+            -e DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos' \
+            -e MIGRATIONS_DIR=/app/migrations/sql \
+            -e BUILD_ID="erp-slice-03-${GITHUB_SHA}" \
+            "$IMAGE" \
+            pnpm --filter @cpos/database-core db migrate
+          docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -Atc \
+            "SELECT count(*) FROM pg_policies WHERE schemaname='procurement' AND tablename='material_requisition_line' AND policyname='tenant_delete_draft_mr_line';" \
+            | grep -q '^1$'
+          docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -Atc \
+            "SELECT has_table_privilege('cpos_platform_runtime','procurement.material_requisition_line','DELETE');" \
+            | grep -q '^t$'
 
       - name: Seed realistic MR and item master review data
         shell: bash
