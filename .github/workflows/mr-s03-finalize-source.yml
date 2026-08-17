@@ -1,0 +1,31 @@
+name: MR S03 Finalize Source
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s03-finalize-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/v2-erp-shell-requisition-slice
+          fetch-depth: 0
+      - name: Apply final S03 corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/mr-s03-finalize.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web-internal/src/erp-requisition-s03.tsx .github/workflows/erp-slice-03-preview.yml
+          git commit -m 'fix(erp): finalize MR S03 defaults and immutable-state gate'
+          git push origin HEAD:build/v2-erp-shell-requisition-slice
