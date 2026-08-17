@@ -1,0 +1,35 @@
+name: MR S03 Migration Test Patch
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s03-migration-test-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Patch migration expectation from isolated clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="/tmp/cpos-mr-s03-migration-${GITHUB_RUN_ID}"
+          rm -rf "$TMP"
+          git clone --quiet --single-branch --branch build/v2-erp-shell-requisition-slice \
+            "https://x-access-token:${GH_TOKEN}@github.com/hanitaki93-create/construction-procurement-os.git" "$TMP"
+          cd "$TMP"
+          python3 scripts/mr-s03-migration-test-patch.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/database-core/integration/migrations.integration.test.ts
+          git commit -m 'test(erp): include MR draft edit authority migration in rebuild'
+          git push origin HEAD:build/v2-erp-shell-requisition-slice
+          rm -rf "$TMP"
