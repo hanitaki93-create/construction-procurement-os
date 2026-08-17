@@ -97,7 +97,7 @@ jobs:
           echo "$CANDIDATE" >/tmp/mr-s03-candidate-name
           echo "$PORT" >/tmp/mr-s03-candidate-port
 
-      - name: Prove submitted demand cannot be silently edited
+      - name: Prove non-DRAFT demand cannot be silently edited
         shell: bash
         run: |
           set -euo pipefail
@@ -112,8 +112,8 @@ jobs:
           [[ "$STATUS" == "409" ]]
           grep -q 'MR_DRAFT_UPDATE_REJECTED' /tmp/mr-s03-locked.json
           docker exec cpos-v2-preview-db psql -U postgres -d cpos -Atc \
-            "SELECT subject || '|' || status || '|' || (SELECT count(*) FROM procurement.material_requisition_line l WHERE l.mr_id=m.mr_id) FROM procurement.material_requisition m WHERE m.mr_id='019f1500-0000-7000-8000-000000000102';" \
-            | grep -q '^Site timber, tools & fixing materials — 8-line request|SUBMITTED|8$'
+            "SELECT CASE WHEN subject='Site timber, tools & fixing materials — 8-line request' AND status <> 'DRAFT' AND (SELECT count(*) FROM procurement.material_requisition_line l WHERE l.mr_id=m.mr_id)=8 THEN 'MR_LOCK_INVARIANT_OK' ELSE subject || '|' || status || '|' || (SELECT count(*) FROM procurement.material_requisition_line l WHERE l.mr_id=m.mr_id) END FROM procurement.material_requisition m WHERE m.mr_id='019f1500-0000-7000-8000-000000000102';" \
+            | grep -q '^MR_LOCK_INVARIANT_OK$'
 
       - name: Browser smoke New MR and DRAFT item editing
         shell: bash
