@@ -122,9 +122,9 @@ jobs:
           PORT=$(cat /tmp/mr-s03-candidate-port)
           docker run --rm --network host \
             -e CPOS_BROWSER_BASE_URL="http://127.0.0.1:${PORT}" \
-            -v "$PWD:/work" -w /work \
+            -v "$PWD/deploy/erp-slice-03/browser-smoke.mjs:/input/browser-smoke.mjs:ro" \
             mcr.microsoft.com/playwright:v1.61.1-noble \
-            bash -lc "corepack enable && corepack prepare pnpm@10.34.0 --activate >/dev/null && pnpm install --frozen-lockfile >/dev/null && node deploy/erp-slice-03/browser-smoke.mjs"
+            bash -lc "set -euo pipefail; mkdir -p /tmp/mr-s03-smoke; cp /input/browser-smoke.mjs /tmp/mr-s03-smoke/browser-smoke.mjs; cd /tmp/mr-s03-smoke; npm init -y >/dev/null; npm install --silent @playwright/test@1.61.1; node browser-smoke.mjs"
 
       - name: Clean browser smoke record and verify persistence path
         if: always()
