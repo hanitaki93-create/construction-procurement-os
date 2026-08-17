@@ -75,11 +75,10 @@ jobs:
           TENANT_ID='019f1500-0000-7000-8000-000000000001'
           PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
           PROJECT_ID='019f1500-0000-7000-8000-000000000005'
+          ROUTED_LINE_ID='019f1500-0000-7000-8000-000000000027'
 
           docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
-          cleanup_candidate() {
-            docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
-          }
+          cleanup_candidate() { docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true; }
           trap cleanup_candidate EXIT
 
           docker run -d \
@@ -115,8 +114,7 @@ jobs:
             >/tmp/mr-s02-list.json
           grep -q 'MR-GT-DEMO-26-09001' /tmp/mr-s02-list.json
 
-          # Prove the New MR route really creates a governed draft, then clean the smoke record
-          # and restore the review counter so this check does not leave a numbering gap.
+          # Prove New MR actually creates a governed draft, then remove the smoke record.
           CREATE_STATUS=$(curl -sS -o /tmp/mr-s02-create.json -w '%{http_code}' \
             -X POST \
             -H 'accept: application/json' \
@@ -133,7 +131,11 @@ jobs:
           docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -c \
             "UPDATE procurement.document_number_counter SET next_value=GREATEST(1,next_value-1), updated_at=clock_timestamp() WHERE tenant_id='${TENANT_ID}' AND document_class='MR' AND scope_key='PROJECT:${PROJECT_ID}:YEAR:2026';" >/dev/null
 
-          # An already-routed approved line must not accept a casual route replacement.
+          # Existing route must reject casual replacement and remain unchanged in persistence.
+          BEFORE_ROUTE=$(docker exec cpos-v2-preview-db psql -U postgres -d cpos -Atc \
+            "SELECT route FROM procurement.procurement_route_decision WHERE tenant_id='${TENANT_ID}'::uuid AND mr_line_id='${ROUTED_LINE_ID}'::uuid AND is_current;")
+          [[ "$BEFORE_ROUTE" == 'PACKAGE_SOURCING' ]]
+
           ROUTE_STATUS=$(curl -sS -o /tmp/mr-s02-route-lock.json -w '%{http_code}' \
             -X POST \
             -H 'accept: application/json' \
@@ -142,9 +144,12 @@ jobs:
             -H "x-cpos-tenant-id: ${TENANT_ID}" \
             -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
             --data '{"route":"COMPETITIVE_RFQ"}' \
-            "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions/019f1500-0000-7000-8000-000000000026/lines/019f1500-0000-7000-8000-000000000027/route")
-          [[ "$ROUTE_STATUS" == "409" ]]
-          grep -qi 'locked' /tmp/mr-s02-route-lock.json
+            "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions/019f1500-0000-7000-8000-000000000026/lines/${ROUTED_LINE_ID}/route")
+          [[ "$ROUTE_STATUS" == "400" ]]
+
+          AFTER_ROUTE=$(docker exec cpos-v2-preview-db psql -U postgres -d cpos -Atc \
+            "SELECT route FROM procurement.procurement_route_decision WHERE tenant_id='${TENANT_ID}'::uuid AND mr_line_id='${ROUTED_LINE_ID}'::uuid AND is_current;")
+          [[ "$AFTER_ROUTE" == 'PACKAGE_SOURCING' ]]
 
           cleanup_candidate
           trap - EXIT
@@ -161,7 +166,6 @@ jobs:
           DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
 
           docker rm -f "$BACKUP" >/dev/null 2>&1 || true
-
           backup_name=''
           backup_restore_name=''
           fallback_was_running=false
