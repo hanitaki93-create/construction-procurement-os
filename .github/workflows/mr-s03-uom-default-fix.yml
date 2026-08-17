@@ -1,0 +1,41 @@
+name: MR S03 EA Default Fix
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s03-uom-default-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/v2-erp-shell-requisition-slice
+          fetch-depth: 0
+      - name: Prefer EA for new free-form MR rows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('apps/web-internal/src/erp-requisition-s03.tsx')
+          text = path.read_text()
+          old = "refs.uoms[0]?.code ?? 'EA'"
+          new = "refs.uoms.find((uom) => uom.code === 'EA')?.code ?? refs.uoms[0]?.code ?? 'EA'"
+          count = text.count(old)
+          if count != 2:
+              raise SystemExit(f'expected 2 default-UOM targets, found {count}')
+          path.write_text(text.replace(old, new))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web-internal/src/erp-requisition-s03.tsx
+          git commit -m 'fix(erp): default new MR rows to EA'
+          git push origin HEAD:build/v2-erp-shell-requisition-slice
