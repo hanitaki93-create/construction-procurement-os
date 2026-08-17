@@ -60,6 +60,7 @@ export interface ProcurementReviewPersistenceHandle {
   }): Promise<void>;
   reviewTrail(mrId: string): Promise<readonly ReviewTrailRow[]>;
   currentRoutes(mrId: string): Promise<readonly RouteDecisionRow[]>;
+  currentRoute(mrLineId: string): Promise<RouteDecisionRow | undefined>;
   lockApprovedLine(mrLineId: string): Promise<ReviewableLineRow | undefined>;
   setRoute(input: {
     readonly mrLineId: string;
@@ -91,6 +92,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `);
       return row !== undefined;
     },
+
     canReview: async () => {
       const row = await executor.oneOrNone<{ readonly allowed: boolean }>(sql`
         SELECT (
@@ -100,6 +102,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `);
       return row?.allowed === true;
     },
+
     canRoute: async () => {
       const row = await executor.oneOrNone<{ readonly allowed: boolean }>(sql`
         SELECT (
@@ -110,6 +113,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `);
       return row?.allowed === true;
     },
+
     lockReviewableMr: (mrId) =>
       executor.oneOrNone<ReviewableMrRow>(sql`
         SELECT mr_id::text, status
@@ -118,6 +122,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
           AND mr_id = ${mrId}
         FOR UPDATE
       `),
+
     reviewableLines: (mrId) =>
       executor.all<ReviewableLineRow>(sql`
         SELECT mr_id::text, mr_line_id::text, requested_quantity::text,
@@ -128,6 +133,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
         ORDER BY line_no, mr_line_id
         FOR UPDATE
       `),
+
     applyLineDecision: async (input) => {
       const result = await executor.execute(sql`
         UPDATE procurement.material_requisition_line
@@ -139,6 +145,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `);
       return result.rowCount === 1;
     },
+
     setMrReviewState: async (mrId, state) => {
       const result = await executor.execute(sql`
         UPDATE procurement.material_requisition
@@ -149,6 +156,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
       `);
       return result.rowCount === 1;
     },
+
     recordReview: async (input) => {
       await executor.execute(sql`
         INSERT INTO procurement.material_requisition_review_occurrence (
@@ -163,6 +171,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
         )
       `);
     },
+
     reviewTrail: (mrId) =>
       executor.all<ReviewTrailRow>(sql`
         SELECT r.review_occurrence_id::text, r.decision, r.reviewer_id::text,
@@ -174,6 +183,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
           AND r.mr_id = ${mrId}
         ORDER BY r.occurred_at, r.review_occurrence_id
       `),
+
     currentRoutes: (mrId) =>
       executor.all<RouteDecisionRow>(sql`
         SELECT d.route_decision_id::text, d.mr_line_id::text, d.policy_key, d.policy_version,
@@ -189,6 +199,21 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
           AND d.is_current
         ORDER BY line.line_no, d.route_decision_id
       `),
+
+    currentRoute: (mrLineId) =>
+      executor.oneOrNone<RouteDecisionRow>(sql`
+        SELECT d.route_decision_id::text, d.mr_line_id::text, d.policy_key, d.policy_version,
+               d.route, d.justification, d.decided_by::text,
+               p.display_name AS decided_by_name, d.decided_at::text
+        FROM procurement.procurement_route_decision d
+        JOIN platform.principal p
+          ON p.tenant_id = d.tenant_id AND p.principal_id = d.decided_by
+        WHERE d.tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND d.mr_line_id = ${mrLineId}
+          AND d.is_current
+        LIMIT 1
+      `),
+
     lockApprovedLine: (mrLineId) =>
       executor.oneOrNone<ReviewableLineRow>(sql`
         SELECT mr_id::text, mr_line_id::text, requested_quantity::text,
@@ -200,6 +225,7 @@ export const procurementReviewPersistence = definePersistenceAdapter<Procurement
           AND line_state IN ('APPROVED','PARTIALLY_APPROVED')
         FOR UPDATE
       `),
+
     setRoute: async (input) => {
       const previous = await executor.oneOrNone<{ readonly route_decision_id: string }>(sql`
         SELECT route_decision_id::text
