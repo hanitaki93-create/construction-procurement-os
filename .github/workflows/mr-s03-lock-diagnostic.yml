@@ -1,0 +1,41 @@
+name: MR S03 Submitted Lock Diagnostic
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s03-lock-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Inspect candidate rejection and DB immutability
+        shell: bash
+        run: |
+          set -u
+          PORT=43125
+          TENANT='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL='019f1500-0000-7000-8000-000000000002'
+          if ! docker inspect cpos-erp-slice-03-candidate >/dev/null 2>&1; then
+            echo 'CANDIDATE_MISSING'
+            exit 2
+          fi
+          echo "CANDIDATE=$(docker inspect -f '{{.State.Status}}|{{.RestartCount}}' cpos-erp-slice-03-candidate)"
+          STATUS=$(curl -sS -o /tmp/mr-s03-lock-diag.json -w '%{http_code}' -X PUT \
+            -H 'accept: application/json' -H 'content-type: application/json' \
+            -H 'x-cpos-session-mode: development' -H "x-cpos-tenant-id: ${TENANT}" -H "x-cpos-principal-id: ${PRINCIPAL}" \
+            --data '{"requiredOnSiteDate":"2026-08-28","priority":"HIGH","subject":"Attempted silent rewrite","lines":[{"entryMode":"FREE_FORM","lineType":"MATERIAL","description":"Should never replace submitted demand","requestedQuantity":"1","uomCode":"EA"}]}' \
+            "http://127.0.0.1:${PORT}/procurement/requisitions/019f1500-0000-7000-8000-000000000102/draft" || true)
+          echo "LOCK_HTTP=${STATUS}"
+          echo -n 'LOCK_BODY='; cat /tmp/mr-s03-lock-diag.json 2>/dev/null || true; echo
+          echo -n 'DB_STATE='
+          docker exec cpos-v2-preview-db psql -U postgres -d cpos -Atc \
+            "SELECT subject || '|' || status || '|' || (SELECT count(*) FROM procurement.material_requisition_line l WHERE l.mr_id=m.mr_id) FROM procurement.material_requisition m WHERE m.mr_id='019f1500-0000-7000-8000-000000000102';"
+          echo -n 'ROUTES='; docker exec cpos-v2-preview-db psql -U postgres -d cpos -Atc \
+            "SELECT count(*) FROM procurement.material_requisition_line WHERE mr_id='019f1500-0000-7000-8000-000000000102' AND entry_mode='MASTER_BACKED' AND item_id IS NOT NULL;"
