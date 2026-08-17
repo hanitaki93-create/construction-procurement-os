@@ -22,6 +22,8 @@ import type {
   SupplierListResponse,
   SupplierSummary,
   SupplierType,
+  UpdateMaterialRequisitionDraftRequest,
+  UpdateMaterialRequisitionDraftResponse,
 } from '@cpos/contracts';
 import type { DatabaseRuntime } from '@cpos/database-core';
 
@@ -60,6 +62,11 @@ export interface GovernedProcurementService {
     context: GovernedProcurementRequestContext,
     request: CreateMaterialRequisitionRequest,
   ): Promise<CreateMaterialRequisitionResponse>;
+  updateRequisitionDraft(
+    context: GovernedProcurementRequestContext,
+    mrId: string,
+    request: UpdateMaterialRequisitionDraftRequest,
+  ): Promise<UpdateMaterialRequisitionDraftResponse>;
   submitRequisition(
     context: GovernedProcurementRequestContext,
     mrId: string,
@@ -225,6 +232,7 @@ function mrLine(row: MrLineRow): MaterialRequisitionLine {
     lineNo: row.line_no,
     entryMode: row.entry_mode,
     itemId: row.item_id,
+    itemCode: row.item_code,
     lineType: row.line_type,
     description: row.description,
     specification: row.specification,
@@ -295,14 +303,13 @@ export function createGovernedProcurementService(
 
   return Object.freeze<GovernedProcurementService>({
     referenceData: (context) =>
-      verifyAndUse(context, 'procurement.reference-data.read.v1', async (handle) => ({
-        uoms: (await handle.uoms()).map((row) => ({
-          code: row.uom_code,
-          displayName: row.display_name,
-          quantityKind: row.quantity_kind,
-          decimalScale: row.decimal_scale,
-        })),
-      })),
+      verifyAndUse(context, 'procurement.reference-data.read.v1', async (handle) => {
+        const [uoms, items] = await Promise.all([handle.uoms(), handle.items()]);
+        return {
+          uoms: uoms.map((row) => ({ code: row.uom_code, displayName: row.display_name, quantityKind: row.quantity_kind, decimalScale: row.decimal_scale })),
+          items: items.map((row) => ({ itemId: row.item_id, itemCode: row.item_code, itemKind: row.item_kind, shortDescription: row.short_description, detailedSpecification: row.detailed_specification, defaultUomCode: row.default_uom_code, manufacturer: row.manufacturer, brand: row.brand, model: row.model, equivalentRule: row.equivalent_rule })),
+        };
+      }),
 
     listSuppliers: (context) =>
       verifyAndUse(context, 'procurement.suppliers.list.v1', async (handle) => {
@@ -464,6 +471,40 @@ export function createGovernedProcurementService(
 
       const requisition = await loadDetail(context, mrId);
       if (requisition === undefined) throw new Error('created MR could not be reloaded');
+      return { requisition };
+    },
+
+    updateRequisitionDraft: async (context, rawMrId, request) => {
+      const mrId = requireUuid(rawMrId, 'mrId');
+      await verifyAndUse(context, 'procurement.mr.draft.update.v1', async (handle) => {
+        if (!(await handle.canCreateRequisition())) throw new Error('not authorized to edit Material/Purchase Requisitions');
+        const existing = await handle.requisition(mrId);
+        if (existing === undefined) throw new Error('MR not found');
+        if (existing.status !== 'DRAFT') throw new Error('MR draft update conflict: only DRAFT requisitions can be edited');
+        if (!Array.isArray(request.lines) || request.lines.length < 1 || request.lines.length > 250) throw new Error('MR must contain between 1 and 250 lines');
+        if (!mrPriorities.has(request.priority)) throw new Error('priority is invalid');
+        const availableUoms = new Set((await handle.uoms()).map((entry) => entry.uom_code));
+        const availableItems = new Set((await handle.items()).map((entry) => entry.item_id));
+        const requiredOnSiteDate = requireDate(request.requiredOnSiteDate, 'requiredOnSiteDate');
+        if (requiredOnSiteDate < existing.request_date) throw new Error('requiredOnSiteDate cannot be before requestDate');
+        const normalized = request.lines.map((line) => {
+          if (!mrEntryModes.has(line.entryMode)) throw new Error('line.entryMode is invalid');
+          if (!mrLineTypes.has(line.lineType)) throw new Error('line.lineType is invalid');
+          if (line.equivalentRule !== undefined && !equivalentRules.has(line.equivalentRule)) throw new Error('line.equivalentRule is invalid');
+          const itemId = line.itemId === undefined ? null : requireUuid(line.itemId, 'itemId');
+          if ((line.entryMode === 'MASTER_BACKED') !== (itemId !== null)) throw new Error('MASTER_BACKED lines require itemId; FREE_FORM lines must not carry itemId');
+          if (itemId !== null && !availableItems.has(itemId)) throw new Error('itemId is not active or not visible');
+          const uomCode = requiredText(line.uomCode, 'uomCode', 12).toUpperCase();
+          if (!availableUoms.has(uomCode)) throw new Error(`uomCode ${uomCode} is not active`);
+          return { entryMode: line.entryMode, itemId, lineType: line.lineType, description: requiredText(line.description, 'line.description', 500), specification: text(line.specification, 12_000), requestedQuantity: requireQuantity(line.requestedQuantity), uomCode, requiredDateOverride: line.requiredDateOverride === undefined ? null : requireDate(line.requiredDateOverride, 'requiredDateOverride'), manufacturer: text(line.manufacturer, 160), brand: text(line.brand, 160), model: text(line.model, 160), equivalentRule: line.equivalentRule ?? 'ALTERNATE_BY_APPROVAL', preferredSupplierId: line.preferredSupplierId === undefined ? null : requireUuid(line.preferredSupplierId, 'preferredSupplierId'), technicalNotes: text(line.technicalNotes, 4000) };
+        });
+        if (!(await handle.updateDraftRequisition({ mrId, requesterTeam: text(request.requesterTeam, 120), requiredOnSiteDate, priority: request.priority, subject: requiredText(request.subject, 'subject', 240), instructions: text(request.instructions, 4000) }))) throw new Error('MR draft update conflict: requisition is no longer editable');
+        if (!(await handle.deleteDraftRequisitionLines(mrId))) throw new Error('MR draft update conflict: requisition is no longer editable');
+        let lineNo = 10;
+        for (const line of normalized) { await handle.createMaterialRequisitionLine({ mrId, lineNo, ...line }); lineNo += 10; }
+      });
+      const requisition = await loadDetail(context, mrId);
+      if (requisition === undefined) throw new Error('updated MR could not be reloaded');
       return { requisition };
     },
 

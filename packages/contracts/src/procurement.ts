@@ -112,8 +112,22 @@ export interface SupplierListResponse {
   readonly suppliers: readonly SupplierSummary[];
 }
 
+export interface ProcurementItemReference {
+  readonly itemId: string;
+  readonly itemCode: string;
+  readonly itemKind: MrLineType;
+  readonly shortDescription: string;
+  readonly detailedSpecification: string | null;
+  readonly defaultUomCode: string | null;
+  readonly manufacturer: string | null;
+  readonly brand: string | null;
+  readonly model: string | null;
+  readonly equivalentRule: EquivalentRule;
+}
+
 export interface ProcurementReferenceDataResponse {
   readonly uoms: readonly ProcurementUom[];
+  readonly items: readonly ProcurementItemReference[];
 }
 
 export interface CreateMaterialRequisitionLineRequest {
@@ -144,6 +158,19 @@ export interface CreateMaterialRequisitionRequest {
   readonly lines: readonly CreateMaterialRequisitionLineRequest[];
 }
 
+export interface UpdateMaterialRequisitionDraftRequest {
+  readonly requiredOnSiteDate: string;
+  readonly priority: MrPriority;
+  readonly subject: string;
+  readonly requesterTeam?: string;
+  readonly instructions?: string;
+  readonly lines: readonly CreateMaterialRequisitionLineRequest[];
+}
+
+export interface UpdateMaterialRequisitionDraftResponse {
+  readonly requisition: MaterialRequisitionDetail;
+}
+
 export interface ProcurementRouteDecisionSummary {
   readonly routeDecisionId: string;
   readonly policyKey: string;
@@ -160,6 +187,7 @@ export interface MaterialRequisitionLine {
   readonly lineNo: number;
   readonly entryMode: MrEntryMode;
   readonly itemId: string | null;
+  readonly itemCode: string | null;
   readonly lineType: MrLineType;
   readonly description: string;
   readonly specification: string | null;

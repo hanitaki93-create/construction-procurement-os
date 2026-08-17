@@ -7,6 +7,19 @@ export interface UomRow {
   readonly decimal_scale: number;
 }
 
+export interface ItemReferenceRow {
+  readonly item_id: string;
+  readonly item_code: string;
+  readonly item_kind: 'MATERIAL' | 'SERVICE' | 'SUBCONTRACT_SCOPE' | 'EQUIPMENT' | 'OTHER';
+  readonly short_description: string;
+  readonly detailed_specification: string | null;
+  readonly default_uom_code: string | null;
+  readonly manufacturer: string | null;
+  readonly brand: string | null;
+  readonly model: string | null;
+  readonly equivalent_rule: 'EXACT_ONLY' | 'APPROVED_EQUIVALENT_ALLOWED' | 'ALTERNATE_BY_APPROVAL';
+}
+
 export interface SupplierRow {
   readonly supplier_id: string;
   readonly supplier_code: string;
@@ -98,6 +111,7 @@ export interface MrLineRow {
   readonly line_no: number;
   readonly entry_mode: 'MASTER_BACKED' | 'FREE_FORM';
   readonly item_id: string | null;
+  readonly item_code: string | null;
   readonly line_type: 'MATERIAL' | 'SERVICE' | 'SUBCONTRACT_SCOPE' | 'EQUIPMENT' | 'OTHER';
   readonly description: string;
   readonly specification: string | null;
@@ -132,6 +146,7 @@ export interface ProcurementPersistenceHandle {
   canManageSuppliers(): Promise<boolean>;
   canCreateRequisition(): Promise<boolean>;
   uoms(): Promise<readonly UomRow[]>;
+  items(): Promise<readonly ItemReferenceRow[]>;
   suppliers(): Promise<readonly SupplierRow[]>;
   supplierContacts(): Promise<readonly SupplierContactRow[]>;
   supplierCompliance(): Promise<readonly SupplierComplianceRow[]>;
@@ -192,6 +207,15 @@ export interface ProcurementPersistenceHandle {
     readonly preferredSupplierId: string | null;
     readonly technicalNotes: string | null;
   }): Promise<string>;
+  updateDraftRequisition(input: {
+    readonly mrId: string;
+    readonly requesterTeam: string | null;
+    readonly requiredOnSiteDate: string;
+    readonly priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+    readonly subject: string;
+    readonly instructions: string | null;
+  }): Promise<boolean>;
+  deleteDraftRequisitionLines(mrId: string): Promise<boolean>;
   requisitions(): Promise<readonly MrHeaderRow[]>;
   requisition(mrId: string): Promise<MrHeaderRow | undefined>;
   requisitionLines(mrId: string): Promise<readonly MrLineRow[]>;
@@ -242,6 +266,15 @@ export const procurementPersistence = definePersistenceAdapter<ProcurementPersis
         FROM procurement.uom_reference
         WHERE active
         ORDER BY uom_code
+      `),
+    items: () =>
+      executor.all<ItemReferenceRow>(sql`
+        SELECT item_id::text, item_code, item_kind, short_description, detailed_specification,
+               default_uom_code, manufacturer, brand, model, equivalent_rule
+        FROM procurement.item_master
+        WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND active
+        ORDER BY item_code
       `),
     suppliers: () =>
       executor.all<SupplierRow>(sql`
@@ -451,14 +484,50 @@ export const procurementPersistence = definePersistenceAdapter<ProcurementPersis
       `),
     requisitionLines: (mrId) =>
       executor.all<MrLineRow>(sql`
-        SELECT mr_line_id::text, line_no, entry_mode, item_id::text, line_type, description, specification,
-               requested_quantity::text, uom_code, required_date_override::text, manufacturer, brand, model,
-               equivalent_rule, preferred_supplier_id::text, technical_notes, approved_quantity::text, line_state
-        FROM procurement.material_requisition_line
+        SELECT line.mr_line_id::text, line.line_no, line.entry_mode, line.item_id::text, item.item_code,
+               line.line_type, line.description, line.specification, line.requested_quantity::text,
+               line.uom_code, line.required_date_override::text, line.manufacturer, line.brand, line.model,
+               line.equivalent_rule, line.preferred_supplier_id::text, line.technical_notes,
+               line.approved_quantity::text, line.line_state
+        FROM procurement.material_requisition_line line
+        LEFT JOIN procurement.item_master item
+          ON item.tenant_id = line.tenant_id AND item.item_id = line.item_id
+        WHERE line.tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND line.mr_id = ${mrId}
+        ORDER BY line.line_no, line.mr_line_id
+      `),
+    updateDraftRequisition: async (input) => {
+      const result = await executor.execute(sql`
+        UPDATE procurement.material_requisition
+        SET requester_team = ${input.requesterTeam},
+            required_on_site_date = ${input.requiredOnSiteDate},
+            priority = ${input.priority},
+            subject = ${input.subject},
+            instructions = ${input.instructions},
+            updated_at = clock_timestamp()
+        WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND mr_id = ${input.mrId}
+          AND status = 'DRAFT'
+      `);
+      return result.rowCount === 1;
+    },
+    deleteDraftRequisitionLines: async (mrId) => {
+      const guard = await executor.oneOrNone<{ readonly allowed: boolean }>(sql`
+        SELECT true AS allowed
+        FROM procurement.material_requisition
         WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
           AND mr_id = ${mrId}
-        ORDER BY line_no, mr_line_id
-      `),
+          AND status = 'DRAFT'
+        FOR UPDATE
+      `);
+      if (guard?.allowed !== true) return false;
+      await executor.execute(sql`
+        DELETE FROM procurement.material_requisition_line
+        WHERE tenant_id = current_setting('cpos.tenant_id')::uuid
+          AND mr_id = ${mrId}
+      `);
+      return true;
+    },
     submitRequisition: async (mrId) => {
       const result = await executor.execute(sql`
         UPDATE procurement.material_requisition mr

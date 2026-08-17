@@ -22,6 +22,7 @@ import type {
 import type { SupportedLocale } from '@cpos/ui-foundation';
 
 import { MrReviewPanel } from './mr-review-panel.js';
+import { ErpRequisitionWorkspaceS03 } from './erp-requisition-s03.js';
 import './procurement.css';
 
 interface DevelopmentSession {
@@ -529,6 +530,6 @@ export function ProcurementWorkspace({
   return page === 'suppliers' ? (
     <SupplierWorkspace session={session} locale={locale} />
   ) : (
-    <MaterialRequisitionWorkspace session={session} locale={locale} projects={projects} />
+    <ErpRequisitionWorkspaceS03 session={session} projects={projects} />
   );
 }

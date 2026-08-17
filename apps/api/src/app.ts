@@ -12,6 +12,7 @@ import {
   type ReadinessResponse,
   type ReviewMaterialRequisitionRequest,
   type SetProcurementRouteRequest,
+  type UpdateMaterialRequisitionDraftRequest,
 } from '@cpos/contracts';
 import type { RuntimeConfig } from '@cpos/config';
 import type { TechnicalLogger } from '@cpos/observability';
@@ -399,6 +400,17 @@ export function buildApi({
       if (status === 500) throw error;
       return reply.status(status).send({ code: 'MR_CREATE_REJECTED', requestId: request.id });
     }
+  });
+
+  app.put('/procurement/requisitions/:mrId/draft', async (request, reply) => {
+    if (!procurementService) return reply.status(503).send({ code: 'PROCUREMENT_RUNTIME_UNAVAILABLE' });
+    const context = await resolvedContext(request, config.build.environment, authenticationSessionResolver);
+    if (!context) return reply.status(401).send({ code: 'SESSION_REQUIRED', message: sessionRequiredMessage(config.build.environment) });
+    const mrId = (request.params as { readonly mrId?: unknown }).mrId;
+    const raw = request.body;
+    if (typeof mrId !== 'string' || !isObject(raw) || typeof raw['requiredOnSiteDate'] !== 'string' || typeof raw['priority'] !== 'string' || typeof raw['subject'] !== 'string' || !Array.isArray(raw['lines'])) return reply.status(400).send({ code: 'INVALID_MR_DRAFT_REQUEST' });
+    try { return await procurementService.updateRequisitionDraft(context, mrId, raw as unknown as UpdateMaterialRequisitionDraftRequest); }
+    catch (error: unknown) { const status = productErrorStatus(error); if (status === 500) throw error; return reply.status(status).send({ code: 'MR_DRAFT_UPDATE_REJECTED', requestId: request.id }); }
   });
 
   app.get('/procurement/requisitions/:mrId', async (request, reply) => {
