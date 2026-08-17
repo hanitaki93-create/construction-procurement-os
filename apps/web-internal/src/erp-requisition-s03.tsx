@@ -383,6 +383,9 @@ function DraftEditor({ session, mr, projects, refs, suppliers }: { readonly sess
   const [header, setHeader] = useState<DraftHeader>({ requiredDate: mr.requiredOnSiteDate, priority: mr.priority, subject: mr.subject, team: mr.requesterTeam ?? '', remarks: mr.instructions ?? '' });
   const [lines, setLines] = useState<DraftLine[]>(() => mr.lines.map(lineFromExisting));
   const [error, setError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<'clean' | 'dirty' | 'saved'>('clean');
+  const setHeaderDirty = (next: DraftHeader | ((current: DraftHeader) => DraftHeader)) => { setSaveState('dirty'); setHeader(next); };
+  const setLinesDirty = (next: DraftLine[] | ((current: DraftLine[]) => DraftLine[])) => { setSaveState('dirty'); setLines(next); };
   const payload = (): UpdateMaterialRequisitionDraftRequest => ({
     requiredOnSiteDate: header.requiredDate,
     priority: header.priority,
@@ -393,7 +396,13 @@ function DraftEditor({ session, mr, projects, refs, suppliers }: { readonly sess
   });
   const save = useMutation({
     mutationFn: () => json<MaterialRequisitionDetailResponse>(`/procurement/requisitions/${mr.mrId}/draft`, session, { method: 'PUT', body: JSON.stringify(payload()) }),
-    onSuccess: async () => Promise.all([client.invalidateQueries({ queryKey: ['procurement-mr', session, mr.mrId] }), client.invalidateQueries({ queryKey: ['procurement-mrs', session] })]),
+    onMutate: () => setSaveState('clean'),
+    onSuccess: async (result) => {
+      client.setQueryData(['procurement-mr', session, mr.mrId], result);
+      setSaveState('saved');
+      await client.invalidateQueries({ queryKey: ['procurement-mrs', session] });
+    },
+    onError: () => setSaveState('dirty'),
   });
   const saveAndSubmit = useMutation({
     mutationFn: async () => {
@@ -409,10 +418,10 @@ function DraftEditor({ session, mr, projects, refs, suppliers }: { readonly sess
     action();
   }
   return <div className="mr-s03-stack">
-    <section className="mr-s03-card"><div className="mr-s03-section-head"><div><strong>Draft request information</strong><span>Editable until submission</span></div><Status value="DRAFT" /></div><HeaderEditor header={header} setHeader={setHeader} projects={projects} projectId={mr.projectId} projectLocked /></section>
-    <section className="mr-s03-card mr-s03-items-card"><div className="mr-s03-section-head"><div><strong>Requested items / scope</strong><span>Edit directly. # is only the display serial; Item code / Ref. is the master reference.</span></div><button className="erp-button erp-button--small erp-button--ghost" type="button" onClick={() => window.print()}>Print item schedule / PDF</button></div><ItemGrid lines={lines} setLines={setLines} refs={refs} suppliers={suppliers} /></section>
+    <section className="mr-s03-card"><div className="mr-s03-section-head"><div><strong>Draft request information</strong><span>Editable until submission</span></div><Status value="DRAFT" /></div><HeaderEditor header={header} setHeader={setHeaderDirty} projects={projects} projectId={mr.projectId} projectLocked /></section>
+    <section className="mr-s03-card mr-s03-items-card"><div className="mr-s03-section-head"><div><strong>Requested items / scope</strong><span>Edit directly. # is only the display serial; Item code / Ref. is the master reference.</span></div><button className="erp-button erp-button--small erp-button--ghost" type="button" onClick={() => window.print()}>Print item schedule / PDF</button></div><ItemGrid lines={lines} setLines={setLinesDirty} refs={refs} suppliers={suppliers} /></section>
     {error || save.isError || saveAndSubmit.isError ? <div className="mr-s03-error"><strong>Draft action failed</strong><span>{error ?? save.error?.message ?? saveAndSubmit.error?.message}</span></div> : null}
-    <div className="mr-s03-draft-actions"><div><strong>Draft controls</strong><span>Save keeps the MR editable. Save & submit locks demand for approval.</span></div><button className="erp-button erp-button--ghost" type="button" disabled={save.isPending || saveAndSubmit.isPending} onClick={() => guard(() => save.mutate())}>{save.isPending ? 'Saving…' : 'Save changes'}</button><button className="erp-button erp-button--primary" type="button" disabled={save.isPending || saveAndSubmit.isPending} onClick={() => guard(() => saveAndSubmit.mutate())}>{saveAndSubmit.isPending ? 'Submitting…' : 'Save & submit for approval'}</button></div>
+    <div className="mr-s03-draft-actions"><div><strong>Draft controls</strong><span>Save keeps the MR editable. Save & submit locks demand for approval.</span><span className={`mr-s03-save-state mr-s03-save-state--${saveState}`} data-testid="mr-draft-save-state">{save.isPending ? 'Saving…' : saveState === 'saved' ? 'Saved ✓' : saveState === 'dirty' ? 'Unsaved changes' : 'No unsaved changes'}</span></div><button className="erp-button erp-button--ghost" type="button" disabled={save.isPending || saveAndSubmit.isPending} onClick={() => guard(() => save.mutate())}>{save.isPending ? 'Saving…' : saveState === 'saved' ? 'Saved ✓' : 'Save changes'}</button><button className="erp-button erp-button--primary" type="button" disabled={save.isPending || saveAndSubmit.isPending} onClick={() => guard(() => saveAndSubmit.mutate())}>{saveAndSubmit.isPending ? 'Submitting…' : 'Save & submit for approval'}</button></div>
   </div>;
 }
 

@@ -37,8 +37,16 @@ try {
   if (!mrNumber?.startsWith('MR-GT-DEMO-26-')) throw new Error(`unexpected MR number: ${mrNumber}`);
 
   await page.getByLabel('Quantity row 2').fill('7');
+  const saveResponsePromise = page.waitForResponse((response) => response.request().method() === 'PUT' && response.url().includes('/procurement/requisitions/') && response.url().endsWith('/draft'));
   await page.getByRole('button', { name: 'Save changes' }).click();
-  await page.waitForLoadState('networkidle');
+  const saveResponse = await saveResponsePromise;
+  if (saveResponse.status() !== 200) throw new Error(`draft save returned HTTP ${saveResponse.status()}`);
+  const savedBody = await saveResponse.json();
+  const serverQty = savedBody?.requisition?.lines?.[1]?.requestedQuantity;
+  if (serverQty !== '7.000000' && serverQty !== '7') throw new Error(`draft save response did not contain edited quantity: ${serverQty}`);
+  await page.getByTestId('mr-draft-save-state').waitFor({ state: 'visible' });
+  const saveState = (await page.getByTestId('mr-draft-save-state').textContent())?.trim();
+  if (saveState !== 'Saved ✓') throw new Error(`draft save UI did not confirm completion: ${saveState}`);
   await page.getByRole('button', { name: '← Requisition register' }).click();
   await page.getByPlaceholder('MR number, subject, project, requester…').fill(subject);
   await page.getByRole('row', { name: new RegExp(subject) }).click();

@@ -125,6 +125,9 @@ body .erp-workarea { padding: 12px 14px 24px; }
 .mr-s03-draft-actions>div strong, .mr-s03-draft-actions>div span { display: block; }
 .mr-s03-draft-actions>div strong { color: #213541; font-size: 11.5px; }
 .mr-s03-draft-actions>div span { margin-top: 1px; color: #72808a; font-size: 10px; }
+.mr-s03-draft-actions>div .mr-s03-save-state { margin-top: 4px; font-size: 10px; font-weight: 750; }
+.mr-s03-save-state--dirty { color: #8a5a17 !important; }
+.mr-s03-save-state--saved { color: #1e685f !important; }
 
 .mr-s03-review-comments { margin: 10px; }
 .mr-s03-actions-right { display: flex; justify-content: flex-end; border-top: 1px solid #e4e9ec; padding: 9px 10px; }
