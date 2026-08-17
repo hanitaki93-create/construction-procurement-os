@@ -246,6 +246,10 @@ export function createGovernedProcurementReviewRuntime(
         if (line === undefined || line.mr_id !== mrId) {
           throw new Error('approved MR line not found on this requisition');
         }
+        const existingRoute = await handle.currentRoute(mrLineId);
+        if (existingRoute !== undefined) {
+          throw new Error('MR route conflict: procurement route is locked; a controlled reopen is required before changing it');
+        }
         await handle.setRoute({
           mrLineId,
           route: request.route,
