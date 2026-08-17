@@ -1,0 +1,35 @@
+name: MR S03 Save State Fix
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s03-save-state-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: [self-hosted, Linux, X64, cpos-ci]
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Apply save-state correction from isolated clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="/tmp/cpos-mr-s03-save-${GITHUB_RUN_ID}"
+          rm -rf "$TMP"
+          git clone --quiet --single-branch --branch build/v2-erp-shell-requisition-slice \
+            "https://x-access-token:${GH_TOKEN}@github.com/hanitaki93-create/construction-procurement-os.git" "$TMP"
+          cd "$TMP"
+          python3 scripts/mr-s03-save-state-fix.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web-internal/src/erp-requisition-s03.tsx apps/web-internal/src/erp-requisition-s03.css deploy/erp-slice-03/browser-smoke.mjs
+          git commit -m 'fix(erp): make MR draft saves explicit and observable'
+          git push origin HEAD:build/v2-erp-shell-requisition-slice
+          rm -rf "$TMP"
