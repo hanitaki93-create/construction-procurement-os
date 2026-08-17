@@ -1,4 +1,4 @@
-name: ERP Slice 01 Requisition Preview
+name: ERP Slice 02 Material Requisition Preview
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - build/v2-erp-shell-requisition-slice
     paths:
       - 'apps/web-internal/**'
+      - 'packages/platform-application/**'
+      - 'deploy/erp-slice-02/**'
       - '.github/workflows/erp-slice-01-preview.yml'
   workflow_dispatch:
 
@@ -13,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: erp-slice-01-preview
+  group: erp-slice-02-preview
   cancel-in-progress: true
 
 jobs:
@@ -26,11 +28,11 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Build evidence-led ERP slice image
+      - name: Build MR Slice 02 image
         shell: bash
         run: |
           set -euo pipefail
-          docker build -f deploy/v2-preview/Dockerfile -t "cpos-erp-slice-01:${GITHUB_SHA}" .
+          docker build -f deploy/v2-preview/Dockerfile -t "cpos-erp-slice-02:${GITHUB_SHA}" .
 
       - name: Verify shared V2 database runtime
         shell: bash
@@ -50,27 +52,47 @@ jobs:
           docker logs cpos-v2-preview-db || true
           exit 1
 
-      - name: Hostile-smoke ERP slice candidate
+      - name: Seed realistic eight-line MR fixture
         shell: bash
         run: |
           set -euo pipefail
-          CANDIDATE=cpos-erp-slice-01-candidate
-          IMAGE="cpos-erp-slice-01:${GITHUB_SHA}"
+          docker exec -i cpos-v2-preview-db \
+            psql -v ON_ERROR_STOP=1 -U postgres -d cpos \
+            < deploy/erp-slice-02/seed-realistic-mr.sql
+
+          docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -Atc \
+            "SELECT mr_number || '|' || status || '|' || (SELECT count(*) FROM procurement.material_requisition_line l WHERE l.mr_id=m.mr_id) FROM procurement.material_requisition m WHERE m.mr_id='019f1500-0000-7000-8000-000000000102';" \
+            | grep -q '^MR-GT-DEMO-26-09001|SUBMITTED|8$'
+
+      - name: Hostile-smoke MR Slice 02 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANDIDATE=cpos-erp-slice-02-candidate
+          IMAGE="cpos-erp-slice-02:${GITHUB_SHA}"
           DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
           CANDIDATE_PORT=43123
+          TENANT_ID='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
+          PROJECT_ID='019f1500-0000-7000-8000-000000000005'
 
           docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
+          cleanup_candidate() {
+            docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
+          }
+          trap cleanup_candidate EXIT
+
           docker run -d \
             --name "$CANDIDATE" \
             --network cpos-v2-preview-net \
             -p 127.0.0.1:${CANDIDATE_PORT}:43118 \
             -e DATABASE_URL="$DATABASE_URL" \
-            -e BUILD_ID="erp-slice-01-${GITHUB_SHA}" \
+            -e BUILD_ID="erp-slice-02-${GITHUB_SHA}" \
             "$IMAGE" >/dev/null
 
           ready=false
           for attempt in $(seq 1 50); do
-            if curl -fsS http://127.0.0.1:${CANDIDATE_PORT}/health/ready >/tmp/erp-slice-ready.json; then
+            if curl -fsS "http://127.0.0.1:${CANDIDATE_PORT}/health/ready" >/tmp/mr-s02-ready.json; then
               ready=true
               break
             fi
@@ -80,32 +102,92 @@ jobs:
             docker logs "$CANDIDATE" || true
             exit 1
           fi
-          curl -fsS http://127.0.0.1:${CANDIDATE_PORT}/ >/tmp/erp-slice-root.html
-          grep -q '<div id="root"></div>' /tmp/erp-slice-root.html
-          docker rm -f "$CANDIDATE" >/dev/null
 
-      - name: Promote ERP slice to public review port
+          curl -fsS "http://127.0.0.1:${CANDIDATE_PORT}/" >/tmp/mr-s02-root.html
+          grep -q '<div id="root"></div>' /tmp/mr-s02-root.html
+
+          curl -fsS \
+            -H 'accept: application/json' \
+            -H 'x-cpos-session-mode: development' \
+            -H "x-cpos-tenant-id: ${TENANT_ID}" \
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
+            "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions" \
+            >/tmp/mr-s02-list.json
+          grep -q 'MR-GT-DEMO-26-09001' /tmp/mr-s02-list.json
+
+          # Prove the New MR route really creates a governed draft, then clean the smoke record
+          # and restore the review counter so this check does not leave a numbering gap.
+          CREATE_STATUS=$(curl -sS -o /tmp/mr-s02-create.json -w '%{http_code}' \
+            -X POST \
+            -H 'accept: application/json' \
+            -H 'content-type: application/json' \
+            -H 'x-cpos-session-mode: development' \
+            -H "x-cpos-tenant-id: ${TENANT_ID}" \
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
+            --data "{\"projectId\":\"${PROJECT_ID}\",\"requiredOnSiteDate\":\"2026-09-05\",\"priority\":\"NORMAL\",\"subject\":\"MR S02 create smoke\",\"requesterTeam\":\"CI smoke\",\"instructions\":\"Temporary record proving the create-new-MR API path.\",\"lines\":[{\"entryMode\":\"FREE_FORM\",\"lineType\":\"MATERIAL\",\"description\":\"Temporary MR smoke line\",\"requestedQuantity\":\"1\",\"uomCode\":\"EA\",\"requiredDateOverride\":\"2026-09-05\",\"technicalNotes\":\"Delete after successful smoke.\"}]}" \
+            "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions")
+          [[ "$CREATE_STATUS" == "201" ]]
+          SMOKE_ID=$(node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/mr-s02-create.json','utf8'));if(!x.requisition?.mrId)process.exit(1);process.stdout.write(x.requisition.mrId)")
+          docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -c \
+            "DELETE FROM procurement.material_requisition WHERE tenant_id='${TENANT_ID}' AND mr_id='${SMOKE_ID}'::uuid;" >/dev/null
+          docker exec cpos-v2-preview-db psql -v ON_ERROR_STOP=1 -U postgres -d cpos -c \
+            "UPDATE procurement.document_number_counter SET next_value=GREATEST(1,next_value-1), updated_at=clock_timestamp() WHERE tenant_id='${TENANT_ID}' AND document_class='MR' AND scope_key='PROJECT:${PROJECT_ID}:YEAR:2026';" >/dev/null
+
+          # An already-routed approved line must not accept a casual route replacement.
+          ROUTE_STATUS=$(curl -sS -o /tmp/mr-s02-route-lock.json -w '%{http_code}' \
+            -X POST \
+            -H 'accept: application/json' \
+            -H 'content-type: application/json' \
+            -H 'x-cpos-session-mode: development' \
+            -H "x-cpos-tenant-id: ${TENANT_ID}" \
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
+            --data '{"route":"COMPETITIVE_RFQ"}' \
+            "http://127.0.0.1:${CANDIDATE_PORT}/procurement/requisitions/019f1500-0000-7000-8000-000000000026/lines/019f1500-0000-7000-8000-000000000027/route")
+          [[ "$ROUTE_STATUS" == "409" ]]
+          grep -qi 'locked' /tmp/mr-s02-route-lock.json
+
+          cleanup_candidate
+          trap - EXIT
+
+      - name: Promote MR Slice 02 to public review port
         shell: bash
         run: |
           set -euo pipefail
-          PUBLIC=cpos-erp-slice-01
-          PREVIOUS=cpos-v2-preview
-          IMAGE="cpos-erp-slice-01:${GITHUB_SHA}"
+          PUBLIC=cpos-erp-preview
+          LEGACY_PUBLIC=cpos-erp-slice-01
+          BACKUP=cpos-erp-preview-backup
+          FALLBACK=cpos-v2-preview
+          IMAGE="cpos-erp-slice-02:${GITHUB_SHA}"
           DATABASE_URL='postgresql://postgres@cpos-v2-preview-db:5432/cpos'
 
-          docker rm -f "$PUBLIC" >/dev/null 2>&1 || true
-          previous_was_running=false
-          if docker inspect "$PREVIOUS" >/dev/null 2>&1; then
-            if [[ "$(docker inspect -f '{{.State.Running}}' "$PREVIOUS")" == "true" ]]; then
-              previous_was_running=true
-              docker stop "$PREVIOUS" >/dev/null
-            fi
+          docker rm -f "$BACKUP" >/dev/null 2>&1 || true
+
+          backup_name=''
+          backup_restore_name=''
+          fallback_was_running=false
+
+          if docker inspect "$PUBLIC" >/dev/null 2>&1; then
+            docker stop "$PUBLIC" >/dev/null 2>&1 || true
+            docker rename "$PUBLIC" "$BACKUP"
+            backup_name="$BACKUP"
+            backup_restore_name="$PUBLIC"
+          elif docker inspect "$LEGACY_PUBLIC" >/dev/null 2>&1; then
+            docker stop "$LEGACY_PUBLIC" >/dev/null 2>&1 || true
+            docker rename "$LEGACY_PUBLIC" "$BACKUP"
+            backup_name="$BACKUP"
+            backup_restore_name="$LEGACY_PUBLIC"
+          elif docker inspect "$FALLBACK" >/dev/null 2>&1 && [[ "$(docker inspect -f '{{.State.Running}}' "$FALLBACK")" == "true" ]]; then
+            fallback_was_running=true
+            docker stop "$FALLBACK" >/dev/null
           fi
 
           rollback() {
             docker rm -f "$PUBLIC" >/dev/null 2>&1 || true
-            if [[ "$previous_was_running" == "true" ]]; then
-              docker start "$PREVIOUS" >/dev/null 2>&1 || true
+            if [[ -n "$backup_name" ]] && docker inspect "$backup_name" >/dev/null 2>&1; then
+              docker rename "$backup_name" "$backup_restore_name" >/dev/null 2>&1 || true
+              docker start "$backup_restore_name" >/dev/null 2>&1 || true
+            elif [[ "$fallback_was_running" == "true" ]]; then
+              docker start "$FALLBACK" >/dev/null 2>&1 || true
             fi
           }
           trap rollback ERR
@@ -116,23 +198,34 @@ jobs:
             --network cpos-v2-preview-net \
             -p 0.0.0.0:43120:43118 \
             -e DATABASE_URL="$DATABASE_URL" \
-            -e BUILD_ID="erp-slice-01-${GITHUB_SHA}" \
+            -e BUILD_ID="erp-slice-02-${GITHUB_SHA}" \
             "$IMAGE" >/dev/null
 
           ready=false
           for attempt in $(seq 1 50); do
-            if curl -fsS http://127.0.0.1:43120/health/ready >/tmp/erp-slice-public-ready.json; then
+            if curl -fsS http://127.0.0.1:43120/health/ready >/tmp/mr-s02-public-ready.json; then
               ready=true
               break
             fi
             sleep 1
           done
           [[ "$ready" == "true" ]]
-          curl -fsS http://127.0.0.1:43120/ >/tmp/erp-slice-public-root.html
-          grep -q '<div id="root"></div>' /tmp/erp-slice-public-root.html
-          trap - ERR
+          curl -fsS http://127.0.0.1:43120/ >/tmp/mr-s02-public-root.html
+          grep -q '<div id="root"></div>' /tmp/mr-s02-public-root.html
 
-          echo 'ERP_SLICE_01_URL=http://18.181.166.50:43120'
-          echo "ERP_SLICE_01_COMMIT=${GITHUB_SHA}"
+          TENANT_ID='019f1500-0000-7000-8000-000000000001'
+          PRINCIPAL_ID='019f1500-0000-7000-8000-000000000002'
+          curl -fsS \
+            -H 'accept: application/json' \
+            -H 'x-cpos-session-mode: development' \
+            -H "x-cpos-tenant-id: ${TENANT_ID}" \
+            -H "x-cpos-principal-id: ${PRINCIPAL_ID}" \
+            http://127.0.0.1:43120/procurement/requisitions \
+            >/tmp/mr-s02-public-list.json
+          grep -q 'MR-GT-DEMO-26-09001' /tmp/mr-s02-public-list.json
+
+          trap - ERR
+          echo 'ERP_MR_SLICE_02_URL=http://18.181.166.50:43120'
+          echo "ERP_MR_SLICE_02_COMMIT=${GITHUB_SHA}"
           docker inspect -f 'CONTAINER={{.Name}} STATE={{.State.Status}} RESTART={{.RestartCount}} PORTS={{json .NetworkSettings.Ports}}' "$PUBLIC"
-          cat /tmp/erp-slice-public-ready.json
+          cat /tmp/mr-s02-public-ready.json
