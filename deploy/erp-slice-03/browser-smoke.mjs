@@ -44,7 +44,7 @@ try {
   const savedBody = await saveResponse.json();
   const serverQty = savedBody?.requisition?.lines?.[1]?.requestedQuantity;
   if (serverQty !== '7.000000' && serverQty !== '7') throw new Error(`draft save response did not contain edited quantity: ${serverQty}`);
-  await page.getByTestId('mr-draft-save-state').waitFor({ state: 'visible' });
+  await page.waitForFunction(() => document.querySelector('[data-testid="mr-draft-save-state"]')?.textContent?.trim() === 'Saved ✓');
   const saveState = (await page.getByTestId('mr-draft-save-state').textContent())?.trim();
   if (saveState !== 'Saved ✓') throw new Error(`draft save UI did not confirm completion: ${saveState}`);
   await page.getByRole('button', { name: '← Requisition register' }).click();
