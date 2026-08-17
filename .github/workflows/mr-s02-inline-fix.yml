@@ -1,0 +1,40 @@
+name: MR S02 Inline Fix
+
+on:
+  push:
+    branches:
+      - build/v2-erp-shell-requisition-slice
+    paths:
+      - '.github/workflows/mr-s02-inline-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: build/v2-erp-shell-requisition-slice
+          fetch-depth: 0
+      - name: Apply narrow TypeScript fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('apps/web-internal/src/erp-requisition.tsx')
+          text = path.read_text()
+          old = '''    if (!references.data) return <div className="mr-s02-page mr-s02-state"><strong>MR master data is not ready</strong><span>Retry the reference-data request before creating a requisition.</span><button className="erp-button" type="button" onClick={() => references.refetch()}>Retry</button></div>;'''
+          new = '''    if (!references.data) return <div className="mr-s02-page mr-s02-state"><strong>MR master data is not ready</strong><span>Return to the register and reopen New MR after reference data finishes loading.</span><button className="erp-button" type="button" onClick={() => setCreating(false)}>Back</button></div>;'''
+          if old not in text:
+              raise SystemExit('target TypeScript branch not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          rm .github/workflows/mr-s02-inline-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web-internal/src/erp-requisition.tsx .github/workflows/mr-s02-inline-fix.yml
+          git commit -m 'fix(erp): resolve MR reference-data fallback narrowing'
+          git push origin HEAD:build/v2-erp-shell-requisition-slice
