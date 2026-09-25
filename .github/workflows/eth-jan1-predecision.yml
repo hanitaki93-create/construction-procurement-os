@@ -1,0 +1,40 @@
+name: ETH Jan1 pre-decision data discovery
+on:
+  push:
+    branches: [research/isolated-eth-candlestick-v1]
+    paths: ['.github/workflows/eth-jan1-predecision.yml']
+permissions:
+  contents: read
+concurrency:
+  group: eth-jan1-predecision
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: self-hosted
+    timeout-minutes: 5
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - name: Research host and data path metadata only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(date -u +%Y-%m-%d)" = "2026-09-25"
+          nice -n 19 ionice -c3 python3 - <<'PY'
+          import os, json, socket
+          from pathlib import Path
+          assert socket.gethostname() == "ip-172-26-9-103", "Research VPS host guard failed"
+          found=[]
+          skip={".git","node_modules",".venv",".venv-brain",".cache","logs","reports","results","backups"}
+          for root, dirs, files in os.walk("/home/ubuntu"):
+              dirs[:] = [d for d in dirs if d not in skip and not d.startswith(".venv") and len(Path(root,d).parts)<10]
+              for name in files:
+                  p=Path(root,name); s=str(p).lower()
+                  if name.endswith((".csv",".parquet",".csv.gz",".jsonl")) and ("eth" in s) and any(v in s for v in ("ohlcv","candle","kline","baseline","market_data","market-data","/data/")) and not any(v in s for v in ("trade","signal","label","decision","result","evaluat","prediction","feature")):
+                      try: found.append({"path":str(p),"bytes":p.stat().st_size})
+                      except OSError: pass
+          print(json.dumps({"host":socket.gethostname(),"candidates":found[:250],"count":len(found)},indent=2))
+          
+          PY
